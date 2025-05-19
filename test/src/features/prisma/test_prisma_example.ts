@@ -3,7 +3,6 @@ import { AutoBeState } from "@autobe/agent/src/context/AutoBeState";
 import { AutoBeCompiler } from "@autobe/compiler";
 import { FileSystemIterator } from "@autobe/filesystem";
 import { AutoBeAnalyzeHistory } from "@autobe/interface";
-import fs from "fs";
 import OpenAI from "openai";
 import { v4 } from "uuid";
 
@@ -12,7 +11,7 @@ import { TestGlobal } from "../../TestGlobal";
 export const test_prisma_example = async () => {
   if (TestGlobal.env.CHATGPT_API_KEY === undefined) return false;
   const files: Record<string, string> = await FileSystemIterator.read({
-    root: `${TestGlobal.ROOT}/assets/bbs/docs/requirements`,
+    root: `${TestGlobal.ROOT}/assets/shopping/docs/requirements`,
     extension: "md",
     prefix: "",
   });
@@ -46,15 +45,6 @@ export const test_prisma_example = async () => {
   })({
     reason: "just for testing",
   });
-};
 
-// const getAnalyzeFiles = async (): Promise<Record<string, string>> => {
-//   const root = `${TestGlobal.ROOT}/../examples/analyze`;
-//   const directory = await fs.promises.readdir(root);
-//   const record: Record<string, string> = {};
-//   for (const file of directory) {
-//     if (file.endsWith(".md") === false) continue;
-//     record[file] = await fs.promises.readFile(`${root}/${file}`, "utf-8");
-//   }
-//   return record;
-// };
+  return response;
+};
