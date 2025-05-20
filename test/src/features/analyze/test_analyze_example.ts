@@ -1,8 +1,6 @@
 import { AutoBeAgent, orchestrate } from "@autobe/agent";
 import { AutoBeCompiler } from "@autobe/compiler";
-import { AutoBeUserMessageHistory } from "@autobe/interface";
 import OpenAI from "openai";
-import { v4 } from "uuid";
 
 import { TestGlobal } from "../../TestGlobal";
 
@@ -19,15 +17,9 @@ export const test_analyze_example = async () => {
 
   return await orchestrate.analyze({
     ...agent.getContext(),
-    histories: () => [
-      {
-        id: v4(),
-        type: "userMessage",
-        contents: [
-          {
-            type: "text",
-            text: `저는 아래와 같은 서비스를 만들고 싶습니다.
-
+  })({
+    reason: "The user requested the preparation of the plan.",
+    userPlanningRequirements: `
 \`\`\`md
 ### **사내 게시판 요구사항 명세**
 
@@ -38,15 +30,7 @@ export const test_analyze_example = async () => {
 | **3. 글·댓글 기능** | • 글 작성, 수정, 삭제 (본인 + 관리자 권한)• 댓글 및 **대댓글(1‑depth)** 작성·삭제 지원• 글·댓글 모두 **좋아요** 가능 (사용자 당 1회) |
 | **4. UI / UX** | • **왼쪽 네비게이션 바**: 게시판 목록·글쓰기 버튼• **우측 상단**: 로그인/로그아웃, 비밀번호 변경 메뉴 |
 | **5. 기타 제약** | • 삭제된 글·댓글은 복구 불가 (하드 삭제)• 동시 좋아요 중복 방지 처리가 서버 측에 구현될 것 |
-\`\`\`
+\`\`\`    
 `,
-          },
-        ],
-        started_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
-      } satisfies AutoBeUserMessageHistory,
-    ],
-  })({
-    reason: "just for testing",
   });
 };
