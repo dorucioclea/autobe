@@ -23,6 +23,9 @@
     "README.md",
     "package.json"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@autobe/interface": "workspace:^",
     "@emotion/styled": "^11.14.0",
