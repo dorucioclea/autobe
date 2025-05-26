@@ -55,7 +55,6 @@ export const orchestrateAnalyze =
         id: v4(),
         type: "analyze",
         reason: userPlanningRequirements,
-        description: "",
         files: pointer.value.files,
         step,
         created_at,
