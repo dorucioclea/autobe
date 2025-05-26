@@ -3,8 +3,8 @@ import {
   AutoBeAssistantMessageHistory,
 } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
-import { randomUUID } from "crypto";
 import { IPointer } from "tstl";
+import { v4 } from "uuid";
 
 import { AnalyzeAgent } from "../analyze/AnalyzeAgent";
 import { createReviewerAgent } from "../analyze/CreateReviewerAgent";
@@ -31,7 +31,15 @@ export const orchestrateAnalyze =
       );
     }
 
+    const step = (ctx.state().analyze?.step ?? -1) + 1;
     const created_at = new Date().toISOString();
+    ctx.dispatch({
+      type: "analyzeStart",
+      reason: userPlanningRequirements,
+      step,
+      created_at,
+    });
+
     const agent = new AnalyzeAgent(createReviewerAgent, ctx, pointer);
     const response = await agent.conversate(
       [
@@ -43,22 +51,35 @@ export const orchestrateAnalyze =
     );
 
     if (pointer.value?.files) {
-      return {
-        id: randomUUID(),
-        completed_at: new Date().toISOString(),
-        description: "",
-        reason: "",
-        files: pointer.value?.files,
-        created_at,
-        step: 0,
+      const history: AutoBeAnalyzeHistory = {
+        id: v4(),
         type: "analyze",
-      } satisfies AutoBeAnalyzeHistory;
+        reason: userPlanningRequirements,
+        description: "",
+        files: pointer.value.files,
+        step,
+        created_at,
+        completed_at: new Date().toISOString(),
+      };
+      ctx.dispatch({
+        type: "analyzeComplete",
+        files: pointer.value.files,
+        step,
+        created_at,
+      });
+      return history;
     }
-    return {
-      id: randomUUID(),
+    const history: AutoBeAssistantMessageHistory = {
+      id: v4(),
       type: "assistantMessage",
       text: response,
       created_at,
       completed_at: new Date().toISOString(),
-    } satisfies AutoBeAssistantMessageHistory;
+    };
+    ctx.dispatch({
+      type: "assistantMessage",
+      text: response,
+      created_at,
+    });
+    return history;
   };
