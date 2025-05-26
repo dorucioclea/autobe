@@ -52,8 +52,8 @@ export const orchestrateInterface =
       created_at: start.toISOString(),
       completed_at: new Date().toISOString(),
     };
-    ctx.histories().push(result);
     ctx.state().interface = result;
+    ctx.histories().push(result);
     ctx.dispatch({
       type: "interfaceComplete",
       files: result.files,

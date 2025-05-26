@@ -61,6 +61,7 @@ export const orchestrateAnalyze =
         created_at,
         completed_at: new Date().toISOString(),
       };
+      ctx.state().analyze = history;
       ctx.histories().push(history);
       ctx.dispatch({
         type: "analyzeComplete",
@@ -68,7 +69,6 @@ export const orchestrateAnalyze =
         step,
         created_at,
       });
-      ctx.state().analyze = history;
       return history;
     }
     const history: AutoBeAssistantMessageHistory = {

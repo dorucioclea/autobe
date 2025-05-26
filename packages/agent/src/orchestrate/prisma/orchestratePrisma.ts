@@ -57,8 +57,8 @@ export const orchestratePrisma =
       result: result,
       step: ctx.state().analyze?.step ?? 0,
     };
-    ctx.histories().push(history);
     ctx.state().prisma = history;
+    ctx.histories().push(history);
     if (result.type === "success")
       ctx.dispatch({
         type: "prismaComplete",
