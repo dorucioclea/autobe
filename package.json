@@ -8,7 +8,7 @@
     "build": "pnpm --filter=./packages/** --filter=./test -r build",
     "package:latest": "pnpm --filter=./packages/** -r publish --tag latest",
     "package:next": "pnpm --filter=./packages/** -r publish --tag next",
-    "release": "bumpp -r",
+    "release": "node deploy/sync_readme.js && bumpp -r",
     "playground": "node playground/index.js"
   },
   "keywords": [],
