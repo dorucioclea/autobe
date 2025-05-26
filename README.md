@@ -75,7 +75,7 @@ pnpm install
 pnpm run playground
 ```
 
-We're preparing a playground website, and it will be published with the alpha version release (2025-06-01, after [stackblitz/webcontainer#1880](https://github.com/stackblitz/webcontainer-core/issues/1880) issue fixed).
+We're preparing a playground website, and it will be published with the alpha version release (2025-06-01, after [stackblitz/webcontainer#1880](https://github.com/stackblitz/webcontainer-core/issues/1880) bug fixed).
 
 Until then, please clone this `@autobe` repo and run the playground application manually as shown above. When `@autobe` agent writes some program codes, they would be stored under the `playground-result` directory.
 
