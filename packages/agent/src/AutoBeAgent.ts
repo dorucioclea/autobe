@@ -1,5 +1,6 @@
 import { MicroAgentica } from "@agentica/core";
 import {
+  AutoBeAssistantMessageHistory,
   AutoBeEvent,
   AutoBeHistory,
   AutoBeUserMessageContent,
@@ -74,6 +75,12 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
         }),
       ],
     });
+    this.agentica_.on("assistantMessage", async (message) => {
+      console.log("assistantMessage", message);
+    });
+    this.agentica_.on("call", async (message) => {
+      console.log("call", message);
+    });
     this.agentica_.getHistories().push(
       ...this.histories_
         .map((history) =>
@@ -86,13 +93,19 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
     );
     this.agentica_.on("assistantMessage", async (message) => {
       const start = new Date();
-      this.histories_.push({
+      const history: AutoBeAssistantMessageHistory = {
         id: v4(),
         type: "assistantMessage",
         text: await message.join(),
         created_at: start.toISOString(),
         completed_at: new Date().toISOString(),
-      });
+      };
+      this.histories_.push(history);
+      this.dispatch({
+        type: "assistantMessage",
+        text: history.text,
+        created_at: history.created_at,
+      }).catch(() => {});
     });
   }
 
