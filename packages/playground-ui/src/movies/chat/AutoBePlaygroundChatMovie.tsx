@@ -96,7 +96,7 @@ export function AutoBePlaygroundChatMovie(
 
   useEffect(() => {
     props.listener.on(async (e) => {
-      setEvents([...events, e]);
+      setEvents((prev) => [...prev, e]);
     });
     props.service
       .getTokenUsage()
