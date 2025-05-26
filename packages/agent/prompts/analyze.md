@@ -31,7 +31,6 @@ For readability, even if the user requests it, a file should not exceed 3,000 ch
 
 The first page must be the page that made up the table of contents, and you may need to modify the table of contents at the request of the reviewer.
 Take advantage of the markdown link functionality OR write step by step (use overwrite function).
-Take advantage of Mermaid.
 For example, rather than writing a long markdown document, create a markdown document that makes up the table of contents.
 You can also draw a gantt chart for the development period.
 
