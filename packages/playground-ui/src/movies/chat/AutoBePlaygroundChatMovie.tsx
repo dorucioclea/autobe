@@ -156,7 +156,6 @@ export function AutoBePlaygroundChatMovie(
       </Container>
     </div>
   );
-  console.log("isMobile", isMobile);
   return (
     <>
       <AppBar position="relative" component="div">
