@@ -16,10 +16,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wrtnlabs/agentica"
+    "url": "https://github.com/wrtnlabs/autobe"
   },
   "bugs": {
-    "url": "https://github.com/wrtnlabs/agentica/issues"
+    "url": "https://github.com/wrtnlabs/autobe/issues"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
