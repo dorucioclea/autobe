@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@autobe/filesystem",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Internal FileSystem for AutoBE Project, not distributed to public",
   "main": "src/index.ts",
   "scripts": {
