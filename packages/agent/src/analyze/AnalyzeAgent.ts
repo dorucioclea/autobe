@@ -42,10 +42,12 @@ export class AnalyzeAgent<Model extends ILlmSchema.Model> {
             return AutoBeSystemPromptConstant.ANALYZE.replace(
               "{% Guidelines %}",
               AutoBeSystemPromptConstant.ANALYZE_GUIDELINE,
-            ).replace(
-              "{% Example Documentation %}",
-              AutoBeSystemPromptConstant.ANALYZE_EXAMPLE,
-            );
+            )
+              .replace(
+                "{% Example Documentation %}",
+                AutoBeSystemPromptConstant.ANALYZE_EXAMPLE,
+              )
+              .replace("{% User Locale %}", ctx.config?.locale ?? "en-US");
           },
         },
       },

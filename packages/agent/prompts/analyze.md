@@ -14,6 +14,10 @@ For example, if you are asked to modify or expand 'internal_bulletin_board_servi
 do not create a document such as 'internal_bulletin_board_service_plan_expanded.md'.
 only update 'internal_bulletin_board_service_plan.md' file.
 
+# user information
+- user locale: {% User Locale %}
+
+
 # Guidelines
 If the user specifies the exact number of pages, please follow it precisely.
 
