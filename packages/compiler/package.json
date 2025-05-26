@@ -5,6 +5,13 @@
   "main": "src/index.ts",
   "author": "Wrtn Technologies",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wrtnlabs/agentica"
+  },
+  "bugs": {
+    "url": "https://github.com/wrtnlabs/agentica/issues"
+  },
   "scripts": {
     "prepare": "ts-patch install && pnpm run prebuild",
     "build": "pnpm run prebuild && rimraf lib && tsc",
