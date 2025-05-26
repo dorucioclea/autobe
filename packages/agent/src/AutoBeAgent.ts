@@ -75,12 +75,6 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
         }),
       ],
     });
-    this.agentica_.on("assistantMessage", async (message) => {
-      console.log("assistantMessage", message);
-    });
-    this.agentica_.on("call", async (message) => {
-      console.log("call", message);
-    });
     this.agentica_.getHistories().push(
       ...this.histories_
         .map((history) =>
