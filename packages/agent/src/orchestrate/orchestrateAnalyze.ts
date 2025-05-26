@@ -62,7 +62,6 @@ export const orchestrateAnalyze =
       };
       ctx.state().analyze = history;
       ctx.histories().push(history);
-      ctx.state().analyze = history;
       ctx.dispatch({
         type: "analyzeComplete",
         files: pointer.value.files,
