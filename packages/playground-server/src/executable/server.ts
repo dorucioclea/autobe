@@ -21,7 +21,7 @@ const main = async () => {
         typia.assert(acceptor.header);
         return {
           type: "accept",
-          cwd: `${__dirname}/../../../../playground`,
+          cwd: `${__dirname}/../../../../playground-result`,
           agent: new AutoBeAgent({
             model: acceptor.header.model,
             vendor: {
