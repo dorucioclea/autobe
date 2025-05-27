@@ -22,8 +22,16 @@ export const validate_agent_prisma = async (owner: string, project: string) => {
   });
 
   const validates: AutoBePrismaValidateEvent[] = [];
-  agent.on("prismaValidate", (event) => {
+  agent.on("prismaValidate", async (event) => {
     validates.push(event);
+    if (event.result.type === "failure")
+      await FileSystemIterator.save({
+        root: `${TestGlobal.ROOT}/results/${owner}/${project}/prisma-failure-${validates.length}`,
+        files: {
+          ...event.schemas,
+          "reason.log": event.result.reason,
+        },
+      });
   });
 
   const components: AutoBePrismaComponentsEvent[] = [];
@@ -48,6 +56,13 @@ export const validate_agent_prisma = async (owner: string, project: string) => {
     if (result.type !== "prisma")
       throw new Error("History type must be prisma.");
   }
+
+  console.log({
+    starts: starts.length,
+    validates: validates.length,
+    components: components.length,
+    schemas: schemas.length,
+  });
 
   // REPORT RESULT
   await FileSystemIterator.save({
