@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@autobe/station",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "AutoBE Station",
   "packageManager": "pnpm@10.6.4",
   "scripts": {
