@@ -16,7 +16,7 @@ type Filename = string;
 type FileContent = string;
 
 export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
-  private readonly createInnerAgent: () => MicroAgentica<Model>;
+  private readonly createAnalyzeAgent: () => MicroAgentica<Model>;
   private readonly fileMap: Record<Filename, FileContent> = {};
 
   constructor(
@@ -25,6 +25,7 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
     private readonly pointer: IPointer<{
       files: Record<Filename, FileContent>;
     } | null>,
+    filenames: string[],
   ) {
     assertSchemaModel(ctx.model);
 
@@ -36,7 +37,7 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
       },
     });
 
-    this.createInnerAgent = (): MicroAgentica<Model> => {
+    this.createAnalyzeAgent = (): MicroAgentica<Model> => {
       const agent = new MicroAgentica({
         controllers: [controller],
         model: ctx.model,
@@ -68,13 +69,20 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
           {
             type: "systemMessage",
             text: [
-              "# Example",
-              "```md",
-              AutoBeSystemPromptConstant.ANALYZE_EXAMPLE,
-              "```",
+              "The following is the name of the entire file.",
+              "Use it to build a table of contents.",
+              filenames.map((filename) => `- ${filename}`),
+              "",
+              "However, do not touch other than the file you have to create.",
             ].join("\n"),
           },
         ],
+      });
+
+      agent.on("request", (event) => {
+        if (event.body.tools) {
+          event.body.tool_choice = "required";
+        }
       });
 
       return agent;
@@ -87,8 +95,12 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
    * @param content Conversation from user in this time.
    * @returns
    */
-  async conversate(content: string): Promise<string> {
-    const response = await this.createInnerAgent().conversate(content);
+  async conversate(content: string, retry = 10): Promise<string> {
+    if (retry === 0) {
+      return "Abort due to excess retry count";
+    }
+
+    const response = await this.createAnalyzeAgent().conversate(content);
     const lastMessage = response[response.length - 1]!;
 
     if ("text" in lastMessage) {
@@ -115,11 +127,9 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
         return lastMessage.text;
       }
 
-      const currentFiles = this.fileMap;
-
       const reviewer = this.createReviewerAgentFn(this.ctx, {
         query: content,
-        currentFiles,
+        filenames: Object.keys(this.fileMap),
       });
 
       const [review] = await reviewer.conversate(lastMessage.text);
@@ -139,11 +149,12 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
               message: `THIS IS ANSWER OF REVIEW AGENT. FOLLOW THIS INSTRUCTIONS. AND DON\'T REQUEST ANYTHING.`,
               review: review.text,
             }),
+            retry--,
           );
         }
       }
 
-      return `If the document is not 1,000 characters, please fill it out in more abundance, and if it exceeds 1,000 characters, please fill out the next document. If you don't have the next document, you can exit now.`;
+      return `COMPLETE WITHOUT REVIEW`;
     }
 
     return "COMPLETE";

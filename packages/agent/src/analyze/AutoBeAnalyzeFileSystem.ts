@@ -13,7 +13,9 @@ export interface IFile {
   /**
    * Markdown file content. Only write the content of the file. Do not include
    * any questions. This should contain only the contents of the file. Do not
-   * write down any questions or appreciation.
+   * write down any questions or appreciation. For example, remove a sentence
+   * such as "Is it okay if we proceed with the table of contents? Please let me
+   * know if there is anything to add or exclude from the table of contents!"
    */
   markdown: string;
 }
