@@ -17,6 +17,7 @@ export const AutoBeAnalyzeReviewer = <Model extends ILlmSchema.Model>(
           return "Answer only 'completion' or 'failure'.";
         },
       },
+      locale: ctx.config?.locale,
     },
     histories: [
       ...ctx

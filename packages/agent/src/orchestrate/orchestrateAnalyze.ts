@@ -105,6 +105,7 @@ export const orchestrateAnalyze =
       vendor: ctx.vendor,
       controllers: [controller],
       config: {
+        locale: ctx.config?.locale,
         systemPrompt: {
           common: () =>
             [
