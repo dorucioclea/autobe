@@ -67,7 +67,7 @@ Maintenance  | -         | Users can request AutoBE to modify the backend applic
 
 ## Playground
 
-https://stackblitz.com/github/wrtnlabs/autobe-playground-stackblitz
+[https://stackblitz.com/github/wrtnlabs/autobe-playground-stackblitz](https://stackblitz.com/github/wrtnlabs/autobe-playground-stackblitz?file=md!README.md)
 
 You can experience the `@autobe` agent from the playground website above.
 
