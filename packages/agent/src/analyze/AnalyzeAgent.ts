@@ -40,24 +40,38 @@ export class AnalyzeAgent<Model extends ILlmSchema.Model> {
         vendor: ctx.vendor,
         config: {
           systemPrompt: {
-            common: () => {
-              return AutoBeSystemPromptConstant.ANALYZE.replace(
-                "{% Guidelines %}",
-                AutoBeSystemPromptConstant.ANALYZE_GUIDELINE,
-              )
-                .replace(
-                  "{% Example Documentation %}",
-                  AutoBeSystemPromptConstant.ANALYZE_EXAMPLE,
-                )
-                .replace("{% User Locale %}", ctx.config?.locale ?? "en-US");
-            },
             describe: () => {
               return "Answer only 'completion' or 'failure'.";
             },
           },
         },
         tokenUsage: ctx.usage(),
-        histories: [],
+        histories: [
+          {
+            type: "systemMessage",
+            text: AutoBeSystemPromptConstant.ANALYZE.replace(
+              "{% User Locale %}",
+              ctx.config?.locale ?? "en-US",
+            ),
+          },
+          {
+            type: "systemMessage",
+            text: [
+              "# Guidelines",
+              "If the user specifies the exact number of pages, please follow it precisely.",
+              AutoBeSystemPromptConstant.ANALYZE_GUIDELINE,
+            ].join("\n"),
+          },
+          {
+            type: "systemMessage",
+            text: [
+              "# Example",
+              "```md",
+              AutoBeSystemPromptConstant.ANALYZE_EXAMPLE,
+              "```",
+            ].join("\n"),
+          },
+        ],
       });
 
       return agent;

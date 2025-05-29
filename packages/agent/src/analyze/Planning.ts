@@ -1,37 +1,48 @@
+export interface IFile {
+  /**
+   * Describe briefly why you made this document, and if you have any plans for
+   * the next one.
+   */
+  reason: string;
+
+  /** Filename to generate or overwrite. */
+  filename: `${string}.md`;
+
+  /**
+   * Markdown file content. Only write the content of the file. Do not include
+   * any questions. This should contain only the contents of the file. Do not
+   * write down any questions or appreciation.
+   */
+  markdown: string;
+}
+
+export interface ICreateOrUpdateInput {
+  /**
+   * Fill in the elements of the array as many files as you want to create.
+   * Overwrite if you point to the name of the file that already exists.
+   *
+   * @title files to create or update
+   */
+  files: Array<IFile>;
+}
+
 type Filename = string;
 type FileContent = string;
 
 export interface IPlanning {
   /**
    * Generate multiple markdown files. if there is already created files,
-   * overwrite it. Generate several markdown files at once.
+   * overwrite it. Generate several markdown files at once. It is recommended
+   * that you create multiple files at a time.
    */
-  createOrUpdateFiles(input: {
-    files: Array<{
-      /**
-       * Describe briefly why you made this document, and if you have any plans
-       * for the next one.
-       */
-      reason: string;
-
-      /** Filename to generate or overwrite. */
-      filename: `${string}.md`;
-
-      /**
-       * Markdown file content. Only write the content of the file. Do not
-       * include any questions. This should contain only the contents of the
-       * file. Do not write down any questions or appreciation.
-       */
-      markdown: string;
-    }>;
-  }): Promise<void>;
+  createOrUpdateFiles(input: ICreateOrUpdateInput): Promise<void>;
 
   /**
    * Remove markdown file.
    *
    * @param input.name Filename to remove
    */
-  removeFile(input: { filename: `${string}.md` }): Promise<void>;
+  removeFile(input: Pick<IFile, "filename">): Promise<void>;
 
   /**
    * If you decide that you no longer need any reviews, or if the reviewer
@@ -50,13 +61,7 @@ export interface IPlanning {
 export class Planning implements IPlanning {
   constructor(private readonly fileMap: Record<Filename, FileContent> = {}) {}
 
-  async createOrUpdateFiles(input: {
-    files: Array<{
-      reason: string;
-      filename: `${string}.md`;
-      markdown: string;
-    }>;
-  }): Promise<void> {
+  async createOrUpdateFiles(input: { files: Array<IFile> }): Promise<void> {
     input.files.forEach((file) => {
       this.fileMap[file.filename] = file.markdown;
     });

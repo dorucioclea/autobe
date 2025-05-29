@@ -44,7 +44,7 @@ export const orchestrateAnalyze =
     const response = await agent.conversate(
       [
         `Please write a user requirement report.`,
-        "```json",
+        "```md",
         JSON.stringify(userPlanningRequirements),
         "```",
       ].join("\n"),
