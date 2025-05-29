@@ -1,77 +1,76 @@
 ```기획서
-# 아보카도 마켓 (Avocado Market)
+# Avocado Market
 
-**서비스 상세 기획 보고서**
-
----
-
-## 1. 서비스 개요
-
-**아보카도 마켓**은 지역 기반 중고 거래를 넘어, **친환경 가치와 커뮤니티 중심의 연결**을 지향하는 차세대 중고거래 플랫폼입니다.
-사용자는 누구나 쉽고 안전하게 중고 물품을 사고팔 수 있으며, 지역 이웃과의 교류를 통해 지속 가능한 생활을 실현할 수 있습니다.
-👉 [자세히 보기](01_overview.md)
+**Detailed Service Planning Report**
 
 ---
 
-## 2. 시장 조사 및 벤치마킹
+## 1. Service Overview
 
-국내외 중고거래 플랫폼 시장 현황을 종합 분석하고, 주요 경쟁사의 서비스 전략과 차별 요소를 비교하였습니다. 또한, 향후 시장 성장 가능성과 트렌드도 함께 제시합니다.
-👉 [자세히 보기](02_market_analysis.md)
-
----
-
-## 3. 주요 기능 및 상세 설명
-
-아보카도 마켓이 제공하는 핵심 기능들과 실제 사용 시나리오를 구체적으로 설명합니다. 각 기능의 목적, 사용자에게 제공되는 가치, 차별화된 기술 또는 UI 요소를 포함합니다.
-👉 [자세히 보기](03_features.md)
+**Avocado Market** is a next-generation secondhand trading platform that goes beyond local transactions to promote **eco-friendly values and community-driven connections**.  
+Anyone can easily and safely buy and sell used items, while engaging with local neighbors to realize a more sustainable lifestyle.  
+👉 [View Details](01_overview.md)
 
 ---
 
-## 4. 수익 모델 및 성장 전략
+## 2. Market Research & Benchmarking
 
-광고, 프리미엄 서비스, 제휴 기반 비즈니스 등 다양한 수익화 모델을 제시하며, 이를 기반으로 한 중장기 성장 전략을 포함합니다.
-👉 [자세히 보기](04_business_model.md)
-
----
-
-## 5. UX/UI 설계 가이드
-
-사용자 친화적 인터페이스 설계 방안과 함께, 레퍼런스 사례 및 사용자 경험 향상을 위한 디자인 원칙을 제공합니다.
-👉 [자세히 보기](05_uxui_guidelines.md)
+We present a comprehensive analysis of the domestic and global secondhand market landscape, comparing the strategies and differentiators of major competitors. This section also outlines future market growth potential and emerging trends.  
+👉 [View Details](02_market_analysis.md)
 
 ---
 
-## 6. 개발 및 출시 전략
+## 3. Key Features & Detailed Descriptions
 
-서비스 개발부터 MVP 설계, 베타 테스트, 정식 출시까지의 전체 로드맵을 제시하며, 각 단계별 목표와 전략을 구체화합니다.
-👉 [자세히 보기](06_release_strategy.md)
-
----
-
-## 7. 기술 아키텍처
-
-플랫폼의 전체 시스템 구조, 핵심 기술 스택, 외부 API 연동 방식, 인프라 구성 등을 포함한 기술적 설계 내용을 정리합니다.
-👉 [자세히 보기](07_architecture.md)
+This section details the core features offered by Avocado Market and provides concrete usage scenarios. Each feature includes its purpose, the value delivered to users, and any distinctive technologies or UI elements.  
+👉 [View Details](03_features.md)
 
 ---
 
-## 8. 포지셔닝 및 마케팅 전략
+## 4. Revenue Model & Growth Strategy
 
-타깃 사용자 정의, 브랜드 아이덴티티 수립, 홍보 전략, 지역 밀착형 커뮤니티 마케팅 등 실질적인 실행 전략을 제안합니다.
-👉 [자세히 보기](08_marketing.md)
-
----
-
-## 9. 리스크 관리 방안
-
-서비스 운영 전반에서 발생할 수 있는 다양한 리스크를 식별하고, 이에 대한 사전 예방 및 사후 대응 방안을 체계적으로 정리하였습니다.
-👉 [자세히 보기](09_risk_management.md)
+We propose a variety of monetization models including advertisements, premium services, and partnership-based businesses, along with a mid-to-long-term growth strategy based on these models.  
+👉 [View Details](04_business_model.md)
 
 ---
 
-## 10. 서비스 확장 가능성
+## 5. UX/UI Design Guidelines
 
-중장기적으로 고려할 수 있는 신규 기능, 비즈니스 모델 확장, 글로벌 진출 등 아보카도 마켓의 미래 비전을 제시합니다.
-👉 [자세히 보기](10_expansion.md)
+This section provides user-friendly interface design strategies, reference case studies, and design principles aimed at improving user experience.  
+👉 [View Details](05_uxui_guidelines.md)
 
-```;
+---
+
+## 6. Development & Launch Strategy
+
+We outline the full roadmap from development to MVP design, beta testing, and official release, including clear objectives and strategies for each stage.  
+👉 [View Details](06_release_strategy.md)
+
+---
+
+## 7. Technical Architecture
+
+This section presents the technical design of the platform, including the overall system structure, core technology stack, integration with external APIs, and infrastructure setup.  
+👉 [View Details](07_architecture.md)
+
+---
+
+## 8. Positioning & Marketing Strategy
+
+We define the target users, establish brand identity, propose promotional strategies, and suggest community-driven local marketing tactics for practical execution.  
+👉 [View Details](08_marketing.md)
+
+---
+
+## 9. Risk Management Plan
+
+We identify potential risks throughout service operations and present systematic measures for prevention and response.  
+👉 [View Details](09_risk_management.md)
+
+---
+
+## 10. Service Scalability
+
+This section outlines the future vision of Avocado Market, including potential new features, business model expansions, and possibilities for global expansion.  
+👉 [View Details](10_expansion.md)
+```
