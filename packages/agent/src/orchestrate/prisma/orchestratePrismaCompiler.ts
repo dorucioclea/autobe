@@ -258,7 +258,7 @@ const MAIN_PRISMA_FILE = StringUtil.trim`
   generator client {
     provider        = "prisma-client-js"
     previewFeatures = ["postgresqlExtensions", "views"]
-    binaryTargets   = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    binaryTargets   = ["native"]
   }
 
   datasource db {
