@@ -6,15 +6,40 @@ import typia from "typia";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
+import { StringUtil } from "../../utils/StringUtil";
 import { transformPrismaCompilerHistories } from "./transformPrismaCompilerHistories";
 
-export async function orchestratePrismaCompiler<Model extends ILlmSchema.Model>(
+export function orchestratePrismaCompiler<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   files: Record<string, string>,
-  retry: number = 10,
-): Promise<IAutoBePrismaCompilerResult & { description: string }> {
-  const pointer: IPointer<IModifyPrismaSchemaFilesProps> = {
-    value: { files, description: "" },
+  retry: number = 5,
+): Promise<IAutoBePrismaCompilerResult> {
+  files["main.prisma"] = MAIN_PRISMA_FILE;
+  return step(ctx, files, retry);
+}
+
+async function step<Model extends ILlmSchema.Model>(
+  ctx: AutoBeContext<Model>,
+  files: Record<string, string>,
+  life: number,
+): Promise<IAutoBePrismaCompilerResult> {
+  // TRY COMPILATION
+  const result: IAutoBePrismaCompilerResult = await ctx.compiler.prisma({
+    files,
+  });
+  if (result.type !== "failure" || life <= 0) return result;
+
+  // VALIDATION FAILED
+  ctx.dispatch({
+    type: "prismaValidate",
+    schemas: files,
+    result,
+    step: ctx.state().analyze?.step ?? 0,
+    created_at: new Date().toISOString(),
+  });
+
+  const pointer: IPointer<IModifyPrismaSchemaFilesProps | null> = {
+    value: null,
   };
   const agentica: MicroAgentica<Model> = new MicroAgentica({
     model: ctx.model,
@@ -22,7 +47,7 @@ export async function orchestratePrismaCompiler<Model extends ILlmSchema.Model>(
     config: {
       ...(ctx.config ?? {}),
     },
-    histories: transformPrismaCompilerHistories(ctx.state(), files),
+    histories: transformPrismaCompilerHistories(files, result),
     tokenUsage: ctx.usage(),
     controllers: [
       createApplication({
@@ -33,77 +58,33 @@ export async function orchestratePrismaCompiler<Model extends ILlmSchema.Model>(
       }),
     ],
   });
-
   agentica.on("request", (event) => {
     if (event.body.tools) {
       event.body.tool_choice = "required";
     }
   });
 
-  let result: IAutoBePrismaCompilerResult;
+  // REQUEST CORRECTION
+  await agentica.conversate(
+    StringUtil.trim`
+      Resolve the compilation errors in the provided Prisma schema files.
 
-  for (let i: number = 0; i < retry; ++i) {
-    result = await ctx.compiler.prisma({
-      files: pointer.value?.files ?? files,
-    });
-
-    if (result.type !== "failure") break;
-    ctx.dispatch({
-      type: "prismaValidate",
-      schemas: files,
-      result,
-      step: ctx.state().analyze?.step ?? 0,
-      created_at: new Date().toISOString(),
-    });
-
-    await agentica.conversate(
-      [
-        "The Prisma schema files have compilation errors that must be fixed. You MUST provide complete, corrected files.",
-        "",
-        "============================================== CURRENT FILES ==============================================",
-        "",
-        ...Object.entries(pointer.value?.files ?? files).flatMap(
-          ([filename, content]) => [`### ${filename} ###`, content, ""],
-        ),
-        "",
-        "============================================== COMPILATION ERRORS ==============================================",
-        "",
-        result.reason,
-        "",
-        "============================================== REQUIREMENTS ==============================================",
-        "",
-        "CRITICAL: You must call the modifyPrismaSchemaFiles function with:",
-        "",
-        "1. **COMPLETE file contents** - Do NOT truncate or abbreviate any content",
-        "2. **ALL files** - Every file from the input must be included in the output",
-        "3. **Fixed errors** - Resolve all compilation errors shown above",
-        "4. **Preserved structure** - Keep all models, fields, relationships, and comments",
-        "5. **Proper syntax** - Ensure valid Prisma schema syntax",
-        "",
-        "IMPORTANT NOTES:",
-        "- Include the ENTIRE content of each file, not summaries or truncated versions",
-        "- Maintain all existing relationships between models",
-        "- Keep all field definitions, attributes, and indexes",
-        "- Preserve all comments and documentation",
-        "- Fix ONLY the compilation errors, don't make unnecessary changes",
-        "",
-        "Example of what NOT to do:",
-        "```",
-        "// ... (truncated for brevity)",
-        "// ... other fields and relationships",
-        "// ... unchanged ...",
-        "```",
-        "",
-        "You must provide the COMPLETE file content for each file.",
-      ].join("\n"),
+      Don't remake every schema files. Fix only some of the files that have
+      compilation errors. You MUST provide complete, corrected files.
+    `,
+  );
+  if (pointer.value === null) {
+    console.error(
+      "Unreachable error: PrismaCompilerAgent.pointer.value is null",
     );
-
-    if (i === retry - 1) {
-      throw new Error("Prisma schema compiler failed");
-    }
+    return result; // unreachable
   }
 
-  return { ...result!, description: pointer.value.description };
+  const newFiles: Record<string, string> = {
+    ...files,
+    ...pointer.value.files,
+  };
+  return step(ctx, newFiles, life - 1);
 }
 
 function createApplication<Model extends ILlmSchema.Model>(props: {
@@ -146,49 +127,138 @@ const collection = {
 
 interface IApplication {
   /**
-   * Fixes compilation errors in Prisma schema files.
+   * Fixes Prisma compilation errors while preserving ALL existing comments,
+   * documentation, and schema structure.
    *
-   * CRITICAL: This function must return COMPLETE file contents, not truncated
-   * versions.
+   * ## Core Rules
    *
-   * Responsibilities:
+   * 1. Fix ONLY compilation errors - never remove comments/documentation
+   * 2. Apply minimal changes - preserve original design and relationships
+   * 3. Return COMPLETE files - no truncation allowed
+   * 4. NEVER use mapping names in @relation directives
    *
-   * 1. Analyze compilation errors in the provided schema files
-   * 2. Fix all syntax and structural issues
-   * 3. Return COMPLETE corrected files (no truncation or abbreviation)
-   * 4. Preserve all existing models, relationships, and business logic
-   * 5. Maintain proper cross-file references and dependencies
+   * ## Preservation Requirements
    *
-   * @param props Contains files to fix and requires complete file contents in
-   *   response
+   * - Keep ALL comments (`//` and `///`)
+   * - Keep ALL field/model documentation
+   * - Keep business logic and architectural patterns
+   * - Remove description comments only when erasing properties/relationships
+   *
+   * ## Fix Strategy
+   *
+   * - Resolve syntax/relationship errors without changing structure
+   * - Remove mapping names from @relation directives if present
+   * - Add missing foreign keys/constraints while preserving documentation
    */
   modifyPrismaSchemaFiles(props: IModifyPrismaSchemaFilesProps): void;
 }
 
 interface IModifyPrismaSchemaFilesProps {
   /**
-   * COMPLETE Prisma schema files with ALL content included.
+   * Detailed execution plan for fixing Prisma compilation errors.
    *
-   * CRITICAL REQUIREMENTS:
+   * 🎯 Purpose: Enable systematic reasoning and step-by-step error resolution
+   * approach
    *
-   * - Each file must contain the ENTIRE schema content
-   * - Do NOT truncate, abbreviate, or use placeholders like "... unchanged ..."
-   * - Include ALL models, fields, relationships, indexes, and comments
-   * - Maintain exact same file organization and naming
+   * 📋 Required Planning Content:
    *
-   * File organization patterns:
+   * 1. **Error Analysis Summary**
    *
-   * - Main.prisma: Configuration, datasource, generators
-   * - Schema-XX-domain.prisma: Complete domain-specific models with ALL fields
+   *    - List all identified compilation errors with their locations
+   *    - Categorize errors by type (syntax, relationships, types, constraints)
+   *    - Identify root causes and error interdependencies
+   * 2. **Fix Strategy Overview**
    *
-   * Key = filename (e.g., "main.prisma", "schema-01-core.prisma") Value =
-   * COMPLETE file content (no truncation allowed)
+   *    - Prioritize fixes based on dependencies (fix foundational errors first)
+   *    - Outline minimal changes needed for each error
+   *    - Identify potential impact on other schema parts
+   * 3. **Step-by-Step Fix Plan**
+   *
+   *    - File-by-file modification plan with specific changes
+   *    - Exact line numbers or sections to be modified
+   *    - New code additions or corrections to be applied
+   *    - Verification steps to ensure fixes don't break other parts
+   * 4. **Preservation Checklist**
+   *
+   *    - Confirm which comments/documentation must be preserved
+   *    - List relationships and business logic to maintain unchanged
+   *    - Identify cross-file dependencies that must remain intact
+   * 5. **Risk Assessment**
+   *
+   *    - Potential side effects of each planned fix
+   *    - Validation points to check after applying fixes
+   *    - Rollback considerations if fixes introduce new issues
+   *
+   * 💡 Example Planning Structure:
+   *
+   *     ## Error Analysis
+   *     - Error 1: Missing foreign key field 'userId' in Post model (schema-02-posts.prisma:15)
+   *     - Error 2: Invalid @relation reference to non-existent 'User.posts' (schema-01-users.prisma:8)
+   *
+   *     ## Fix Strategy
+   *     1. Add missing 'userId String' field to Post model
+   *     2. Update @relation mapping in User model to reference correct field
+   *
+   *     ## Detailed Steps
+   *     1. schema-02-posts.prisma: Add 'userId String' after line 14
+   *     2. schema-01-users.prisma: Fix @relation(fields: [userId], references: [id])
+   *
+   *     ## Preservation Notes
+   *     - Keep all existing comments in Post model
+   *     - Maintain User model documentation
+   *     - Preserve existing indexes and constraints
    */
-  files: Record<string, string>;
+  planning: string;
 
   /**
-   * Brief description of what was fixed or modified in the schema files. Should
-   * summarize the changes made to resolve compilation errors.
+   * Original Prisma schema files that contain compilation errors and need
+   * correction.
+   *
+   * 📥 Input Structure:
+   *
+   * - Key: filename (e.g., "schema-01-users.prisma")
+   * - Value: COMPLETE original file content with compilation errors
+   *
+   * 🔍 Expected Input File Types:
+   *
+   * - Domain-specific schema files: "schema-XX-domain.prisma" → Contains complete
+   *   model definitions for specific business domains
+   *
+   * 📝 Input File Content Analysis:
+   *
+   * - All models with their complete field definitions
+   * - All relationships (@relation directives with field mappings)
+   * - All indexes, constraints, and unique identifiers
+   * - All enums and their complete value sets
+   * - All comments and documentation
+   * - Cross-file model references and dependencies
+   *
+   * ⚠️ Input Processing Notes:
+   *
+   * - Files may contain syntax errors, type mismatches, or missing references
+   * - Some models might reference non-existent fields or models
+   * - Relationship mappings might be incorrect or incomplete
+   * - Foreign key fields might be missing or incorrectly defined
+   * - Cross-file dependencies might be broken or circular
    */
-  description: string;
+  files: Record<string, string>;
 }
+
+const MAIN_PRISMA_FILE = StringUtil.trim`
+  generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions", "views"]
+    binaryTargets   = ["native", "linux-musl-arm64-openssl-3.0.x"]
+  }
+
+  datasource db {
+    provider   = "postgresql"
+    url        = env("DATABASE_URL")
+    extensions = []
+  }
+
+  generator markdown {
+    provider = "prisma-markdown"
+    output   = "../docs/ERD.md"
+  }
+`;
