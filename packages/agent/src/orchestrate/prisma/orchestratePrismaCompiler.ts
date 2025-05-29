@@ -12,7 +12,7 @@ import { transformPrismaCompilerHistories } from "./transformPrismaCompilerHisto
 export function orchestratePrismaCompiler<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   files: Record<string, string>,
-  retry: number = 5,
+  retry: number = 8,
 ): Promise<IAutoBePrismaCompilerResult> {
   files["main.prisma"] = MAIN_PRISMA_FILE;
   return step(ctx, files, retry);
