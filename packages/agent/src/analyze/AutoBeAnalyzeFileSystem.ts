@@ -1,3 +1,5 @@
+import { tags } from "typia";
+
 export interface IFile {
   /**
    * Describe briefly why you made this document, and if you have any plans for
@@ -23,13 +25,13 @@ export interface ICreateOrUpdateInput {
    *
    * @title files to create or update
    */
-  files: Array<IFile>;
+  files: Array<IFile> & tags.MinItems<1>;
 }
 
 type Filename = string;
 type FileContent = string;
 
-export interface IPlanning {
+export interface IAutoBeAnalyzeFileSystem {
   /**
    * Generate multiple markdown files. if there is already created files,
    * overwrite it. Generate several markdown files at once. It is recommended
@@ -37,11 +39,7 @@ export interface IPlanning {
    */
   createOrUpdateFiles(input: ICreateOrUpdateInput): Promise<void>;
 
-  /**
-   * Remove markdown file.
-   *
-   * @param input.name Filename to remove
-   */
+  /** Remove markdown file. */
   removeFile(input: Pick<IFile, "filename">): Promise<void>;
 
   /**
@@ -52,22 +50,21 @@ export interface IPlanning {
    * When there is content you are unsure about and need to ask the user a
    * question, abort the process and ask the user directly. The reason for
    * aborting should be included as the content of the question.
-   *
-   * @param input.reason Should contain the reason for the abort.
    */
   abort(input: { reason: string }): "OK";
 }
 
-export class Planning implements IPlanning {
+export class AutoBeAnalyzeFileSystem implements IAutoBeAnalyzeFileSystem {
   constructor(private readonly fileMap: Record<Filename, FileContent> = {}) {}
-
-  async createOrUpdateFiles(input: { files: Array<IFile> }): Promise<void> {
+  async createOrUpdateFiles(input: {
+    files: Array<IFile> & tags.MinItems<1>;
+  }): Promise<void> {
     input.files.forEach((file) => {
       this.fileMap[file.filename] = file.markdown;
     });
   }
 
-  async removeFile(input: { filename: `${string}.md` }): Promise<void> {
+  async removeFile(input: Pick<IFile, "filename">): Promise<void> {
     delete this.fileMap[input.filename];
   }
 

@@ -3,9 +3,9 @@ import { ILlmSchema } from "@samchon/openapi";
 
 import { AutoBeContext } from "../context/AutoBeContext";
 
-export const createReviewerAgent = <Model extends ILlmSchema.Model>(
+export const AutoBeAnalyzeReviewer = <Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
-  input: ICreateReviewerAgentInput,
+  input: AutoBeAnalyzeReviewer.ICreateReviewerAgentInput,
 ) => {
   // All links specified in the markdown are drawn in advance and provided to LLM.
   const markdownFiles = Array.from(
@@ -39,6 +39,11 @@ export const createReviewerAgent = <Model extends ILlmSchema.Model>(
       },
     },
     histories: [
+      ...ctx
+        .histories()
+        .filter(
+          (el) => el.type === "assistantMessage" || el.type === "userMessage",
+        ),
       {
         type: "systemMessage",
         text: [
@@ -114,16 +119,18 @@ export const createReviewerAgent = <Model extends ILlmSchema.Model>(
   return agent;
 };
 
-export interface ICreateReviewerAgentInput {
-  /**
-   * Indicates the initial utterance of the user. Identify the purpose of your
-   * documentation for better review.
-   */
-  query: string;
+export namespace AutoBeAnalyzeReviewer {
+  export interface ICreateReviewerAgentInput {
+    /**
+     * Indicates the initial utterance of the user. Identify the purpose of your
+     * documentation for better review.
+     */
+    query: string;
 
-  /**
-   * Hand over the title and name of the file that has been created so far to
-   * the list.
-   */
-  currentFiles: Record<string, string>;
+    /**
+     * Hand over the title and name of the file that has been created so far to
+     * the list.
+     */
+    currentFiles: Record<string, string>;
+  }
 }

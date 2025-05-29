@@ -6,8 +6,8 @@ import { ILlmSchema } from "@samchon/openapi";
 import { IPointer } from "tstl";
 import { v4 } from "uuid";
 
-import { AnalyzeAgent } from "../analyze/AnalyzeAgent";
-import { createReviewerAgent } from "../analyze/CreateReviewerAgent";
+import { AutoBeAnalyzeAgent } from "../analyze/AnalyzeAgent";
+import { AutoBeAnalyzeReviewer } from "../analyze/AutoBeAnalyzeReviewer";
 import { AutoBeContext } from "../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../context/IAutoBeApplicationProps";
 
@@ -40,7 +40,7 @@ export const orchestrateAnalyze =
       created_at,
     });
 
-    const agent = new AnalyzeAgent(createReviewerAgent, ctx, pointer);
+    const agent = new AutoBeAnalyzeAgent(AutoBeAnalyzeReviewer, ctx, pointer);
     const response = await agent.conversate(
       [
         `Please write a user requirement report.`,
