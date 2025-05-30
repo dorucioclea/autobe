@@ -67,7 +67,7 @@ Maintenance  | -         | Users can request AutoBE to modify the backend applic
 
 ## Playground
 
-https://github.com/user-attachments/assets/92ac438b-66e8-44c5-9304-342581d0edd3
+https://github.com/user-attachments/assets/082a4aad-aad9-454c-8b6d-3bd811543414
 
 [https://stackblitz.com/github/wrtnlabs/autobe-playground-stackblitz](https://stackblitz.com/github/wrtnlabs/autobe-playground-stackblitz?file=md!README.md)
 
