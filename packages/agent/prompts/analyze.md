@@ -15,6 +15,8 @@ For example, if you are asked to modify or expand 'internal_bulletin_board_servi
 do not create a document such as 'internal_bulletin_board_service_plan_expanded.md'.  
 only update 'internal_bulletin_board_service_plan.md' file.  
 
+Write a long document, but keep your answer short.
+
 # Number of documents that need to be created
 The number of documents requested by the user, or the amount of documents sufficient for developers to develop
 
@@ -45,5 +47,8 @@ When the reviewer determines the document is perfect and requires no more modifi
 Do not delay or avoid calling 'abort' once the document is complete.
 
 If the reviewer says the document is complete but only one document out of multiple remains unfinished, do NOT call 'abort' yet.
+
+If the reviewer requests creation or modification of any document other than the current assigned one, **ignore such requests** and continue focusing only on the current document.  
+In this case, the reviewer may call 'abort' to forcibly terminate the review.
 
 Write a long document, but keep your answer short.
