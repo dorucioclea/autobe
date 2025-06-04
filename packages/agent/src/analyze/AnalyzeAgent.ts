@@ -6,8 +6,11 @@ import typia from "typia";
 import { AutoBeSystemPromptConstant } from "../constants/AutoBeSystemPromptConstant";
 import { AutoBeContext } from "../context/AutoBeContext";
 import { assertSchemaModel } from "../context/assertSchemaModel";
-import { createReviewerAgent } from "./CreateReviewerAgent";
-import { IPlanning, Planning } from "./Planning";
+import {
+  AutoBeAnalyzeFileSystem,
+  IAutoBeAnalyzeFileSystem,
+} from "./AutoBeAnalyzeFileSystem";
+import { AutoBeAnalyzeReviewer } from "./AutoBeAnalyzeReviewer";
 
 type Filename = string;
 type FileContent = string;
@@ -17,7 +20,7 @@ export class AnalyzeAgent<Model extends ILlmSchema.Model> {
   private readonly fileMap: Record<Filename, FileContent> = {};
 
   constructor(
-    private readonly createReviewerAgentFn: typeof createReviewerAgent,
+    private readonly createReviewerAgentFn: typeof AutoBeAnalyzeReviewer,
     private readonly ctx: AutoBeContext<Model>,
     private readonly pointer: IPointer<{
       files: Record<Filename, FileContent>;
@@ -27,7 +30,7 @@ export class AnalyzeAgent<Model extends ILlmSchema.Model> {
 
     const controller = createController<Model>({
       model: ctx.model,
-      execute: new Planning(this.fileMap),
+      execute: new AutoBeAnalyzeFileSystem(this.fileMap),
       build: async (files: Record<Filename, FileContent>) => {
         this.pointer.value = { files };
       },
@@ -93,11 +96,10 @@ export class AnalyzeAgent<Model extends ILlmSchema.Model> {
         return lastMessage.text;
       }
 
-      const currentFiles = this.fileMap;
-
+      const currentFiles = JSON.stringify(this.fileMap);
       const reviewer = this.createReviewerAgentFn(this.ctx, {
         query: content,
-        currentFiles,
+        files: currentFiles,
       });
 
       const [review] = await reviewer.conversate(lastMessage.text);
@@ -130,7 +132,7 @@ export class AnalyzeAgent<Model extends ILlmSchema.Model> {
 
 function createController<Model extends ILlmSchema.Model>(props: {
   model: Model;
-  execute: Planning;
+  execute: AutoBeAnalyzeFileSystem;
   build: (input: Record<Filename, FileContent>) => void;
 }): IAgenticaController.IClass<Model> {
   assertSchemaModel(props.model);
@@ -139,7 +141,7 @@ function createController<Model extends ILlmSchema.Model>(props: {
   ] as unknown as ILlmApplication<Model>;
   return {
     protocol: "class",
-    name: "Planning",
+    name: "AutoBeAnalyzeFileSystem",
     application,
     // execute: props.execute,
     execute: {
@@ -158,16 +160,24 @@ function createController<Model extends ILlmSchema.Model>(props: {
         props.build(props.execute.allFiles());
         return response;
       },
-    } satisfies IPlanning,
+    } satisfies IAutoBeAnalyzeFileSystem,
   };
 }
 
-const claude = typia.llm.application<Planning, "claude", { reference: true }>();
+const claude = typia.llm.application<
+  AutoBeAnalyzeFileSystem,
+  "claude",
+  { reference: true }
+>();
 const collection = {
-  chatgpt: typia.llm.application<Planning, "chatgpt", { reference: true }>(),
+  chatgpt: typia.llm.application<
+    AutoBeAnalyzeFileSystem,
+    "chatgpt",
+    { reference: true }
+  >(),
   claude,
   llama: claude,
   deepseek: claude,
   "3.1": claude,
-  "3.0": typia.llm.application<Planning, "3.0">(),
+  "3.0": typia.llm.application<AutoBeAnalyzeFileSystem, "3.0">(),
 };

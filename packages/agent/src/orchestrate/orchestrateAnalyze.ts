@@ -137,7 +137,7 @@ export const orchestrateAnalyze =
             "",
             `Among the various documents, the part you decided to take care of is as follows.: ${filename}`,
             `Only write this document named '${filename}'.`,
-            "Never write other docuements.",
+            "Never write other documents.",
             "",
             "```md",
             JSON.stringify(userPlanningRequirements),
