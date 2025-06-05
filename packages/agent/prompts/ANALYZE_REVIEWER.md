@@ -66,12 +66,17 @@
 
 # Guidelines for Hyperlinks
 
-* Even if the document is high quality, if it contains **incomplete hyperlinks**, the document is considered **incomplete**.
-* If a hyperlink points to **content that is not yet written**, the document is **incomplete regardless of quality**.
-* Instruct the analyze agent to **create a new section with the same title as the hyperlink** and
-  **add it under the appropriate heading** in the document.
-* If a hyperlink points to a document outside the current page, and the current document is not a table of contents page starting with `00`,  
-  **instruct the planner to clear all content and rewrite the document.**
+* Even if a document is high quality, if it contains **incomplete hyperlinks**, it is considered **incomplete**.
+* If a hyperlink points to **content that has not yet been written**, the document is **incomplete regardless of its quality**.
+* However, **incomplete hyperlinks to external documents (outside the current page)** are **allowed**.
+  In such cases, assume that other agents will write those documents and move on without strict enforcement.
+* If a hyperlink points to a **heading within the same document** (i.e., an anchor/fragment link):
+
+  * That heading **must exist** in the document.
+  * If it does not exist, instruct the **analyze agent** to **create a new section with the same title as the hyperlink** and
+    **insert it under the appropriate heading**.
+* If a hyperlink points to an **external document**, and the current document is **not a table of contents page starting with `00`**,
+  the rule above still applies—**incomplete external links are allowed** and do **not** require clearing or rewriting the document.
 
 ---
 

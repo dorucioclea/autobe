@@ -49,6 +49,12 @@ export interface IAutoBeApplicationProps {
    * document, before or after the document, or there should be no more than N
    * headings. The entire content of the document will have requirements, such
    * as maintaining informal or formal language.
+   *
+   * # Limiting the volume of a document
+   *
+   * However, do not go beyond the volume guide; each agent only needs to create
+   * one page because the agent receiving this document will be created as many
+   * as the number of pages.
    */
   userPlanningRequirements?: string;
 }
