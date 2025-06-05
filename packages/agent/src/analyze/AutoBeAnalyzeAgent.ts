@@ -134,7 +134,7 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
       });
 
       const filenames = Object.keys(this.fileMap).join(",");
-      const command = `Request for review of these files.: ${filenames}`;
+      const command = `Please proceed with the review of these files only.: ${filenames}`;
       const [review] = await reviewer.conversate(command);
 
       if (review) {
@@ -152,7 +152,7 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
               message: `THIS IS ANSWER OF REVIEW AGENT. FOLLOW THIS INSTRUCTIONS. AND DON\'T REQUEST ANYTHING.`,
               review: review.text,
             }),
-            retry--,
+            retry - 1,
           );
         }
       }
