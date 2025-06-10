@@ -7,14 +7,14 @@ import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import typia from "typia";
 import { v4 } from "uuid";
 
-import { AutoBeAnalyzeAgent } from "../../analyze/AutoBeAnalyzeAgent";
-import { IFile } from "../../analyze/AutoBeAnalyzeFileSystem";
-import { AutoBeAnalyzePointer } from "../../analyze/AutoBeAnalyzePointer";
-import { AutoBeAnalyzeReviewer } from "../../analyze/AutoBeAnalyzeReviewer";
 import { AutoBeSystemPromptConstant } from "../../constants/AutoBeSystemPromptConstant";
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
+import { AutoBeAnalyzeAgent } from "./AutoBeAnalyzeAgent";
+import { IFile } from "./AutoBeAnalyzeFileSystem";
+import { AutoBeAnalyzePointer } from "./AutoBeAnalyzePointer";
+import { AutoBeAnalyzeReviewer } from "./AutoBeAnalyzeReviewer";
 
 /** @todo Kakasoo */
 export const orchestrateAnalyze =

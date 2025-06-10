@@ -2,9 +2,9 @@ import { IAgenticaController, MicroAgentica } from "@agentica/core";
 import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import typia from "typia";
 
-import { AutoBeSystemPromptConstant } from "../constants/AutoBeSystemPromptConstant";
-import { AutoBeContext } from "../context/AutoBeContext";
-import { assertSchemaModel } from "../context/assertSchemaModel";
+import { AutoBeSystemPromptConstant } from "../../constants/AutoBeSystemPromptConstant";
+import { AutoBeContext } from "../../context/AutoBeContext";
+import { assertSchemaModel } from "../../context/assertSchemaModel";
 import {
   AutoBeAnalyzeFileSystem,
   IAutoBeAnalyzeFileSystem,
