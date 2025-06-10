@@ -1,6 +1,5 @@
 import { IAgenticaController, MicroAgentica } from "@agentica/core";
 import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
-import { IPointer } from "tstl";
 import typia from "typia";
 
 import { AutoBeSystemPromptConstant } from "../constants/AutoBeSystemPromptConstant";
@@ -10,29 +9,28 @@ import {
   AutoBeAnalyzeFileSystem,
   IAutoBeAnalyzeFileSystem,
 } from "./AutoBeAnalyzeFileSystem";
+import {
+  AutoBEAnalyzeFileMap,
+  AutoBeAnalyzePointer,
+} from "./AutoBeAnalyzePointer";
 import { AutoBeAnalyzeReviewer } from "./AutoBeAnalyzeReviewer";
-
-type Filename = string;
-type FileContent = string;
 
 export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
   private readonly createAnalyzeAgent: () => MicroAgentica<Model>;
-  private readonly fileMap: Record<Filename, FileContent> = {};
+  private readonly fileMap: AutoBEAnalyzeFileMap = {};
 
   constructor(
     private readonly createReviewerAgentFn: typeof AutoBeAnalyzeReviewer,
     private readonly ctx: AutoBeContext<Model>,
-    private readonly pointer: IPointer<{
-      files: Record<Filename, FileContent>;
-    } | null>,
-    filenames: string[],
+    private readonly pointer: AutoBeAnalyzePointer,
+    private readonly filenames: string[],
   ) {
     assertSchemaModel(ctx.model);
 
     const controller = createController<Model>({
       model: ctx.model,
       execute: new AutoBeAnalyzeFileSystem(this.fileMap),
-      build: async (files: Record<Filename, FileContent>) => {
+      build: async (files: AutoBEAnalyzeFileMap) => {
         this.pointer.value = { files };
       },
     });
@@ -72,7 +70,7 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
             text: [
               "The following is the name of the entire file.",
               "Use it to build a table of contents.",
-              filenames.map((filename) => `- ${filename}`),
+              this.filenames.map((filename) => `- ${filename}`),
               "",
               "However, do not touch other than the file you have to create.",
             ].join("\n"),
@@ -167,7 +165,7 @@ export class AutoBeAnalyzeAgent<Model extends ILlmSchema.Model> {
 function createController<Model extends ILlmSchema.Model>(props: {
   model: Model;
   execute: AutoBeAnalyzeFileSystem;
-  build: (input: Record<Filename, FileContent>) => void;
+  build: (input: AutoBEAnalyzeFileMap) => void;
 }): IAgenticaController.IClass<Model> {
   assertSchemaModel(props.model);
   const application: ILlmApplication<Model> = collection[
