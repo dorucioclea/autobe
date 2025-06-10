@@ -1,8 +1,8 @@
 import { MicroAgentica } from "@agentica/core";
 import { ILlmSchema } from "@samchon/openapi";
 
-import { AutoBeSystemPromptConstant } from "../constants/AutoBeSystemPromptConstant";
-import { AutoBeContext } from "../context/AutoBeContext";
+import { AutoBeSystemPromptConstant } from "../../constants/AutoBeSystemPromptConstant";
+import { AutoBeContext } from "../../context/AutoBeContext";
 
 export const AutoBeAnalyzeReviewer = <Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
