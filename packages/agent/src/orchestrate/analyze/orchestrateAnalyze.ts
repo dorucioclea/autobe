@@ -219,8 +219,10 @@ export interface IDeterminingInput {
    * attached to the name of all documents. This value would then be passed to
    * other agents as well, in the form of bbs_article, bbs_article_snapshot, and
    * bbs_comments in the table name. Interfaces will likewise be used in
-   * interfaces and tests because they originate from the name of prisma
-   * scheme.
+   * interfaces and tests because they originate from the name of prisma scheme.
+   * Do not use prefixes that are related to the technology stack (e.g., ts_,
+   * api_, react_) or unnatural prefixes that typically wouldn’t appear in table
+   * names or domain models (e.g., zz_, my_, dev_).
    *
    * @title Prefix
    */
