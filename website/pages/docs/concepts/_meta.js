@@ -1,5 +1,5 @@
 export default {
   waterfall: "Waterfall Model",
-  compiler: "Compiler Driven Develop.",
+  compiler: "Compiler Feedback",
   openapi: "OpenAPI Specification",
 };
