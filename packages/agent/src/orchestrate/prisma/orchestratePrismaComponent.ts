@@ -4,10 +4,7 @@ import {
   MicroAgentica,
   MicroAgenticaHistory,
 } from "@agentica/core";
-import {
-  AutoBeAnalyzeHistory,
-  AutoBeAssistantMessageHistory,
-} from "@autobe/interface";
+import { AutoBeAssistantMessageHistory } from "@autobe/interface";
 import { AutoBePrismaComponentsEvent } from "@autobe/interface/src/events/AutoBePrismaComponentsEvent";
 import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import { IPointer } from "tstl";
@@ -29,15 +26,7 @@ export async function orchestratePrismaComponents<
     value: null,
   };
 
-  const prefix =
-    ctx
-      .histories()
-      .find<AutoBeAnalyzeHistory>((value): value is AutoBeAnalyzeHistory => {
-        return (
-          value.type === "analyze" &&
-          value.step === (ctx.state().analyze?.step ?? 0)
-        );
-      })?.prefix ?? null;
+  const prefix = ctx.state().analyze?.prefix ?? null;
 
   const agentica: MicroAgentica<Model> = new MicroAgentica({
     model: ctx.model,
