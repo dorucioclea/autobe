@@ -88,6 +88,7 @@ export const transformInterfaceHistories = (
         "## Prefix",
         "",
         `* Prefix provided by the user: ${state.analyze?.prefix ?? null}`,
+        `* When defining TypeScript interfaces, the interface name must be in PascalCase. The property names, however, do not need to follow this convention.`,
         "",
         "The user wants all TypeScript identifiers (such as interfaces, types, and functions) to start with the prefix provided below.  ",
         "If the prefix is `null`, it should be ignored.  ",
