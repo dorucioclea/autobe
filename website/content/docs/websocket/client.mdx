@@ -1,0 +1,80 @@
+---
+title: AutoBE > Guide Documents > WebSocket Protocol > Client Application
+---
+import { Tabs } from "nextra/components";
+
+import RemoteSource from "../../../components/RemoteSource";
+import AutoBeRpcNodeJsMainSnippet from "../../../template/snippets/AutoBeRpcNodeJsMainSnippet.mdx";
+import AutoBeRpcClientMainSnippet from "../../../template/snippets/AutoBeRpcClientMainSnippet.mdx";
+import AutoBeRpcClientSetupSnippet from "../../../template/snippets/AutoBeRpcClientSetupSnippet.mdx";
+
+## Setup
+<AutoBeRpcClientSetupSnippet />
+
+You can start WebSocket client application by installing `@autobe/rpc` and [`tgrid`](https://tgrid.com) packages.
+
+`tgrid` is a TypeScript based RPC (Remote Procedure Call) framework supporting WebSocket protocol, and `@autobe/rpc` is an wrapper module of [`@autobe/core`](/docs/core) following the WebSocket RPC.
+
+
+
+
+## Development
+<Tabs items={[
+  "Main Program", 
+  <code>IAutoBeRpcListener</code>,
+  <code>IAutoBeRpcService</code>,
+]}>
+  <Tabs.Tab>
+    <AutoBeRpcClientMainSnippet />
+  </Tabs.Tab>
+  <Tabs.Tab>
+    <RemoteSource
+      url="https://raw.githubusercontent.com/wrtnlabs/autobe/refs/heads/main/packages/interface/src/rpc/IAutoBeRpcService.ts"
+      filename="@autobe/interface/IAutoBeRpcService"
+      showLineNumbers />
+  </Tabs.Tab>
+  <Tabs.Tab>
+    <RemoteSource
+      url="https://raw.githubusercontent.com/wrtnlabs/autobe/refs/heads/main/packages/interface/src/rpc/IAutoBeRpcListener.ts"
+      filename="@autobe/interface/IAutoBeRpcListener"
+      showLineNumbers />
+  </Tabs.Tab>
+</Tabs>
+
+You can develop WebSocket client application like above.
+
+At first, create an `WebSocketConnector` instance with `IAutoBeRpcListener` and `IAutoBeRpcService` type specifications, and constructing the `IAutoBeRpcListener` typed instance to provide event handlers. The `IAutoBeRpcListener` typed would be provided to the WebSocket server, so that the server will call the `IAutoBeRpcListener` functions remotely (Remote Procedure Call).
+
+And then connect to the server with `WebSocketConnector.connect()` method specifying the server's WebSocket address. If server accepts the connection, you can go to the next step. Otherwise server rejects your connection, an exception would be thrown.
+
+After the connection, you can start conversation by calling the server's functions remotely (Remote Procedure Call) to the `Driver<IAutoBeRpcService>` typed instance obtained from the `WebSocketConnector.getDriver()` method. Whenever you call some functions of the `Driver<IAutoBeRpcService>` instance, the server will call the corresponding functions of the `IAutoBeRpcListener` instance.
+
+Note that, WebSocket protocol is different with HTTP protocol. The connection would be kept until you call the `WebSocketConnector.close()` method manually. So, if your business has been completed, please don't forget to closing the connection.
+
+
+
+## Event Listener
+<Tabs items={[
+  'Client Application', 
+  'Server Application',
+  <code>IAutoBeRpcListener</code>
+]}>
+  <Tabs.Tab>
+    <AutoBeRpcClientMainSnippet />
+  </Tabs.Tab>
+  <Tabs.Tab>
+    <AutoBeRpcNodeJsMainSnippet />
+  </Tabs.Tab>
+  <Tabs.Tab>
+    <RemoteSource
+      url="https://raw.githubusercontent.com/wrtnlabs/autobe/refs/heads/main/packages/rpc/src/IAutoBeRpcListener.ts"
+      filename="@autobe/rpc/IAutoBeRpcListener"
+      showLineNumbers />
+  </Tabs.Tab>
+</Tabs>
+
+Looking at the `IAutoBeRpcListener` interface provided from client to server for event listening, you can find that `assistantMessage` and `{analyze|prisma|interface|test|realize}Complete` functions are mandatory, and the other functions are all optional. You have to implement these functions to handle the events from the server.
+
+The other optional functions, they are not mandatory, but recommended to implement. They are used to track the progress of the server's work, so that you can show the progress to the user.
+
+For example, when the `@autobe` server is on the `prisma` phase, the progress would be started from the `prismaStart` function, and then `prismaComponents`, `prismaSchemas`, `prismaComplete` functions would be called in order. During the `prisma` phase, if validation or compilation errors are occurred, the `prismaValidate` or `prismaCorrect` function would be called.
