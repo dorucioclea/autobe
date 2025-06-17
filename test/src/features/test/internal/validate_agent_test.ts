@@ -15,6 +15,7 @@ export const validate_agent_test = async (owner: string, project: string) => {
     console.log("testStart");
     events.push(event);
   });
+
   agent.on("testScenario", (event) => {
     console.log("testScenario");
     events.push(event);
