@@ -12,7 +12,7 @@ import { TestGlobal } from "../../../TestGlobal";
 import { prepare_agent_analyze } from "./prepare_agent_analyze";
 
 export const validate_agent_analyze = async (
-  owner: "samchon",
+  owner: "samchon" | "kakasoo",
   project: "bbs-backend" | "shopping-backend" | "sns-backend",
 ) => {
   if (TestGlobal.env.CHATGPT_API_KEY === undefined) return false;
