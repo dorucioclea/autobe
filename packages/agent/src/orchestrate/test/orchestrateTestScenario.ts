@@ -106,12 +106,12 @@ async function process<Model extends ILlmSchema.Model>(
     model: ctx.model,
     vendor: ctx.vendor,
     config: {
-      ...(ctx.config ?? { locale: "en-US" }),
-      systemPrompt: {
-        describe: () => {
-          return "Answer only 'completion' or 'failure'.";
+      ...(ctx.config ?? {
+        locale: "en-US",
+        executor: {
+          describe: null,
         },
-      },
+      }),
     },
     tokenUsage: ctx.usage(),
     histories: [...transformTestScenarioHistories(ctx.state())],

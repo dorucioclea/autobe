@@ -24,10 +24,11 @@ export namespace IAutoBeTestPlan {
    */
   export interface IPlan {
     /**
-     * A detailed natural language description of how this API endpoint should
-     * be tested. This should include both successful and failure scenarios,
-     * business rule validations, edge cases, and any sequence of steps
-     * necessary to perform the test.
+     * A detailed natural language description of how this API endpoint should be
+     * tested. This should include both successful and failure scenarios, business
+     * rule validations, edge cases, and any sequence of steps necessary to perform
+     * the test. A subsequent agent will use this draft to generate multiple test
+     * scenarios.
      */
     draft: string;
 
