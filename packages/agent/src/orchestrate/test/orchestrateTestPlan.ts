@@ -58,7 +58,7 @@ export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
 
   return {
     type: "testPlan",
-    step: ctx.state().analyze ?? 0,
+    step: ctx.state().analyze?.step ?? 0,
     plans: pointer.value,
     created_at: new Date().toISOString(),
   } as AutoBeTestPlanEvent;
