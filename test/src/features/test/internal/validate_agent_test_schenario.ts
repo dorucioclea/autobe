@@ -24,7 +24,18 @@ export const validate_agent_test_scenario = async (
     events.push(event);
   });
 
-  const result = await orchestrateTestScenario(agent.getContext());
+  const result = await orchestrateTestScenario(agent.getContext(), [
+    {
+      method: "get",
+      path: "products/{id}",
+      plans: [
+        {
+          draft: "Just getting detailed about product of that ID.",
+          dependsOn: [],
+        },
+      ],
+    },
+  ]);
   typia.assert(result);
   return result;
 };

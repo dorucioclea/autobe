@@ -26,6 +26,5 @@ export const validate_agent_test_plan = async (
 
   const result = await orchestrateTestPlan(agent.getContext());
   typia.assert(result);
-  console.log(JSON.stringify(result, null, 2));
   return result;
 };

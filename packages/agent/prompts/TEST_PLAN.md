@@ -31,27 +31,51 @@ You will receive an array of `Operation` objects structured like this:
 
 ## Output Format
 
-For each operation, generate a test draft object in the following format:
+Your output must be an array of grouped test plans, using the following structure:
 
 ```ts
-{
-  method: "post",
-  path: "/shopping/products",
-  draft: "Test product creation by submitting two requests with the same product.pid. Confirm that the second request returns a uniqueness constraint error.",
-  dependsOn: [
-    {
-      method: "post",
-      path: "/shopping/categories",
-      purpose: "Create a category beforehand so the product can reference it."
-    },
-    {
-      method: "get",
-      path: "/users/me",
-      purpose: "Verify a valid user session and obtain user context for the test."
-    }
-  ]
-}
+[
+  {
+    method: "post",
+    path: "/shopping/products",
+    plans: [
+      {
+        draft: "Test product creation by submitting two requests with the same product.pid. Confirm that the second request returns a uniqueness constraint error.",
+        dependsOn: [
+          {
+            method: "post",
+            path: "/shopping/categories",
+            purpose: "Create a category beforehand so the product can reference it."
+          },
+          {
+            method: "get",
+            path: "/users/me",
+            purpose: "Verify a valid user session and obtain user context for the test."
+          }
+        ]
+      },
+      {
+        draft: "Verify that missing required fields like 'name' or 'price' trigger appropriate validation errors.",
+        dependsOn: []
+      }
+    ]
+  },
+  {
+    method: "patch",
+    path: "/shopping/products/{productId}",
+    plans: [
+      {
+        draft: "Attempt to update a product with an invalid productId and expect a 404 error.",
+        dependsOn: []
+      }
+    ]
+  }
+]
 ```
+
+- Each top-level object is a **plan group** for a single unique endpoint (`method + path`).
+- The `plans` array contains **one or more test drafts** for that endpoint.
+- Each `draft` may list its **prerequisite API calls** in the `dependsOn` array, which includes `method`, `path`, and a `purpose` for context.
 
 ---
 

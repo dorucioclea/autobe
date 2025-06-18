@@ -1,6 +1,12 @@
 import { AutoBeOpenApi } from "../openapi";
 
 export namespace IAutoBeTestPlan {
+  /** Test plans grouped by endpoint */
+  export interface IPlanGroup extends AutoBeOpenApi.IEndpoint {
+    /** Array of test plans. */
+    plans: IAutoBeTestPlan.IPlan[];
+  }
+
   /**
    * Represents a test plan for a single API operation.
    *
@@ -16,7 +22,7 @@ export namespace IAutoBeTestPlan {
    * This structure is intended to help organize test specifications for complex
    * workflows and ensure that all prerequisites are explicitly declared.
    */
-  export interface IPlan extends AutoBeOpenApi.IEndpoint {
+  export interface IPlan {
     /**
      * A detailed natural language description of how this API endpoint should
      * be tested. This should include both successful and failure scenarios,

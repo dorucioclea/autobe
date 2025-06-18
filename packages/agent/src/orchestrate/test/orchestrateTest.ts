@@ -10,6 +10,7 @@ import { v4 } from "uuid";
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
 import { orchestrateTestCorrect } from "./orchestrateTestCorrect";
+import { orchestrateTestPlan } from "./orchestrateTestPlan";
 import { orchestrateTestProgress } from "./orchestrateTestProgress";
 import { orchestrateTestScenario } from "./orchestrateTestScenario";
 
@@ -44,9 +45,12 @@ export const orchestrateTest =
       return history;
     }
 
+    // PLAN
+    const { planGroups } = await orchestrateTestPlan(ctx);
+
     // SCENARIOS
     const scenarioEvent: AutoBeTestScenarioEvent =
-      await orchestrateTestScenario(ctx);
+      await orchestrateTestScenario(ctx, planGroups);
 
     const scenarios = scenarioEvent.scenarios
       .map((scenario) => {

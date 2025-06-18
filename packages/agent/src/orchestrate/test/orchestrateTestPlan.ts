@@ -26,10 +26,9 @@ export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
     );
   }
 
-  const pointer: IPointer<IAutoBeTestPlan.IPlan[]> = {
+  const pointer: IPointer<IAutoBeTestPlan.IPlanGroup[]> = {
     value: [],
   };
-
   const agentica: MicroAgentica<Model> = new MicroAgentica({
     model: ctx.model,
     vendor: ctx.vendor,
@@ -44,7 +43,8 @@ export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
       createApplication({
         model: ctx.model,
         build: (next) => {
-          pointer.value = next.plans;
+          pointer.value ??= [];
+          pointer.value.push(...next.planGroups);
         },
       }),
     ],
@@ -59,7 +59,7 @@ export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
   return {
     type: "testPlan",
     step: ctx.state().analyze?.step ?? 0,
-    plans: pointer.value,
+    planGroups: pointer.value,
     created_at: new Date().toISOString(),
   } as AutoBeTestPlanEvent;
 }
@@ -135,6 +135,6 @@ interface IApplication {
 }
 
 interface IMakePlanProps {
-  /** Array of test plans. */
-  plans: IAutoBeTestPlan.IPlan[];
+  /** Array of test plan group. */
+  planGroups: IAutoBeTestPlan.IPlanGroup[];
 }
