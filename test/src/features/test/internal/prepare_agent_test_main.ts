@@ -52,7 +52,7 @@ export const prepare_agent_test_main = async (
         apiKey: TestGlobal.env.CHATGPT_API_KEY,
         baseURL: "https://openrouter.ai/api/v1",
       }),
-      model: "openai/gpt-4.1",
+      model: "gpt-4.1",
       semaphore: 16,
     },
     compiler: new AutoBeCompiler(),
