@@ -77,6 +77,10 @@ const createHistoryProperties = (operations: AutoBeOpenApi.IOperation[]) => [
     type: "systemMessage",
     text: [
       "Below are the full operations. Please refer to this.",
+      "Your role is to draft all test cases for each given Operation.",
+      "It is also permissible to write multiple test codes on a single endpoint.",
+      "However, rather than meaningless tests, business logic tests should be written and an E2E test situation should be assumed.",
+      "",
       "```json",
       JSON.stringify(operations),
       "```",
