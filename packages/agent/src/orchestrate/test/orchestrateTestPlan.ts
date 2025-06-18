@@ -2,6 +2,7 @@ import { IAgenticaHistoryJson, MicroAgentica } from "@agentica/core";
 import { ILlmSchema } from "@samchon/openapi";
 import { v4 } from "uuid";
 
+import { AutoBeSystemPromptConstant } from "../../constants/AutoBeSystemPromptConstant";
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { enforceToolCall } from "../../utils/enforceToolCall";
 
@@ -29,7 +30,7 @@ export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
   });
   enforceToolCall(agentica);
 
-  const response = await agentica.conversate("");
+  const response = await agentica.conversate(`create test scenarioes.`);
 }
 
 const createHistoryProperties = () =>
@@ -37,6 +38,5 @@ const createHistoryProperties = () =>
     id: v4(),
     created_at: new Date().toISOString(),
     type: "systemMessage",
-    text: "",
-    // text: AutoBeSystemPromptConstant.TEST_PLAN,
+    text: AutoBeSystemPromptConstant.TEST_PLAN,
   }) satisfies IAgenticaHistoryJson.ISystemMessage;
