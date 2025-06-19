@@ -79,6 +79,49 @@ Your output must be an array of grouped test plans, using the following structur
 
 ---
 
+### ✅ **Uniqueness Rule**
+
+> ⚠️ **Each `{method} + {path}` combination must appear only once** in the output array.
+> This means **you must not create multiple plan groups with the same HTTP method and path.**
+
+* Treat each `{method} + {path}` pair as a **unique test identifier**.
+* All test plans (`plans`) related to the same endpoint must be **grouped under a single PlanGroup object**.
+* Duplicating PlanGroups for the same endpoint will lead to invalid output.
+
+**✅ Good:**
+
+```ts
+[
+  {
+    method: "patch",
+    path: "/blog/posts/{postId}",
+    plans: [
+      { draft: "...", dependsOn: [...] },
+      { draft: "...", dependsOn: [...] }
+    ]
+  }
+]
+```
+
+**❌ Bad:**
+
+```ts
+[
+  {
+    method: "patch",
+    path: "/blog/posts/{postId}",
+    plans: [ ... ]
+  },
+  {
+    method: "patch",
+    path: "/blog/posts/{postId}", // Duplicate! Not allowed.
+    plans: [ ... ]
+  }
+]
+```
+
+---
+
 ## Writing Guidelines
 
 1. **draft**:
