@@ -38,7 +38,8 @@ export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
         describe: null,
       },
     },
-    histories: createHistoryProperties(operations),
+    tokenUsage: ctx.usage(),
+    histories: createHistoryProperties(ops, include, exclude),
     controllers: [
       createApplication({
         model: ctx.model,
