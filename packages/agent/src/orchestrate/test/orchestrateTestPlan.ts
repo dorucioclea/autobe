@@ -14,6 +14,7 @@ import { v4 } from "uuid";
 import { AutoBeSystemPromptConstant } from "../../constants/AutoBeSystemPromptConstant";
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
+import { divideArray } from "../../utils/divideArray";
 import { enforceToolCall } from "../../utils/enforceToolCall";
 
 export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
@@ -30,7 +31,14 @@ export async function orchestrateTestPlan<Model extends ILlmSchema.Model>(
   let include: AutoBeOpenApi.IOperation[] = Array.from(operations);
 
   do {
-    exclude.push(...(await execute(ctx, operations, include, exclude)));
+    const matrix = divideArray({ array: include, capacity: 30 });
+
+    await Promise.all(
+      matrix.map(async (_include) => {
+        exclude.push(...(await execute(ctx, operations, _include, exclude)));
+      }),
+    );
+
     include = include.filter((op) => {
       if (
         exclude.some((pg) => pg.method === op.method && pg.path === op.path)

@@ -7,8 +7,8 @@ import { TestGlobal } from "../../../TestGlobal";
 import { prepare_agent_test } from "./prepare_agent_test";
 
 export const validate_agent_test_plan = async (
-  _owner: string,
-  project: "bbs-backend",
+  owner: "samchon" | "kakasoo" | "michael",
+  project: "bbs-backend" | "shopping-backend",
 ) => {
   if (TestGlobal.env.CHATGPT_API_KEY === undefined) return false;
 
@@ -29,7 +29,7 @@ export const validate_agent_test_plan = async (
   typia.assert(result);
 
   await FileSystemIterator.save({
-    root: `${TestGlobal.ROOT}/results/${_owner}/${project}/test/plan`,
+    root: `${TestGlobal.ROOT}/results/${owner}/${project}/test/plan`,
     files: {
       "groups.json": JSON.stringify(result.planGroups, null, 2),
       "logs/history.json": JSON.stringify(agent.getHistories(), null, 2),
