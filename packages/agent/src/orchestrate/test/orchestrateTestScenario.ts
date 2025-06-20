@@ -1,6 +1,7 @@
 import { IAgenticaController, MicroAgentica } from "@agentica/core";
 import { AutoBeOpenApi, AutoBeTest } from "@autobe/interface";
 import { AutoBeTestScenarioEvent } from "@autobe/interface/src/events/AutoBeTestScenarioEvent";
+import { IAutoBeTestPlan } from "@autobe/interface/src/test/AutoBeTestPlan";
 import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import { HashMap, HashSet, IPointer } from "tstl";
 import typia from "typia";
@@ -14,32 +15,11 @@ import { transformTestScenarioHistories } from "./transformTestScenarioHistories
 
 export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
+  planGroups: IAutoBeTestPlan.IPlanGroup[],
   capacity: number = 4,
 ): Promise<AutoBeTestScenarioEvent> {
-  const files = Object.entries(ctx.state().interface?.files ?? {})
-    .filter(([filename]) => {
-      return filename.startsWith("test/features/api/");
-    })
-    .reduce<Record<string, string>>((acc, [filename, content]) => {
-      return Object.assign(acc, { [filename]: content });
-    }, {});
-
-  const operations = ctx.state().interface?.document.operations ?? [];
-  const endpoints: Omit<AutoBeOpenApi.IOperation, "specification">[] =
-    operations.map((it) => {
-      return {
-        method: it.method,
-        path: it.path,
-        summary: it.summary,
-        description: it.description,
-        parameters: it.parameters,
-        requestBody: it.requestBody,
-        responseBody: it.responseBody,
-      };
-    });
-
-  const matrix: AutoBeOpenApi.IEndpoint[][] = divideArray({
-    array: endpoints,
+  const matrix: IAutoBeTestPlan.IPlanGroup[][] = divideArray({
+    array: planGroups,
     capacity,
   });
   const start: Date = new Date();
@@ -51,8 +31,6 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
       const rows: AutoBeTest.IScenario[] = await divideAndConquer(
         ctx,
         e,
-        endpoints,
-        files,
         3,
         (count) => {
           completed += count;
@@ -83,8 +61,6 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
 async function divideAndConquer<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   endpoints: AutoBeOpenApi.IEndpoint[],
-  allEndpoints: AutoBeOpenApi.IEndpoint[],
-  files: Record<string, string>,
   retry: number,
   progress: (completed: number) => void,
 ): Promise<AutoBeTest.IScenario[]> {
@@ -105,8 +81,6 @@ async function divideAndConquer<Model extends ILlmSchema.Model>(
     const newbie: AutoBeTest.IScenario[] = await process(
       ctx,
       Array.from(remained),
-      allEndpoints,
-      files,
     );
     for (const item of newbie) {
       scenarios.set(item.endpoint, item.scenarios);
@@ -123,8 +97,6 @@ async function divideAndConquer<Model extends ILlmSchema.Model>(
 async function process<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   endpoints: AutoBeOpenApi.IEndpoint[],
-  allEndpoints: AutoBeOpenApi.IEndpoint[],
-  files: Record<string, string>,
 ): Promise<AutoBeTest.IScenario[]> {
   const pointer: IPointer<AutoBeTest.IScenario[] | null> = {
     value: null,
@@ -134,17 +106,15 @@ async function process<Model extends ILlmSchema.Model>(
     model: ctx.model,
     vendor: ctx.vendor,
     config: {
-      ...(ctx.config ?? { locale: "en-US" }),
-      systemPrompt: {
-        describe: () => {
-          return "Answer only 'completion' or 'failure'.";
+      ...(ctx.config ?? {
+        locale: "en-US",
+        executor: {
+          describe: null,
         },
-      },
+      }),
     },
     tokenUsage: ctx.usage(),
-    histories: [
-      ...transformTestScenarioHistories(ctx.state(), allEndpoints, files),
-    ],
+    histories: [...transformTestScenarioHistories(ctx.state())],
     controllers: [
       createApplication({
         model: ctx.model,
