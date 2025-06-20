@@ -89,7 +89,7 @@ const execute = async <Model extends ILlmSchema.Model>(
   });
   enforceToolCall(agentica);
 
-  await agentica.conversate(`create test scenarioes.`);
+  await agentica.conversate(`create test scenarios.`);
   if (pointer.value.length === 0) {
     throw new Error("Failed to create test plans.");
   }
