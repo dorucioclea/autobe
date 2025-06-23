@@ -46,9 +46,9 @@ export class AutoBeTypeScriptCompiler implements IAutoBeTypeScriptCompiler {
         target: ts.ScriptTarget.ESNext,
         module: ts.ModuleKind.CommonJS,
         downlevelIteration: true,
+        baseUrl: "./",
         paths: {
           [alias]: ["./src/api"],
-          [`${alias}/lib/`]: ["./src/api"],
           [`${alias}/lib/*`]: ["./src/api/*"],
         },
         strict: true,
