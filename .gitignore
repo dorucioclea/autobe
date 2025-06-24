@@ -4,7 +4,7 @@ node_modules/
 playground-result/
 
 packages/*/README.md
-internals/*/README.md
+repositories/
 test/README.md
 website/README.md
 
@@ -13,5 +13,3 @@ website/README.md
 .envrc
 .idea
 .DS_Store
-
-package-lock.json
