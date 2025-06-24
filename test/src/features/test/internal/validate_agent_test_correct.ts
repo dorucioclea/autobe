@@ -1,6 +1,10 @@
 import { orchestrateTestCorrect } from "@autobe/agent/src/orchestrate/test/orchestrateTestCorrect";
 import { FileSystemIterator } from "@autobe/filesystem";
-import { AutoBeEvent, AutoBeTestProgressEvent } from "@autobe/interface";
+import {
+  AutoBeEvent,
+  AutoBeTestScenarioEvent,
+  AutoBeTestWriteEvent,
+} from "@autobe/interface";
 import fs from "fs";
 
 import { TestGlobal } from "../../../TestGlobal";
@@ -20,24 +24,35 @@ export const validate_agent_test_correct = async (
   agent.on("testStart", (event) => {
     events.push(event);
   });
-  agent.on("testPlan", (event) => {
+  agent.on("testScenario", (event) => {
     events.push(event);
   });
   agent.on("testComplete", (event) => {
     events.push(event);
   });
 
-  const codes: AutoBeTestProgressEvent[] = JSON.parse(
+  const scenarios: AutoBeTestScenarioEvent.IScenario[] = JSON.parse(
+    await fs.promises.readFile(
+      `${ROOT}/assets/repositories/${owner}/${project}/test/scenarios.json`,
+      "utf8",
+    ),
+  );
+
+  const codes: AutoBeTestWriteEvent[] = JSON.parse(
     await fs.promises.readFile(
       `${ROOT}/assets/repositories/${owner}/${project}/test/codes.json`,
       "utf8",
     ),
   );
 
-  const correct = await orchestrateTestCorrect(agent.getContext(), codes);
+  const correct = await orchestrateTestCorrect(
+    agent.getContext(),
+    codes,
+    scenarios,
+  );
 
   const files = Object.entries(correct.files)
-    .map(([filename, { content }]) => {
+    .map(([filename, content]) => {
       return { [`compiled/${filename}`]: content };
     })
     .reduce<Record<string, string>>((acc, cur) => {

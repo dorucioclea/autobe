@@ -1,7 +1,7 @@
 import {
   AutoBeAssistantMessageHistory,
   AutoBeTestHistory,
-  AutoBeTestProgressEvent,
+  AutoBeTestWriteEvent,
 } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
 import { v4 } from "uuid";
@@ -9,8 +9,8 @@ import { v4 } from "uuid";
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
 import { orchestrateTestCorrect } from "./orchestrateTestCorrect";
-import { orchestrateTestPlan } from "./orchestrateTestPlan";
 import { orchestrateTestProgress } from "./orchestrateTestProgress";
+import { orchestrateTestScenario } from "./orchestrateTestScenario";
 
 export const orchestrateTest =
   <Model extends ILlmSchema.Model>(ctx: AutoBeContext<Model>) =>
@@ -44,29 +44,22 @@ export const orchestrateTest =
     }
 
     // PLAN
-    const { plans } = await orchestrateTestPlan(ctx);
+    const { scenarios } = await orchestrateTestScenario(ctx);
 
     // TEST CODE
-    const codes: AutoBeTestProgressEvent[] = await orchestrateTestProgress(
+    const codes: AutoBeTestWriteEvent[] = await orchestrateTestProgress(
       ctx,
-      plans,
+      scenarios,
     );
 
-    const correct = await orchestrateTestCorrect(ctx, codes);
+    const correct = await orchestrateTestCorrect(ctx, codes, scenarios);
 
     const history: AutoBeTestHistory = {
       type: "test",
       id: v4(),
       completed_at: new Date().toISOString(),
       created_at: start.toISOString(),
-      files: Object.entries(correct.files)
-        .map(([filename, { content }]) => {
-          return { [filename]: content };
-        })
-        .reduce<Record<string, string>>(
-          (acc, cur) => Object.assign(acc, cur),
-          {},
-        ),
+      files: correct.files,
       compiled: correct.result,
       reason: "Step to the test generation referencing the interface",
       step: ctx.state().interface?.step ?? 0,
@@ -75,14 +68,7 @@ export const orchestrateTest =
     ctx.dispatch({
       type: "testComplete",
       created_at: start.toISOString(),
-      files: Object.entries(correct.files)
-        .map(([filename, { content }]) => {
-          return { [filename]: content };
-        })
-        .reduce<Record<string, string>>(
-          (acc, cur) => Object.assign(acc, cur),
-          {},
-        ),
+      files: correct.files,
       step: ctx.state().interface?.step ?? 0,
     });
 
