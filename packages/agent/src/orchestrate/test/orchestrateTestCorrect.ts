@@ -1,16 +1,20 @@
 import { IAgenticaController, MicroAgentica } from "@agentica/core";
 import {
+  AutoBeOpenApi,
   AutoBeTestProgressEvent,
   AutoBeTestValidateEvent,
   IAutoBeTypeScriptCompilerResult,
 } from "@autobe/interface";
+import { IAutoBeTestPlan } from "@autobe/interface/src/test/AutoBeTestPlan";
 import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import { IPointer } from "tstl";
 import typia from "typia";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
+import { randomBackoffRetry } from "../../utils/backoffRetry";
 import { enforceToolCall } from "../../utils/enforceToolCall";
+import { filterDocument } from "./orchestrateTestProgress";
 import { transformTestCorrectHistories } from "./transformTestCorrectHistories";
 
 export async function orchestrateTestCorrect<Model extends ILlmSchema.Model>(
@@ -19,19 +23,25 @@ export async function orchestrateTestCorrect<Model extends ILlmSchema.Model>(
   life: number = 4,
 ): Promise<AutoBeTestValidateEvent> {
   // 1) Build map of new test files from progress events
-  const testFiles = Object.fromEntries(
-    codes.map(({ filename, content }) => [
-      `test/features/api/${filename}`,
-      content,
-    ]),
-  );
+  const testFiles = codes
+    .map(({ filename, content, scenario }) => {
+      return {
+        [`test/features/api/${filename}`]: { content, scenario },
+      };
+    })
+    .reduce<
+      Record<string, { content: string; scenario: IAutoBeTestPlan.IScenario }>
+    >((acc, cur) => Object.assign(acc, cur), {});
 
   // 2) Keep only files outside the test directory from current state
-  const retainedFiles = Object.fromEntries(
-    Object.entries(ctx.state().interface?.files ?? {}).filter(
-      ([filename]) => !filename.startsWith("test/features/api"),
-    ),
-  );
+  const retainedFiles = Object.entries(ctx.state().interface?.files ?? {})
+    .filter(([filename]) => {
+      return !filename.startsWith("test/features/api");
+    })
+    .reduce<Record<string, { content: string }>>(
+      (acc, cur) => Object.assign(acc, cur),
+      {},
+    );
 
   // 3) Merge and filter: keep .ts/.json, drop anything under "benchmark"
   const mergedFiles = { ...retainedFiles, ...testFiles };
@@ -73,13 +83,23 @@ export async function orchestrateTestCorrect<Model extends ILlmSchema.Model>(
  */
 async function step<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
-  files: Record<string, string>,
+  files: Record<
+    string,
+    { content: string; scenario?: IAutoBeTestPlan.IScenario }
+  >,
   life: number,
 ): Promise<AutoBeTestValidateEvent> {
   // COMPILE TEST CODE
+
+  const fileMap = Object.entries(files)
+    .map(([filename, { content }]) => {
+      return { [filename]: content };
+    })
+    .reduce<Record<string, string>>((acc, cur) => Object.assign(acc, cur), {});
+
   const result: IAutoBeTypeScriptCompilerResult =
     await ctx.compiler.typescript.compile({
-      files,
+      files: fileMap,
     });
   if (result.type === "success") {
     // SUCCESS
@@ -156,24 +176,28 @@ async function step<Model extends ILlmSchema.Model>(
 
   // VALIDATION FAILED
   const validate = await Promise.all(
-    Object.entries(diagnostics).map(async ([filename, d]) => {
-      const code = files[filename];
-      const response = await process(ctx, d, code);
+    Object.entries(diagnostics).map(
+      async ([filename, d]): Promise<[string, { content: string }]> => {
+        const scenario = files[filename].scenario;
+        const code = files[filename].content;
+        const response = await process(ctx, d, code, scenario);
 
-      ctx.dispatch({
-        type: "testCorrect",
-        created_at: new Date().toISOString(),
-        files: { ...files, [filename]: response.content },
-        result,
-        solution: response.solution,
-        think_without_compile_error: response.think_without_compile_error,
-        think_again_with_compile_error: response.think_again_with_compile_error,
-        step: ctx.state().interface?.step ?? 0,
-      });
+        ctx.dispatch({
+          type: "testCorrect",
+          created_at: new Date().toISOString(),
+          files: { ...fileMap, [filename]: response.content },
+          result,
+          solution: response.solution,
+          think_without_compile_error: response.think_without_compile_error,
+          think_again_with_compile_error:
+            response.think_again_with_compile_error,
+          step: ctx.state().interface?.step ?? 0,
+        });
 
-      // Return [filename, modified code]
-      return [filename, response.content];
-    }),
+        // Return [filename, modified code]
+        return [filename, { content: response.content }];
+      },
+    ),
   );
 
   const newFiles = { ...files, ...Object.fromEntries(validate) };
@@ -195,26 +219,32 @@ async function process<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   diagnostics: IAutoBeTypeScriptCompilerResult.IDiagnostic[],
   code: string,
+  scenario?: IAutoBeTestPlan.IScenario,
 ): Promise<ICorrectTestFunctionProps> {
   const pointer: IPointer<ICorrectTestFunctionProps | null> = {
     value: null,
   };
 
-  const apiFiles = Object.entries(ctx.state().interface?.files ?? {})
-    .filter(([filename]) => {
-      return filename.startsWith("src/api/");
-    })
-    .reduce<Record<string, string>>((acc, [filename, content]) => {
-      return Object.assign(acc, { [filename]: content });
-    }, {});
+  let document: AutoBeOpenApi.IDocument | null = null;
+  if (scenario) {
+    document = filterDocument(scenario, ctx.state().interface!.document);
+  }
 
-  const dtoFiles = Object.entries(ctx.state().interface?.files ?? {})
-    .filter(([filename]) => {
-      return filename.startsWith("src/api/structures/");
-    })
-    .reduce<Record<string, string>>((acc, [filename, content]) => {
-      return Object.assign(acc, { [filename]: content });
-    }, {});
+  // const apiFiles = Object.entries(ctx.state().interface?.files ?? {})
+  //   .filter(([filename]) => {
+  //     return filename.startsWith("src/api/");
+  //   })
+  //   .reduce<Record<string, string>>((acc, [filename, content]) => {
+  //     return Object.assign(acc, { [filename]: content });
+  //   }, {});
+
+  // const dtoFiles = Object.entries(ctx.state().interface?.files ?? {})
+  //   .filter(([filename]) => {
+  //     return filename.startsWith("src/api/structures/");
+  //   })
+  //   .reduce<Record<string, string>>((acc, [filename, content]) => {
+  //     return Object.assign(acc, { [filename]: content });
+  //   }, {});
 
   const agentica = new MicroAgentica({
     model: ctx.model,
@@ -222,7 +252,7 @@ async function process<Model extends ILlmSchema.Model>(
     config: {
       ...(ctx.config ?? {}),
     },
-    histories: transformTestCorrectHistories(apiFiles, dtoFiles),
+    histories: transformTestCorrectHistories(document),
     controllers: [
       createApplication({
         model: ctx.model,
@@ -235,47 +265,49 @@ async function process<Model extends ILlmSchema.Model>(
   });
   enforceToolCall(agentica);
 
-  await agentica.conversate(
-    [
-      "Fix the compilation error in the provided code.",
-      "",
-      "## Original Code",
-      "```typescript",
-      code,
-      "```",
-      "",
-      diagnostics.map((diagnostic) => {
-        if (diagnostic.start === undefined || diagnostic.length === undefined)
-          return "";
+  await randomBackoffRetry(async () => {
+    await agentica.conversate(
+      [
+        "Fix the compilation error in the provided code.",
+        "",
+        "## Original Code",
+        "```typescript",
+        code,
+        "```",
+        "",
+        diagnostics.map((diagnostic) => {
+          if (diagnostic.start === undefined || diagnostic.length === undefined)
+            return "";
 
-        const checkDtoRegexp = `Cannot find module '@ORGANIZATION/template-api/lib/structures/IBbsArticleComment' or its corresponding type declarations.`;
-        const [group] = [
-          ...checkDtoRegexp.matchAll(
-            /Cannot find module '(.*lib\/structures\/.*)'/g,
-          ),
-        ];
+          const checkDtoRegexp = `Cannot find module '@ORGANIZATION/template-api/lib/structures/IBbsArticleComment' or its corresponding type declarations.`;
+          const [group] = [
+            ...checkDtoRegexp.matchAll(
+              /Cannot find module '(.*lib\/structures\/.*)'/g,
+            ),
+          ];
 
-        const [_, filename] = group ?? [];
+          const [_, filename] = group ?? [];
 
-        return [
-          "## Error Information",
-          `- Position: Characters ${diagnostic.start} to ${diagnostic.start + diagnostic.length}`,
-          `- Error Message: ${diagnostic.messageText}`,
-          `- Problematic Code: \`${code.substring(diagnostic.start, diagnostic.start + diagnostic.length)}\``,
-          filename
-            ? `The type files located under **/lib/structures are declared in '@ORGANIZATION/PROJECT-api/lib/structures'.\n` +
-              `Note: '@ORGANIZATION/PROJECT-api' must be written exactly as is and should not be replaced.\n`
-            : "",
-        ].join("\n");
-      }),
-      "## Instructions",
-      "1. Focus on the specific error location and message",
-      "2. Provide the corrected TypeScript code",
-      "3. Ensure the fix resolves the compilation error",
-      "",
-      "Return only the fixed code without explanations.",
-    ].join("\n"),
-  );
+          return [
+            "## Error Information",
+            `- Position: Characters ${diagnostic.start} to ${diagnostic.start + diagnostic.length}`,
+            `- Error Message: ${diagnostic.messageText}`,
+            `- Problematic Code: \`${code.substring(diagnostic.start, diagnostic.start + diagnostic.length)}\``,
+            filename
+              ? `The type files located under **/lib/structures are declared in '@ORGANIZATION/PROJECT-api/lib/structures'.\n` +
+                `Note: '@ORGANIZATION/PROJECT-api' must be written exactly as is and should not be replaced.\n`
+              : "",
+          ].join("\n");
+        }),
+        "## Instructions",
+        "1. Focus on the specific error location and message",
+        "2. Provide the corrected TypeScript code",
+        "3. Ensure the fix resolves the compilation error",
+        "",
+        "Return only the fixed code without explanations.",
+      ].join("\n"),
+    );
+  });
   if (pointer.value === null) throw new Error("Failed to modify test code.");
   return pointer.value;
 }
