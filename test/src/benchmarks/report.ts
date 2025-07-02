@@ -11,9 +11,9 @@ export function generateReport(
   }[],
   startTime: number,
 ) {
-  const tokenUsage = results.reduce((acc, v) => {
-    return AutoBeTokenUsage.plus(acc, v.agent.getTokenUsage());
-  }, new AutoBeTokenUsage());
+  const tokenUsage = results
+    .map((v) => v.agent.getTokenUsage())
+    .reduce((acc, v) => AutoBeTokenUsage.plus(acc, v), new AutoBeTokenUsage());
 
   const successList = results.filter((v) => v.success);
   return `
@@ -53,8 +53,21 @@ ${(["analyze", "prisma", "interface"] as const)
   )
   .join("\n")}
 - Total Token Usage
-  - Aggregate: ${tokenUsage.aggregate.total.toLocaleString("en-US")}
-  - Call: ${tokenUsage.call.total.toLocaleString("en-US")}
-  - Describe: ${tokenUsage.describe.total.toLocaleString("en-US")}
+${(
+  [
+    ["Total", "root"],
+    ["Analyze", "analyze"],
+    ["Prisma", "prisma"],
+    ["Interface", "interface"],
+    ["Test", "test"],
+    ["Realize", "realize"],
+  ] as const
+).map(
+  ([name, key]) => `  - ${name}:
+    - Sum: ${tokenUsage[key].aggregate.total.toLocaleString("en-US")}
+    - Input: ${tokenUsage[key].aggregate.input.total.toLocaleString("en-US")}
+    - Output: ${tokenUsage[key].aggregate.output.total.toLocaleString("en-US")}
+  `,
+)}
 `;
 }

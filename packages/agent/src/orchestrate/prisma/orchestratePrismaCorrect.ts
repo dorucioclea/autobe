@@ -62,7 +62,6 @@ async function step<Model extends ILlmSchema.Model>(
       ...(ctx.config ?? {}),
     },
     histories: transformPrismaCorrectHistories(result),
-    tokenUsage: ctx.usage(),
     controllers: [
       createApplication({
         model: ctx.model,
@@ -75,9 +74,14 @@ async function step<Model extends ILlmSchema.Model>(
   enforceToolCall(agentica);
 
   // REQUEST CORRECTION
-  await agentica.conversate(
-    "Resolve the compilation errors in the provided Prisma schema files.",
-  );
+  await agentica
+    .conversate(
+      "Resolve the compilation errors in the provided Prisma schema files.",
+    )
+    .finally(() => {
+      const tokenUsage = agentica.getTokenUsage();
+      ctx.usage().record(tokenUsage, ["prisma"]);
+    });
   if (pointer.value === null) {
     console.error(
       "Unreachable error: PrismaCompilerAgent.pointer.value is null",

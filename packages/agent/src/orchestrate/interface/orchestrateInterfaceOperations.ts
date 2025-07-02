@@ -101,7 +101,6 @@ async function process<Model extends ILlmSchema.Model>(
       ctx.state(),
       AutoBeSystemPromptConstant.INTERFACE_ENDPOINT,
     ),
-    tokenUsage: ctx.usage(),
     controllers: [
       createApplication({
         model: ctx.model,
@@ -113,15 +112,20 @@ async function process<Model extends ILlmSchema.Model>(
     ],
   });
   enforceToolCall(agentica);
-  await agentica.conversate(
-    [
-      "Make API operations for below endpoints:",
-      "",
-      "```json",
-      JSON.stringify(Array.from(endpoints), null, 2),
-      "```",
-    ].join("\n"),
-  );
+  await agentica
+    .conversate(
+      [
+        "Make API operations for below endpoints:",
+        "",
+        "```json",
+        JSON.stringify(Array.from(endpoints), null, 2),
+        "```",
+      ].join("\n"),
+    )
+    .finally(() => {
+      const tokenUsage = agentica.getTokenUsage();
+      ctx.usage().record(tokenUsage, ["interface"]);
+    });
   if (pointer.value === null) throw new Error("Failed to create operations."); // never be happened
   return pointer.value;
 }

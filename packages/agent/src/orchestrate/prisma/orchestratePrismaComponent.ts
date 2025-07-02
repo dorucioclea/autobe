@@ -35,7 +35,6 @@ export async function orchestratePrismaComponents<
       ...(ctx.config ?? {}),
     },
     histories: transformPrismaComponentsHistories(ctx.state(), prefix),
-    tokenUsage: ctx.usage(),
     controllers: [
       createApplication({
         model: ctx.model,
@@ -49,8 +48,12 @@ export async function orchestratePrismaComponents<
     ],
   });
 
-  const histories: MicroAgenticaHistory<Model>[] =
-    await agentica.conversate(content);
+  const histories: MicroAgenticaHistory<Model>[] = await agentica
+    .conversate(content)
+    .finally(() => {
+      const tokenUsage = agentica.getTokenUsage();
+      ctx.usage().record(tokenUsage, ["prisma"]);
+    });
   if (histories.at(-1)?.type === "assistantMessage")
     return {
       ...(histories.at(-1)! as AgenticaAssistantMessageHistory),

@@ -57,13 +57,15 @@ export const orchestrateAnalyze =
             (el) => el.type === "assistantMessage" || el.type === "userMessage",
           ),
       ],
-      tokenUsage: ctx.usage(),
     });
     enforceToolCall(agentica);
 
-    const determined = await agentica.conversate(
-      "Design a complete list of documents for that document",
-    );
+    const determined = await agentica
+      .conversate("Design a complete list of documents for that document")
+      .finally(() => {
+        const tokenUsage = agentica.getTokenUsage();
+        ctx.usage().record(tokenUsage, ["analyze"]);
+      });
 
     const lastMessage = determined[determined.length - 1]!;
     if (lastMessage.type === "assistantMessage") {

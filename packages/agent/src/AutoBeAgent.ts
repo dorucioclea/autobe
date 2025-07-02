@@ -62,6 +62,9 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
   private readonly state_: AutoBeState;
 
   /** @internal */
+  private readonly usage_: AutoBeTokenUsage;
+
+  /** @internal */
   private readonly listeners_: Map<
     string,
     Set<(event: AutoBeEvent) => Promise<void> | void>
@@ -94,6 +97,11 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
     this.state_ = createAutoBeState(this.histories_);
     this.listeners_ = new Map();
 
+    this.usage_ =
+      props.tokenUsage instanceof AutoBeTokenUsage
+        ? props.tokenUsage
+        : new AutoBeTokenUsage(props.tokenUsage);
+
     // CONSTRUCT AGENTICA
     const vendor: IAgenticaVendor = {
       ...props.vendor,
@@ -106,7 +114,7 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
       compiler: props.compiler,
       histories: () => this.histories_,
       state: () => this.state_,
-      usage: () => this.agentica_.getTokenUsage(),
+      usage: () => this.getTokenUsage(),
       files: (options) => this.getFiles(options),
       dispatch: (event) => {
         this.dispatch(event).catch(() => {});
@@ -124,7 +132,7 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
           execute: () => transformFacadeStateMessage(this.state_),
         },
       },
-      tokenUsage: props.tokenUsage,
+      tokenUsage: props.tokenUsage?.root,
       controllers: [
         createAutoBeController({
           model: props.model,
@@ -132,6 +140,7 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
         }),
       ],
     });
+
     this.agentica_.getHistories().push(
       ...this.histories_
         .map((history) =>
@@ -392,7 +401,7 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
    *   agent, operation type, and consumption category
    */
   public getTokenUsage(): AutoBeTokenUsage {
-    return this.agentica_.getTokenUsage();
+    return this.usage_;
   }
 
   /** @internal */
