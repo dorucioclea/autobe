@@ -52,6 +52,8 @@ export const validate_agent_test_main = async (
     if (result.type !== "test") throw new Error("Failed to generate test.");
   }
 
+  const histories = agent.getHistories();
+
   // REPORT RESULT
   await FileSystemIterator.save({
     root: `${TestGlobal.ROOT}/results/${project}/test/main`,
@@ -59,6 +61,7 @@ export const validate_agent_test_main = async (
       ...(await agent.getFiles()),
       "logs/events.json": typia.json.stringify(events),
       "logs/result.json": typia.json.stringify(result),
+      "logs/histories.json": typia.json.stringify(histories),
     },
   });
   TestValidator.equals("result")(result.compiled.type)("success");
