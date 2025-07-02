@@ -6,6 +6,7 @@ export interface AutobeBenchmarkContext {
   runId: string;
   logsDir: string;
   generatedFiles: Record<string, string>;
+  scenarioName: string;
   stages: {
     analyze: {
       startTime: number;

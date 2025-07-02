@@ -91,6 +91,7 @@ async function runBenchmarks(props: {
         const result = await withAutobeContext(
           {
             logsDir: logger.logsDir,
+            scenarioName: scenario.name,
             runId,
             stages: {
               analyze: {

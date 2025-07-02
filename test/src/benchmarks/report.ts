@@ -3,6 +3,22 @@ import { AutoBeAgent, AutoBeTokenUsage } from "@autobe/agent";
 import { AutobeBenchmarkContext } from "./autobe.context";
 import { formatDurationSecondsFromMs } from "./utils/time-utils";
 
+function groupBy<T, K extends string | number | symbol>(
+  list: readonly T[],
+  keyFn: (item: T) => K,
+): Record<K, T[]> {
+  return list.reduce<Record<K, T[]>>(
+    (acc, item) => {
+      const key = keyFn(item);
+      return {
+        ...acc,
+        [key]: [...(acc[key] ?? []), item],
+      };
+    },
+    {} as Record<K, T[]>,
+  );
+}
+
 export function generateReport(
   results: {
     success: boolean;
@@ -16,10 +32,19 @@ export function generateReport(
     .reduce((acc, v) => AutoBeTokenUsage.plus(acc, v), new AutoBeTokenUsage());
 
   const successList = results.filter((v) => v.success);
+  const grouped = groupBy(results, (v) => v.context.scenarioName);
+  const successGrouped = groupBy(successList, (v) => v.context.scenarioName);
+
   return `
 Benchmark Report
 
 - Success: ${((successList.length / results.length) * 100).toFixed(2)}% (${successList.length} / ${results.length})
+${Object.entries(grouped)
+  .map(
+    ([scenarioName, results]) =>
+      `  - ${scenarioName}: ${((successGrouped[scenarioName]?.length ?? 0) / results.length) * 100}% (${successGrouped[scenarioName]?.length} / ${results.length})`,
+  )
+  .join("\n")}
 - Total time: ${formatDurationSecondsFromMs(Date.now() - startTime)}
 - Avg time per run: ${formatDurationSecondsFromMs(
     results
