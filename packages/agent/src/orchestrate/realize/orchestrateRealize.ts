@@ -2,7 +2,6 @@ import {
   AutoBeAssistantMessageHistory,
   AutoBeOpenApi,
   AutoBeRealizeHistory,
-  AutoBeRealizeIntegratorEvent,
 } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
 import { v4 } from "uuid";
@@ -10,7 +9,6 @@ import { v4 } from "uuid";
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
 import { orchestrateRealizeCoder } from "./orchestrateRealizeCoder";
-import { orchestrateRealizeIntegrator } from "./orchestrateRealizeIntegrator";
 import { orchestrateRealizePlanner } from "./orchestrateRealizePlanner";
 import { IAutoBeRealizeCoderApplication } from "./structures/IAutoBeRealizeCoderApplication";
 
@@ -25,40 +23,16 @@ export const orchestrateRealize =
       throw new Error();
     }
 
-    const lockController = (() => {
-      const locks = new Map<string, Promise<any>>();
-
-      async function withLock<T>(
-        key: string,
-        fn: () => Promise<T>,
-      ): Promise<T> {
-        const prev = locks.get(key) ?? Promise.resolve();
-
-        let release: () => void;
-        const current = new Promise<void>((res) => {
-          release = res;
-        });
-
-        locks.set(
-          key,
-          prev.then(() => current),
-        );
-
-        try {
-          await prev;
-          return await fn();
-        } finally {
-          release!();
-          if (locks.get(key) === current) {
-            locks.delete(key);
-          }
-        }
-      }
-
-      return {
-        withLock,
-      };
-    })();
+    const files: Record<string, string> = {
+      ...ctx.state().interface?.files,
+      ...ctx.state().test?.files.reduce(
+        (acc, file) => {
+          acc[file.location] = file.content;
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
+    };
 
     const codes: IAutoBeRealizeCoderApplication.IPipeOutput[] =
       await Promise.all(
@@ -67,7 +41,7 @@ export const orchestrateRealize =
           result: await pipe(
             op,
             (op) => orchestrateRealizePlanner(ctx, op),
-            (p) => orchestrateRealizeCoder(ctx, op, p),
+            (p) => orchestrateRealizeCoder(ctx, op, p, files),
           ),
         })),
       );
@@ -94,19 +68,6 @@ export const orchestrateRealize =
         });
       }
     }
-
-    const integrated: (AutoBeRealizeIntegratorEvent | FAILED)[] =
-      await Promise.all(
-        successes.map(async ({ operation, result }) => {
-          return await orchestrateRealizeIntegrator(
-            ctx,
-            result,
-            operation,
-            lockController.withLock,
-          );
-        }),
-      );
-    integrated;
 
     const now = new Date().toISOString();
     ctx.dispatch({

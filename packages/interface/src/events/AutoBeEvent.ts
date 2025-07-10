@@ -16,7 +16,6 @@ import { AutoBePrismaSchemasEvent } from "./AutoBePrismaSchemasEvent";
 import { AutoBePrismaStartEvent } from "./AutoBePrismaStartEvent";
 import { AutoBePrismaValidateEvent } from "./AutoBePrismaValidateEvent";
 import { AutoBeRealizeCompleteEvent } from "./AutoBeRealizeCompleteEvent";
-import { AutoBeRealizeIntegratorEvent } from "./AutoBeRealizeIntegratorEvent";
 import { AutoBeRealizeProgressEvent } from "./AutoBeRealizeProgressEvent";
 import { AutoBeRealizeStartEvent } from "./AutoBeRealizeStartEvent";
 import { AutoBeRealizeValidateEvent } from "./AutoBeRealizeValidateEvent";
@@ -77,7 +76,6 @@ export type AutoBeEvent =
   | AutoBeTestCompleteEvent
   | AutoBeRealizeStartEvent
   | AutoBeRealizeProgressEvent
-  | AutoBeRealizeIntegratorEvent
   | AutoBeRealizeValidateEvent
   | AutoBeRealizeCompleteEvent;
 
@@ -142,7 +140,6 @@ export namespace AutoBeEvent {
     testComplete: AutoBeTestCompleteEvent;
     realizeStart: AutoBeRealizeStartEvent;
     realizeProgress: AutoBeRealizeProgressEvent;
-    realizeIntegrator: AutoBeRealizeIntegratorEvent;
     realizeValidate: AutoBeRealizeValidateEvent;
     realizeComplete: AutoBeRealizeCompleteEvent;
   }
