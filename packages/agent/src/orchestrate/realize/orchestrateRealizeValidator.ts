@@ -1,7 +1,14 @@
+import { AutoBeRealizeIntegratorEvent } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
+// import cp from "child_process";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import typia from "typia";
+
+// import { promisify } from "util";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
-import { RealizeIntegratorOutput } from "./orchestrateRealizeIntegrator";
 
 /**
  * The result of validating the integrated code by running tests or static
@@ -55,10 +62,48 @@ export const orchestrateRealizeValidator = async <
   Model extends ILlmSchema.Model,
 >(
   ctx: AutoBeContext<Model>,
-  props: RealizeIntegratorOutput,
+  props: AutoBeRealizeIntegratorEvent[],
 ): Promise<RealizeValidatorOutput> => {
-  ctx;
-  props;
+  const testFiles = Object.fromEntries(
+    ctx.state().test?.files.map((file) => [file.location, file.content]) ?? [],
+  );
 
-  return null!;
+  const files: Record<string, string> = props.reduce(
+    (acc, prop) => ({ ...acc, ...prop.file }),
+    { ...ctx.state().interface?.files },
+  );
+
+  const originalFiles = {
+    ...files,
+    ...testFiles,
+  };
+
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "autobe-"));
+
+  for (const [filePath, content] of Object.entries(originalFiles)) {
+    const location = path.join(tempDir, filePath);
+    await fs.promises.mkdir(path.dirname(location), { recursive: true });
+    await fs.promises.writeFile(location, content, "utf-8");
+  }
+
+  // try {
+  //   console.log("🔧 npm install...");
+  //   await promisify(cp.exec)("npm install", { cwd: tempDir });
+
+  //   console.log("🚀 npm run build...");
+  //   await promisify(cp.exec)("npm run build", { cwd: tempDir });
+
+  //   console.log("🧪 npm test...");
+  //   await promisify(cp.exec)("npm run test", { cwd: tempDir });
+
+  //   console.log("✅ All Works Done!");
+  // } catch (err: any) {
+  //   console.error("❌ Error Occurred:", err.stderr || err.message);
+  //   throw err;
+  // } finally {
+  //   console.log("Start to remove temp directory...");
+  await fs.promises.rm(tempDir, { recursive: true, force: true });
+  // }
+
+  return typia.random<RealizeValidatorOutput>();
 };
