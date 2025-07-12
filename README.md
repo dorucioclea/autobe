@@ -45,7 +45,7 @@ An AI-powered no-code agent that builds backend applications, enhanced by compil
 
 ## Playground
 
-https://github.com/user-attachments/assets/00a3649a-ca0a-417b-a2eb-43387d45b4aa
+https://github.com/user-attachments/assets/8c420015-d81a-4828-8e98-16522bc3ca3f
 
 [https://stackblitz.com/github/wrtnlabs/autobe-playground-stackblitz](https://stackblitz.com/github/wrtnlabs/autobe-playground-stackblitz?file=md!README.md)
 
