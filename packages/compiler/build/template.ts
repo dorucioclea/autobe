@@ -1,20 +1,35 @@
 import { FileSystemIterator } from "@autobe/filesystem";
 import fs from "fs";
 
-const main = async (): Promise<void> => {
+const archive = async (props: {
+  root: string;
+  name: string;
+}): Promise<void> => {
   const files: Record<string, string> = await FileSystemIterator.read({
-    root: `${__dirname}/../../../internals/template`,
+    root: props.root,
   });
-  try {
-    await fs.promises.mkdir(`${__dirname}/../src/raw`);
-  } catch {}
+
   await fs.promises.writeFile(
-    `${__dirname}/../src/raw/AutoBeCompilerTemplate.ts`,
+    `${__dirname}/../src/raw/${props.name}.ts`,
     [
-      `export const AutoBeCompilerTemplate: Record<string, string> = ${JSON.stringify(files, null, 2)};`,
+      `export const ${props.name}: Record<string, string> = ${JSON.stringify(files, null, 2)};`,
     ].join("\n"),
     "utf8",
   );
+};
+
+const main = async (): Promise<void> => {
+  try {
+    await fs.promises.mkdir(`${__dirname}/../src/raw`);
+  } catch {}
+  await archive({
+    root: `${__dirname}/../../../internals/template/interface`,
+    name: "AutoBeCompilerInterfaceTemplate",
+  });
+  await archive({
+    root: `${__dirname}/../../../internals/template/realize`,
+    name: "AutoBeCompilerRealizeTemplate",
+  });
 };
 main().catch((error) => {
   console.error(error);

@@ -1,6 +1,6 @@
 import { OpenApi } from "@samchon/openapi";
 
-import { AutoBeOpenApi } from "../openapi";
+import { AutoBeOpenApi } from "../openapi/AutoBeOpenApi";
 
 /**
  * Interface for the custom Interface compiler that handles API specification

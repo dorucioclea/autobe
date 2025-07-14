@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@autobe/nestjs-dependencies",
+  "name": "@autobe/test-dependencies",
   "version": "0.0.0",
   "author": "Wrtn Technologies",
   "license": "MIT",
