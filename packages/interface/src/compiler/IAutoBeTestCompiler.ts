@@ -139,4 +139,6 @@ export interface IAutoBeTestCompiler {
    *   environment setup
    */
   getExternal(): Promise<Record<string, string>>;
+
+  getTemplate(): Promise<Record<string, string>>;
 }

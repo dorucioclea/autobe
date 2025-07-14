@@ -70,14 +70,16 @@ export async function getAutoBeGenerated<Model extends ILlmSchema.Model>(
   }
 
   // TEST
-  if (state.test?.step === state.analyze.step) {
-    Object.assign(ret, state.test.files);
-    Object.assign(ret, await ctx.compiler.realize.getTemplate());
-  }
+  if (state.test?.step === state.analyze.step)
+    Object.assign(ret, state.test.files, await ctx.compiler.test.getTemplate());
 
   // REALIZE
   if (state.realize?.step === state.analyze.step)
-    Object.assign(ret, state.realize.files);
+    Object.assign(
+      ret,
+      state.realize.files,
+      await ctx.compiler.realize.getTemplate(),
+    );
 
   // LOGGING
   Object.assign(ret, {

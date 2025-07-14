@@ -6,7 +6,9 @@ import {
 } from "@autobe/interface";
 
 import { AutoBeTypeScriptCompiler } from "../AutoBeTypeScriptCompiler";
+import { AutoBeCompilerInterfaceTemplate } from "../raw/AutoBeCompilerInterfaceTemplate";
 import { AutoBeCompilerRealizeTemplate } from "../raw/AutoBeCompilerRealizeTemplate";
+import { AutoBeCompilerTestTemplate } from "../raw/AutoBeCompilerTestTemplate";
 
 export class AutoBeRealizeCompiler implements IAutoBeRealizeCompiler {
   public constructor(private readonly tsc: AutoBeTypeScriptCompiler) {}
@@ -27,6 +29,10 @@ export class AutoBeRealizeCompiler implements IAutoBeRealizeCompiler {
   }
 
   public async getTemplate(): Promise<Record<string, string>> {
-    return AutoBeCompilerRealizeTemplate;
+    return {
+      ...AutoBeCompilerInterfaceTemplate,
+      ...AutoBeCompilerTestTemplate,
+      ...AutoBeCompilerRealizeTemplate,
+    };
   }
 }

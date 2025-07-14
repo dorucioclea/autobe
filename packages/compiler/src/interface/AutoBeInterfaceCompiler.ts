@@ -74,4 +74,8 @@ export class AutoBeInterfaceCompiler implements IAutoBeInterfaceCompiler {
   ): Promise<AutoBeOpenApi.IDocument> {
     return invertOpenApiDocument(document);
   }
+
+  public async getTemplate(): Promise<Record<string, string>> {
+    return AutoBeCompilerInterfaceTemplate;
+  }
 }

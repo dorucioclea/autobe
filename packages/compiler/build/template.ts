@@ -1,14 +1,13 @@
 import { FileSystemIterator } from "@autobe/filesystem";
 import fs from "fs";
 
-const archive = async (props: {
+const template = async (props: {
   root: string;
   name: string;
 }): Promise<void> => {
   const files: Record<string, string> = await FileSystemIterator.read({
     root: props.root,
   });
-
   await fs.promises.writeFile(
     `${__dirname}/../src/raw/${props.name}.ts`,
     [
@@ -22,11 +21,15 @@ const main = async (): Promise<void> => {
   try {
     await fs.promises.mkdir(`${__dirname}/../src/raw`);
   } catch {}
-  await archive({
+  await template({
     root: `${__dirname}/../../../internals/template/interface`,
     name: "AutoBeCompilerInterfaceTemplate",
   });
-  await archive({
+  await template({
+    root: `${__dirname}/../../../internals/template/test`,
+    name: "AutoBeCompilerTestTemplate",
+  });
+  await template({
     root: `${__dirname}/../../../internals/template/realize`,
     name: "AutoBeCompilerRealizeTemplate",
   });

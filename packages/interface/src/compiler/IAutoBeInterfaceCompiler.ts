@@ -82,4 +82,6 @@ export interface IAutoBeInterfaceCompiler {
    *   pipeline integration
    */
   invert(document: OpenApi.IDocument): Promise<AutoBeOpenApi.IDocument>;
+
+  getTemplate(): Promise<Record<string, string>>;
 }
