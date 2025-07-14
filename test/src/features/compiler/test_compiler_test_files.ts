@@ -3,7 +3,6 @@ import { AutoBeCompiler } from "@autobe/compiler";
 import { FileSystemIterator } from "@autobe/filesystem";
 import cp from "child_process";
 import OpenAI from "openai";
-import { v4 } from "uuid";
 
 import { TestGlobal } from "../../TestGlobal";
 import { TestHistory } from "../../internal/TestHistory";
@@ -16,22 +15,7 @@ export const test_compiler_test_files = async (): Promise<void> => {
       model: "gpt-4.1",
     },
     compiler: new AutoBeCompiler(),
-    histories: [
-      ...(await TestHistory.getTest("bbs-backend")),
-      {
-        type: "test",
-        files: [],
-        compiled: {
-          type: "success",
-          javascript: {},
-        },
-        reason: "Test files for compiler",
-        id: v4(),
-        created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
-        step: 0,
-      },
-    ],
+    histories: await TestHistory.getTest("bbs-backend"),
   });
 
   const files: Record<string, string> = await agent.getFiles();

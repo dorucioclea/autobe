@@ -19,19 +19,6 @@ export const test_compiler_realize_files = async (): Promise<void> => {
     histories: [
       ...(await TestHistory.getTest("bbs-backend")),
       {
-        type: "test",
-        files: [],
-        compiled: {
-          type: "success",
-          javascript: {},
-        },
-        id: v4(),
-        created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
-        reason: "Test files for compiler",
-        step: 0,
-      },
-      {
         type: "realize",
         files: {},
         compiled: {

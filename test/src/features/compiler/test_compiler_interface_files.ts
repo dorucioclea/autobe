@@ -14,7 +14,7 @@ export const test_compiler_interface_files = async (): Promise<void> => {
       api: new OpenAI({ apiKey: "" }),
       model: "gpt-4.1",
     },
-    histories: await TestHistory.getTest("bbs-backend"),
+    histories: await TestHistory.getInterface("bbs-backend"),
     compiler: new AutoBeCompiler(),
   });
 
