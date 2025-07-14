@@ -54,4 +54,6 @@ export interface IAutoBeRealizeCompiler {
    *   status for production readiness assessment
    */
   test(props: IAutoBeRealizeTestProps): Promise<IAutoBeRealizeTestResult>;
+
+  getTemplate(): Promise<Record<string, string>>;
 }

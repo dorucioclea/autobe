@@ -17,6 +17,7 @@ import { AutoBeTokenUsage } from "./context/AutoBeTokenUsage";
 import { createAgenticaHistory } from "./factory/createAgenticaHistory";
 import { createAutoBeController } from "./factory/createAutoBeApplication";
 import { createAutoBeState } from "./factory/createAutoBeState";
+import { getAutoBeGenerated } from "./factory/getAutoBeGenerated";
 import { transformFacadeStateMessage } from "./orchestrate/facade/transformFacadeStateMessage";
 import { IAutoBeProps } from "./structures/IAutoBeProps";
 import { randomBackoffStrategy } from "./utils/backoffRetry";
@@ -284,82 +285,14 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
    *   immediate file system operations, build integration, or deployment
    *   workflows
    */
-  public async getFiles(
+  public getFiles(
     options?: Partial<IAutoBeGetFilesOptions>,
   ): Promise<Record<string, string>> {
-    const files: Record<string, string> = {
-      ...Object.fromEntries(
-        this.state_.analyze
-          ? Object.entries(this.state_.analyze.files).map(([key, value]) => [
-              `docs/analysis/${key.split("/").at(-1)}`,
-              value,
-            ])
-          : [],
-      ),
-      ...Object.fromEntries(
-        !!this.state_.prisma?.result
-          ? [
-              ...Object.entries(
-                (options?.dbms ?? "postgres") === "postgres"
-                  ? this.state_.prisma.schemas
-                  : await this.context_.compiler.prisma.write(
-                      this.state_.prisma.result.data,
-                      options!.dbms!,
-                    ),
-              ).map(([key, value]) => [
-                `prisma/schema/${key.split("/").at(-1)}`,
-                value,
-              ]),
-              ...(this.state_.prisma.compiled.type === "success"
-                ? [["docs/ERD.md", this.state_.prisma.compiled.document]]
-                : []),
-              ...(this.state_.prisma.compiled.type === "failure"
-                ? [
-                    [
-                      "prisma/compile-error-reason.log",
-                      this.state_.prisma.compiled.reason,
-                    ],
-                  ]
-                : []),
-              [
-                "autobe/prisma.json",
-                JSON.stringify(this.state_.prisma.result.data, null, 2),
-              ],
-            ]
-          : [],
-      ),
-      ...(this.state_.interface
-        ? this.state_.test
-          ? Object.fromEntries(
-              Object.entries(this.state_.interface.files).filter(
-                ([key]) => key.startsWith("test/features/") === false,
-              ),
-            )
-          : this.state_.interface.files
-        : {}),
-      ...(this.state_.test
-        ? Object.fromEntries(
-            this.state_.test.files.map((f) => [f.location, f.content]),
-          )
-        : {}),
-      ...(this.state_.realize ? this.state_.realize.files : {}),
-      "autobe/histories.json": JSON.stringify(this.histories_, null, 2),
-      "autobe/tokenUsage.json": JSON.stringify(this.getTokenUsage(), null, 2),
-      ...(this.state_.interface
-        ? {
-            "autobe/document.json": JSON.stringify(
-              this.state_.interface.document,
-              null,
-              2,
-            ),
-          }
-        : {}),
-    };
-    return Object.fromEntries(
-      Object.entries(files).map(([k, v]) => [
-        k.startsWith("/") ? k.substring(1) : k,
-        v,
-      ]),
+    return getAutoBeGenerated(
+      this.context_,
+      this.histories_,
+      this.usage_,
+      options,
     );
   }
 

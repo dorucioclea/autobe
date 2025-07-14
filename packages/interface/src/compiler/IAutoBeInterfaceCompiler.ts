@@ -1,6 +1,6 @@
 import { OpenApi } from "@samchon/openapi";
 
-import { AutoBeOpenApi } from "../openapi";
+import { AutoBeOpenApi } from "../openapi/AutoBeOpenApi";
 
 /**
  * Interface for the custom Interface compiler that handles API specification
@@ -82,4 +82,6 @@ export interface IAutoBeInterfaceCompiler {
    *   pipeline integration
    */
   invert(document: OpenApi.IDocument): Promise<AutoBeOpenApi.IDocument>;
+
+  getTemplate(): Promise<Record<string, string>>;
 }
