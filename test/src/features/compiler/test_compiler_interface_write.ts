@@ -6,21 +6,22 @@ import typia from "typia";
 
 import { TestGlobal } from "../../TestGlobal";
 
-export const test_compiler_interface_shopping = async (): Promise<void> => {
+export const test_compiler_interface_write = async (): Promise<void> => {
   const compiler: AutoBeCompiler = new AutoBeCompiler();
   const document: AutoBeOpenApi.IDocument = await compiler.interface.invert(
     OpenApi.convert(
       await fetch(
-        "https://raw.githubusercontent.com/samchon/shopping-backend/master/packages/api/swagger.json",
+        "https://raw.githubusercontent.com/samchon/bbs-backend/master/packages/api/swagger.json",
       ).then((r) => r.json()),
     ),
   );
-  const result: Record<string, string> =
+  const files: Record<string, string> =
     await compiler.interface.write(document);
-  typia.assertEquals(result);
+  typia.assertEquals(files);
 
+  const root: string = `${TestGlobal.ROOT}/results/compiler.interface.write`;
   await FileSystemIterator.save({
-    root: `${TestGlobal.ROOT}/results/samchon/shopping-backend/invert`,
-    files: result,
+    root,
+    files,
   });
 };

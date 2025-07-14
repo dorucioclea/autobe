@@ -26,7 +26,7 @@ export const test_agent_realize_test_worker = async (): Promise<void> => {
   });
   const service: Driver<IAutoBeRealizeTestService> = worker.getDriver();
 
-  await worker.connect(`${__dirname}/../../internal/worker/servant.ts`);
+  await worker.connect(`${__dirname}/../../template/test/servant.ts`);
   try {
     const result: IAutoBeRealizeTestResult = await service.execute({
       files: {},

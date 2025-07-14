@@ -69,14 +69,10 @@ export const orchestrateTest =
     const files: AutoBeTestFile[] = success.map((c) => c.file);
     const compiled: IAutoBeTypeScriptCompileResult =
       await ctx.compiler.test.compile({
-        files: {
-          ...Object.fromEntries(
-            Object.entries(ctx.state().interface!.files).filter(
-              ([key]) => key.startsWith("src/api") === true,
-            ),
-          ),
-          ...Object.fromEntries(files.map((f) => [f.location, f.content])),
-        },
+        files: await ctx.files({
+          dbms: "sqlite",
+        }),
+        ...Object.fromEntries(files.map((f) => [f.location, f.content])),
       });
 
     const history: AutoBeTestHistory = {

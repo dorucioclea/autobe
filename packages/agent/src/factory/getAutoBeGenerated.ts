@@ -54,15 +54,18 @@ export async function getAutoBeGenerated<Model extends ILlmSchema.Model>(
 
   // INTERFACE
   if (state.interface?.step === state.analyze.step) {
+    const files: Record<string, string> = await ctx.compiler.interface.write(
+      state.interface.document,
+    );
     Object.assign(
       ret,
       state.test?.step === state.interface.step
         ? Object.fromEntries(
-            Object.entries(state.interface.files).filter(
+            Object.entries(files).filter(
               ([key]) => key.startsWith("test/features/") === false,
             ),
           )
-        : state.interface.files,
+        : files,
     );
     ret["autobe/document.json"] = typia.json.stringify(
       state.interface.document,

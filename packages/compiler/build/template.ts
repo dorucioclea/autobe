@@ -4,6 +4,7 @@ import fs from "fs";
 const template = async (props: {
   root: string;
   name: string;
+  files?: Record<string, string>;
 }): Promise<void> => {
   const files: Record<string, string> = await FileSystemIterator.read({
     root: props.root,
@@ -11,11 +12,30 @@ const template = async (props: {
   await fs.promises.writeFile(
     `${__dirname}/../src/raw/${props.name}.ts`,
     [
-      `export const ${props.name}: Record<string, string> = ${JSON.stringify(files, null, 2)};`,
+      `export const ${props.name}: Record<string, string> = ${JSON.stringify(
+        {
+          ...files,
+          ...props.files,
+        },
+        null,
+        2,
+      )};`,
     ].join("\n"),
     "utf8",
   );
 };
+
+const getDefinition = async (src: string): Promise<Record<string, string>> => ({
+  [`test/autobe/${src}`]: [
+    "//---------------------------------------------------",
+    "// Cloned from @autobe/interface",
+    "//---------------------------------------------------",
+    await fs.promises.readFile(
+      `${__dirname}/../../interface/src/${src}`,
+      "utf8",
+    ),
+  ].join("\n"),
+});
 
 const main = async (): Promise<void> => {
   try {
@@ -32,6 +52,13 @@ const main = async (): Promise<void> => {
   await template({
     root: `${__dirname}/../../../internals/template/realize`,
     name: "AutoBeCompilerRealizeTemplate",
+    files: {
+      ...(await getDefinition("compiler/IAutoBeRealizeTestOperation.ts")),
+      ...(await getDefinition("compiler/IAutoBeRealizeTestProps.ts")),
+      ...(await getDefinition("compiler/IAutoBeRealizeTestResult.ts")),
+      ...(await getDefinition("rpc/IAutoBeRealizeTestListener.ts")),
+      ...(await getDefinition("rpc/IAutoBeRealizeTestService.ts")),
+    },
   });
 };
 main().catch((error) => {
