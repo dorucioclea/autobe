@@ -5,10 +5,11 @@ import {
   AutoBeHistory,
   AutoBeUserMessageContent,
   AutoBeUserMessageHistory,
+  IAutoBeCompilerListener,
   IAutoBeGetFilesOptions,
 } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
-import { Semaphore } from "tstl";
+import { Semaphore, Singleton } from "tstl";
 import { v4 } from "uuid";
 
 import { AutoBeContext } from "./context/AutoBeContext";
@@ -109,6 +110,17 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
       ...props.vendor,
       semaphore: new Semaphore(props.vendor.semaphore ?? 16),
     };
+    const compilerListener: IAutoBeCompilerListener = {
+      realize: {
+        test: {
+          onOperation: async () => {},
+          onReset: async () => {},
+        },
+      },
+    };
+    const compiler = new Singleton(async () =>
+      props.compiler(compilerListener),
+    );
     this.context_ = {
       vendor,
       model: props.model,
@@ -116,7 +128,8 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
         backoffStrategy: randomBackoffStrategy,
         ...props.config,
       },
-      compiler: props.compiler,
+      compiler: () => compiler.get(),
+      compilerListener,
       histories: () => this.histories_,
       state: () => this.state_,
       usage: () => this.getTokenUsage(),
@@ -124,7 +137,7 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
       dispatch: (event) => {
         this.dispatch(event).catch(() => {});
       },
-    };
+    } satisfies AutoBeContext<Model>;
     this.agentica_ = new MicroAgentica({
       vendor,
       model: props.model,
@@ -285,11 +298,11 @@ export class AutoBeAgent<Model extends ILlmSchema.Model> {
    *   immediate file system operations, build integration, or deployment
    *   workflows
    */
-  public getFiles(
+  public async getFiles(
     options?: Partial<IAutoBeGetFilesOptions>,
   ): Promise<Record<string, string>> {
     return getAutoBeGenerated(
-      this.context_,
+      await this.getContext(),
       this.histories_,
       this.usage_,
       options,
