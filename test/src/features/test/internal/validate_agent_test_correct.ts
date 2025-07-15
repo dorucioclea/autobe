@@ -69,14 +69,7 @@ export const validate_agent_test_correct = async (
       ]),
       "test/tsconfig.json":
         AutoBeCompilerInterfaceTemplate["test/tsconfig.json"],
-      "logs/corrects.json": JSON.stringify(
-        result.map((r) => ({
-          ...r,
-          javascript: undefined,
-        })),
-        null,
-        2,
-      ),
+      "logs/corrects.json": JSON.stringify(result, null, 2),
       "logs/failures.json": JSON.stringify(
         result
           .map((c) => c.result)
