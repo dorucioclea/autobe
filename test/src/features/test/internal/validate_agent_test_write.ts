@@ -71,14 +71,7 @@ export const validate_agent_test_write = async (
       "test/tsconfig.json":
         AutoBeCompilerInterfaceTemplate["test/tsconfig.json"],
       "logs/results.json": typia.json.stringify(writes),
-      "logs/compiled.json": JSON.stringify(
-        {
-          ...result,
-          javascript: undefined,
-        },
-        null,
-        2,
-      ),
+      "logs/compiled.json": JSON.stringify(result, null, 2),
     },
   });
   if (process.argv.includes("--archive"))

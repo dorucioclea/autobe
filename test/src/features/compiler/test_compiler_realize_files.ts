@@ -23,7 +23,6 @@ export const test_compiler_realize_files = async (): Promise<void> => {
         files: {},
         compiled: {
           type: "success",
-          javascript: {},
         },
         id: v4(),
         created_at: new Date().toISOString(),
