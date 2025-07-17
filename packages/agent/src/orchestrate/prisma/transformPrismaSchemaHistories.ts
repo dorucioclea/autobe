@@ -1,21 +1,13 @@
 import { IAgenticaHistoryJson } from "@agentica/core";
-import { AutoBeAnalyzeHistory, AutoBePrisma } from "@autobe/interface";
+import { AutoBePrisma } from "@autobe/interface";
 import { v4 } from "uuid";
 
 import { AutoBeSystemPromptConstant } from "../../constants/AutoBeSystemPromptConstant";
 
 export const transformPrismaSchemaHistories = (
-  analyze: AutoBeAnalyzeHistory,
-  component: {
-    filename: string;
-    tables: string[];
-    entireTables: string[];
-  },
-  remained?: {
-    done: AutoBePrisma.IModel[];
-    todo: string[];
-    namespace: string;
-  },
+  requirementAnalysisReport: Record<string, string>,
+  targetComponent: AutoBePrisma.IComponent,
+  otherComponents: AutoBePrisma.IComponent[],
 ): Array<
   IAgenticaHistoryJson.IAssistantMessage | IAgenticaHistoryJson.ISystemMessage
 > => {
@@ -26,69 +18,37 @@ export const transformPrismaSchemaHistories = (
       type: "systemMessage",
       text: AutoBeSystemPromptConstant.PRISMA_SCHEMA,
     },
-    // {
-    //   id: v4(),
-    //   created_at: new Date().toISOString(),
-    //   type: "systemMessage",
-    //   text: [
-    //     "Before making prisma schema files,",
-    //     "learn about the prisma schema language",
-    //     "from the best practices and examples",
-    //     "",
-    //     AutoBeSystemPromptConstant.PRISMA_EXAMPLE,
-    //   ].join("\n"),
-    // },
+    {
+      id: v4(),
+      created_at: new Date().toISOString(),
+      type: "assistantMessage",
+      text: [
+        "Here is the input data for generating Prisma DB schema.",
+        "",
+        "```",
+        JSON.stringify({
+          requirementAnalysisReport,
+          otherComponents,
+          targetComponent,
+        }),
+        "```",
+      ].join("\n"),
+    },
     {
       id: v4(),
       created_at: new Date().toISOString(),
       type: "systemMessage",
       text: [
-        "Here is the requirement analysis report.",
-        "",
-        "Call the provided tool function to generate Prisma DB schema",
-        "referencing below requirement analysis report.",
-        "",
-        "## User Request",
-        analyze.reason,
-        "",
-        `## Requirement Analysis Report`,
+        "You've already taken a mistake that creating models from the other components.",
+        "Note that, you have to make models from the target component only. Never make",
+        "models from the other components. The other components' models are already made.",
         "",
         "```json",
-        JSON.stringify(analyze.files),
+        JSON.stringify({
+          targetComponent,
+        }),
         "```",
-        "",
-        "## Context",
-        "",
-        `  - Target filename: ${component.filename}`,
-        `  - Tables what you have to make:`,
-        ...component.tables.map((table) => `    - ${table}`),
-        `  - Entire tables you can reference:`,
-        ...component.entireTables.map((table) => `    - ${table}`),
       ].join("\n"),
     },
-    ...(remained
-      ? [
-          {
-            type: "assistantMessage",
-            id: v4(),
-            created_at: new Date().toISOString(),
-            text: [
-              "You made these prisma models before:",
-              "",
-              "```json",
-              JSON.stringify({
-                filename: component.filename,
-                namespace: remained.namespace,
-                models: remained.done,
-              }),
-              "```",
-              "",
-              "However, you have not made these prisma models yet:",
-              "",
-              ...remained.todo.map((s) => `- ${s}`),
-            ].join("\n"),
-          } satisfies IAgenticaHistoryJson.IAssistantMessage,
-        ]
-      : []),
   ];
 };
