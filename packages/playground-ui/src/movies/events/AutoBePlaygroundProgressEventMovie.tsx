@@ -8,6 +8,9 @@ import {
   AutoBePrismaComponentsEvent,
   AutoBePrismaInsufficientEvent,
   AutoBePrismaSchemasEvent,
+  AutoBeRealizeDecoratorCorrectEvent,
+  AutoBeRealizeDecoratorEvent,
+  AutoBeRealizeDecoratorValidateEvent,
   AutoBeRealizeProgressEvent,
   AutoBeRealizeTestOperationEvent,
   AutoBeRealizeTestResetEvent,
@@ -41,12 +44,15 @@ export namespace AutoBePlaygroundProgressEventMovie {
       | AutoBeInterfaceComplementEvent
       | AutoBeTestScenarioEvent
       | AutoBeTestWriteEvent
+      | AutoBeRealizeDecoratorEvent
       | AutoBeTestValidateEvent
       | AutoBeTestCorrectEvent
       | AutoBeRealizeProgressEvent
       | AutoBeRealizeValidateEvent
       | AutoBeRealizeTestResetEvent
-      | AutoBeRealizeTestOperationEvent;
+      | AutoBeRealizeTestOperationEvent
+      | AutoBeRealizeDecoratorValidateEvent
+      | AutoBeRealizeDecoratorCorrectEvent;
   }
 }
 
@@ -80,6 +86,12 @@ function getDescription(
       return `Validating Test Function: ${event.result.type}`;
     case "testCorrect":
       return `Correcting Test Function`;
+    case "realizeDecorator":
+      return `Generated Decorators: ${event.completed} of ${event.total}`;
+    case "realizeDecoratorValidate":
+      return `Validating Decorator Function: ${event.result.type}`;
+    case "realizeDecoratorCorrect":
+      return `Correcting Decorator Function ${event.result.type}`;
     case "realizeValidate":
       return `Validating Realize Function: ${event.result.type}`;
     case "realizeProgress":

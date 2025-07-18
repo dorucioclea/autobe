@@ -42,7 +42,10 @@ export function AutoBePlaygroundEventMovie(
     case "testScenario":
     case "testCorrect":
     case "testValidate":
+    case "realizeDecorator":
     case "realizeValidate":
+    case "realizeDecoratorValidate":
+    case "realizeDecoratorCorrect":
     case "realizeTestReset":
     case "realizeTestOperation":
       return <AutoBePlaygroundProgressEventMovie event={props.event} />;
