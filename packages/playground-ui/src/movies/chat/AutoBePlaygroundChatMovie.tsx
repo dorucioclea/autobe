@@ -86,7 +86,6 @@ export function AutoBePlaygroundChatMovie(
     try {
       await props.service.conversate(text);
     } catch (error) {
-      console.error(error);
       if (error instanceof Error) {
         alert(error.message);
         setError(error);
@@ -112,6 +111,13 @@ export function AutoBePlaygroundChatMovie(
       .then(setTokenUsage)
       .catch(() => {});
   }, []);
+  useEffect(() => {
+    if (eventGroups.length === 0) return;
+    bodyContainerRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [eventGroups.length]);
 
   //----
   // RENDERERS
