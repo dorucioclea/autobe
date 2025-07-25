@@ -26,9 +26,10 @@ export interface AutoBeRealizeAuthorizationValidateEvent
   /**
    * The validation result from the TypeScript compiler.
    *
-   * Contains detailed information about whether the decorator implementation
-   * code successfully passed compilation validation, including any errors or
-   * warnings that were detected during the validation process.
+   * Contains detailed information about whether the authorization implementation
+   * code (providers, payloads, decorators) successfully passed compilation
+   * validation, including any errors or warnings that were detected during
+   * the validation process.
    */
   result: IAutoBeTypeScriptCompileResult;
 
