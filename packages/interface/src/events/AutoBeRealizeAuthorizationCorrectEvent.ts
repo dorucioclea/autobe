@@ -27,9 +27,10 @@ export interface AutoBeRealizeAuthorizationCorrectEvent
    * The compilation failure details that triggered the correction process.
    *
    * Contains the specific compilation error information describing what
-   * validation errors were detected in the decorator implementation code. This
-   * includes error messages, file locations, type issues, or other compilation
-   * problems that prevented successful validation.
+   * validation errors were detected in the authorization implementation code
+   * (providers, payloads, decorators). This includes error messages, file
+   * locations, type issues, or other compilation problems that prevented
+   * successful validation.
    */
   result: IAutoBeTypeScriptCompileResult.IFailure;
 
@@ -37,7 +38,7 @@ export interface AutoBeRealizeAuthorizationCorrectEvent
    * Iteration number of the requirements analysis this correction was performed
    * for.
    *
-   * Indicates which version of the requirements analysis this decorator
+   * Indicates which version of the requirements analysis this authorization
    * correction reflects. This step number ensures that correction efforts are
    * aligned with the current requirements and helps track the evolution of code
    * quality as validation feedback is incorporated.

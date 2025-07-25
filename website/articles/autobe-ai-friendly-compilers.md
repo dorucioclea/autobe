@@ -1,3 +1,7 @@
+<!--
+[AutoBE] We made AI-friendly Compilers for Vibe Coding, achieving 100% build success (open-source, AWS Kiro like)
+-->
+
 ## Preface
 {% youtube JNreQ0Rk94g %}
 
@@ -286,3 +290,26 @@ Through this approach where AI directly generates ASTs, compilers validate them,
 Currently, [`AutoBE`](https://github.com/wrtnlabs/autobe) is in alpha version state, requiring more development until the beta release. However, we believe this compiler-based approach can present new possibilities to developers. We thank those who have shown interest in the [`AutoBE`](https://github.com/wrtnlabs/autobe) project and ask you to continue following our development progress.
 
 https://github.com/wrtnlabs/autobe
+
+## Appendix: AutoBE vs AWS Kiro
+
+{% youtube jIuc0HSgYCY %}
+
+AWS Kiro represents a significant milestone in AI-powered development tools, particularly through its IDE plugin implementation. After observing Kiro's approach as an integrated development environment extension, we recognize the tremendous value this model brings to developer workflows.
+
+Kiro's IDE plugin strategy demonstrates how AI coding assistants can seamlessly integrate into existing development environments, providing real-time assistance without disrupting established workflows. This integration model allows developers to leverage AI capabilities directly within their familiar coding environment, making the technology more accessible and practical for daily use.
+
+Inspired by Kiro's IDE plugin approach, we are planning to develop and release an [`AutoBE`](https://github.com/wrtnlabs/autobe) IDE plugin alongside our v1 release (scheduled for end of 2025). This plugin will integrate [`AutoBE`](https://github.com/wrtnlabs/autobe)'s waterfall compiler system directly into popular IDE `VSCode`, enabling developers to:
+
+- Generate backend applications through familiar IDE interfaces
+- Receive real-time compiler feedback and validation
+- Experience the complete development cycle from requirements analysis to implementation
+- Leverage [`AutoBE`](https://github.com/wrtnlabs/autobe)'s 100% compilation success guarantee within their existing development environment
+
+However, we must acknowledge that compared to AWS Kiro's current development maturity and market presence, [`AutoBE`](https://github.com/wrtnlabs/autobe)'s progress remains in its early stages. While we have achieved significant technical milestones with our compiler-based approach and 100% build success rate, Kiro has already established itself as a comprehensive solution with proven market adoption and extensive IDE integration capabilities.
+
+Our current alpha status, with the realize agent still under development and prompt optimization pending, highlights the gap between our current capabilities and the polished experience that Kiro provides. Rather than viewing this as a limitation, we see it as an opportunity to learn extensively from Kiro's strengths and proven approaches.
+
+We are committed to studying Kiro's successful strategies, particularly their user experience design, IDE integration patterns, and developer workflow optimization. By absorbing their strengths while leveraging our unique compiler-based architecture and guaranteed compilation success, we aim to create an exceptional open-source project that combines the best of both approaches.
+
+The IDE plugin development will be a crucial step in making [`AutoBE`](https://github.com/wrtnlabs/autobe) more accessible to developers, and we plan to incorporate lessons learned from Kiro's implementation to ensure we deliver a polished, practical solution that truly serves the developer community through our open-source initiative.
