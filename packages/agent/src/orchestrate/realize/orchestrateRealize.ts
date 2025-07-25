@@ -1,5 +1,6 @@
 import {
   AutoBeAssistantMessageHistory,
+  AutoBeRealizeAuthorization,
   AutoBeRealizeHistory,
 } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
@@ -7,7 +8,7 @@ import { v4 } from "uuid";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
-import { orchestrateRealizeDecorator } from "./orchestrateRealizeDecorator";
+import { orchestrateRealizeAuthorization } from "./orchestrateRealizeAuthorization";
 import { writeCodeUntilCompilePassed } from "./writeCodeUntilCompilePassed";
 
 export const orchestrateRealize =
@@ -28,7 +29,8 @@ export const orchestrateRealize =
       step: ctx.state().test?.step ?? 0,
     });
 
-    const decorators = await orchestrateRealizeDecorator(ctx);
+    const decorators: AutoBeRealizeAuthorization[] =
+      await orchestrateRealizeAuthorization(ctx);
     const files = await writeCodeUntilCompilePassed(ctx, ops, decorators, 2);
 
     const now = new Date().toISOString();
@@ -47,7 +49,7 @@ export const orchestrateRealize =
         id: v4(),
         reason: props.reason,
         step: ctx.state().analyze?.step ?? 0,
-        decorators: ctx.state().realize?.decorators ?? [],
+        authorizations: ctx.state().realize?.authorizations ?? [],
       } satisfies AutoBeRealizeHistory);
 
       ctx.histories().push(history);
@@ -70,6 +72,6 @@ export const orchestrateRealize =
       id: v4(),
       reason: props.reason,
       step: ctx.state().analyze?.step ?? 0,
-      decorators: ctx.state().realize?.decorators ?? [],
+      authorizations: ctx.state().realize?.authorizations ?? [],
     };
   };

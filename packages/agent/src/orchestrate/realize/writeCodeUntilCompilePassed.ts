@@ -1,6 +1,6 @@
 import {
   AutoBeOpenApi,
-  AutoBeRealizeDecoratorEvent,
+  AutoBeRealizeAuthorization,
   AutoBeRealizeFunction,
   IAutoBeTypeScriptCompileResult,
 } from "@autobe/interface";
@@ -20,13 +20,13 @@ export async function writeCodeUntilCompilePassed<
 >(
   ctx: AutoBeContext<Model>,
   ops: AutoBeOpenApi.IOperation[],
-  autoBeRealizeDecoratorEvent: AutoBeRealizeDecoratorEvent[],
+  authorizations: AutoBeRealizeAuthorization[],
   retry: number,
 ): Promise<AutoBeRealizeFunction[]> {
-  const payloads = autoBeRealizeDecoratorEvent
+  const payloads = authorizations
     .map((el) => {
       return {
-        [`src/authentications/types/${el.payload.name}.ts`]: el.payload.code,
+        [el.payload.location]: el.payload.content,
       };
     })
     .reduce<Record<string, string>>((acc, cur) => Object.assign(acc, cur), {});
@@ -62,9 +62,7 @@ export async function writeCodeUntilCompilePassed<
     )[] = await Promise.all(
       targets.map((op) => {
         const role = op.authorizationRole;
-        const decorator = autoBeRealizeDecoratorEvent.find(
-          (el) => el.role === role,
-        );
+        const decorator = authorizations.find((el) => el.role === role);
 
         return process(ctx, metadata, op, diagnostics, entireCodes, decorator);
       }),
@@ -167,7 +165,7 @@ async function process<Model extends ILlmSchema.Model>(
   op: AutoBeOpenApi.IOperation,
   diagnostics: IAutoBeRealizeCompile.CompileDiagnostics,
   entireCodes: IAutoBeRealizeCompile.FileContentMap,
-  decorator?: AutoBeRealizeDecoratorEvent,
+  decorator?: AutoBeRealizeAuthorization,
 ) {
   const result = await pipe(
     op,

@@ -17,10 +17,10 @@ import {
   AutoBePrismaSchemasEvent,
   AutoBePrismaStartEvent,
   AutoBePrismaValidateEvent,
+  AutoBeRealizeAuthorizationCorrectEvent,
+  AutoBeRealizeAuthorizationValidateEvent,
+  AutoBeRealizeAuthorizationWriteEvent,
   AutoBeRealizeCompleteEvent,
-  AutoBeRealizeDecoratorCorrectEvent,
-  AutoBeRealizeDecoratorEvent,
-  AutoBeRealizeDecoratorValidateEvent,
   AutoBeRealizeProgressEvent,
   AutoBeRealizeStartEvent,
   AutoBeRealizeTestCompleteEvent,
@@ -36,6 +36,8 @@ import {
   AutoBeTestWriteEvent,
   AutoBeUserMessageEvent,
 } from "../events";
+import { AutoBeRealizeAuthorizationCompleteEvent } from "../events/AutoBeRealizeAuthorizationCompleteEvent";
+import { AutoBeRealizeAuthorizationStartEvent } from "../events/AutoBeRealizeAuthorizationStartEvent";
 
 /**
  * Interface for WebSocket RPC event listener provided by client applications to
@@ -323,34 +325,60 @@ export interface IAutoBeRpcListener {
   realizeStart?(event: AutoBeRealizeStartEvent): Promise<void>;
 
   /**
-   * Optional handler for decorator generation events.
+   * Optional handler for authorization implementation start events.
    *
-   * Called when the Realize agent begins generating decorators, enabling client
-   * applications to indicate the start of the decorator generation phase.
+   * Called when the Realize agent begins implementing authentication and
+   * authorization components, including providers, payloads, and decorators
+   * for role-based access control.
    */
-  realizeDecorator?(event: AutoBeRealizeDecoratorEvent): Promise<void>;
-
-  /**
-   * Optional handler for decorator validation events.
-   *
-   * Called when the Realize agent validates the generated decorator, enabling
-   * client applications to show quality assurance processes and potential
-   * correction activities for the decorator.
-   */
-  realizeDecoratorValidate?(
-    event: AutoBeRealizeDecoratorValidateEvent,
+  realizeAuthorizationStart?(
+    event: AutoBeRealizeAuthorizationStartEvent,
   ): Promise<void>;
 
   /**
-   * Optional handler for decorator correction events.
+   * Optional handler for authorization implementation progress events.
+   *
+   * Called when the Realize agent generates authorization components (providers,
+   * payloads, decorators) for each user role, enabling client applications to
+   * track the progress of authorization system implementation.
+   */
+  realizeAuthorizationWrite?(
+    event: AutoBeRealizeAuthorizationWriteEvent,
+  ): Promise<void>;
+
+  /**
+   * Optional handler for authorization validation events.
+   *
+   * Called when the Realize agent validates the generated authorization
+   * components (providers, payloads, decorators), enabling client applications
+   * to show quality assurance processes and potential correction activities
+   * for the authentication and authorization system.
+   */
+  realizeAuthorizationValidate?(
+    event: AutoBeRealizeAuthorizationValidateEvent,
+  ): Promise<void>;
+
+  /**
+   * Optional handler for authorization correction events.
    *
    * Called when the Realize agent corrects compilation failures in the
-   * generated decorator implementation code, enabling client applications to
-   * show that issues are being resolved automatically through iterative
-   * improvement.
+   * generated authorization implementation code (providers, payloads, decorators),
+   * enabling client applications to show that issues are being resolved
+   * automatically through iterative improvement.
    */
-  realizeDecoratorCorrect?(
-    event: AutoBeRealizeDecoratorCorrectEvent,
+  realizeAuthorizationCorrect?(
+    event: AutoBeRealizeAuthorizationCorrectEvent,
+  ): Promise<void>;
+
+  /**
+   * Optional handler for authorization implementation completion events.
+   *
+   * Called when the Realize agent completes the implementation of all
+   * authorization components, signaling that the authentication and
+   * authorization system is fully implemented and ready for use.
+   */
+  realizeAuthorizationComplete?(
+    event: AutoBeRealizeAuthorizationCompleteEvent,
   ): Promise<void>;
 
   /**

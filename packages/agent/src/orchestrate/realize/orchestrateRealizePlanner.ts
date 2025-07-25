@@ -1,4 +1,4 @@
-import { AutoBeOpenApi, AutoBeRealizeDecoratorEvent } from "@autobe/interface";
+import { AutoBeOpenApi, AutoBeRealizeAuthorization } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
@@ -74,7 +74,7 @@ export interface RealizePlannerOutput {
    * middleware configurations, or special handling directives that affect the
    * final code output.
    */
-  decoratorEvent?: AutoBeRealizeDecoratorEvent;
+  decoratorEvent?: AutoBeRealizeAuthorization;
 }
 
 /**
@@ -99,7 +99,7 @@ export interface RealizePlannerOutput {
 export const orchestrateRealizePlanner = async <Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   operation: AutoBeOpenApi.IOperation,
-  autoBeRealizeDecoratorEvent?: AutoBeRealizeDecoratorEvent,
+  authorization?: AutoBeRealizeAuthorization,
 ): Promise<RealizePlannerOutput> => {
   const testScenarios =
     ctx
@@ -122,6 +122,6 @@ export const orchestrateRealizePlanner = async <Model extends ILlmSchema.Model>(
       .replaceAll("-", "_")
       .replaceAll("{", "$")
       .replaceAll("}", "")}`,
-    decoratorEvent: autoBeRealizeDecoratorEvent,
+    decoratorEvent: authorization,
   } satisfies RealizePlannerOutput;
 };
