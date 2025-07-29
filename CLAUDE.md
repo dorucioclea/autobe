@@ -138,6 +138,109 @@ Mission: "Can you converse? Then you're a full-stack developer."
 4. Reference the test results in `/test/results/` for examples
 5. Use the existing agent patterns found in `/packages/` directory
 
+### Development Conventions
+
+All commits, pull requests, and issues follow the same convention format.
+
+#### Convention Format
+**Format**: `<type>(<workspace>): <description>`
+
+This format is used for:
+- Commit messages
+- Pull request titles
+- Issue titles
+
+**Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, missing semicolons, etc.)
+- `refactor`: Code refactoring without changing functionality
+- `test`: Adding or modifying tests
+- `chore`: Maintenance tasks, dependency updates
+- `perf`: Performance improvements
+
+**Workspaces** (from pnpm-workspace.yaml):
+- `agent`, `compiler`, `filesystem`, `interface`, `playground-server`, `playground-ui`, `rpc`, `utils`, `vscode-extension` (in packages/)
+- `test` 
+- `website`
+- `internals/website-examples`
+
+**Examples**:
+```
+# Commits, PRs, and Issues all use the same format:
+feat(agent): add partial modification support to analyze agent
+fix(compiler): resolve TypeScript compilation error in realize agent
+refactor(utils): remove console log from randomBackoffStrategy function
+chore: release v0.14.6
+```
+
+#### Pull Request Guidelines
+1. **PR Title**: Must follow the convention format above
+2. **PR Description** must include:
+   - Summary of changes
+   - Related issue number (e.g., `Closes #123`, `Related to #456`)
+   - Test plan or verification steps
+   - Breaking changes (if any)
+
+**PR Template**:
+```markdown
+## Summary
+Brief description of what this PR does
+
+## Related Issues
+Closes #123
+
+## Changes
+- List of specific changes
+- What was modified and why
+
+## Test Plan
+How to verify these changes work correctly
+
+## Breaking Changes
+Any breaking changes (or "None")
+```
+
+#### Issue Guidelines
+1. **Issue Title**: Must follow the convention format above
+2. **Issue Body** structure:
+
+**For Bugs**:
+```markdown
+## Problem Description
+What is broken and how it affects users
+
+## Steps to Reproduce
+1. Step one
+2. Step two
+3. Expected vs Actual behavior
+
+## Environment
+- Version: 
+- OS: 
+- Node version:
+```
+
+**For Features** (using EARS format):
+```markdown
+## Problem Statement
+Current limitations and why this feature is needed
+
+## Requirements (EARS Format)
+WHEN [trigger]
+THE SYSTEM SHALL [action]
+
+WHERE [condition]
+THE SYSTEM SHALL [behavior]
+
+## Proposed Solution
+How to implement this feature
+
+## Expected Benefits
+What improvements this brings
+```
+
 ### Project Context Awareness
 - This is a production-ready no-code agent system
 - Code quality must be enterprise-grade
