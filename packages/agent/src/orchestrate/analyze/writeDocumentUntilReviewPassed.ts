@@ -36,12 +36,14 @@ export async function writeDocumentUntilReviewPassed<
     return pointer;
   }
 
+  let isToolCalled = false;
   const writer = orchestrateAnalyzeWrite(ctx, {
     totalFiles: props.totalFiles,
     roles: props.roles,
     targetFile: props.filename,
     review: props.prevReview ?? "",
     setDocument: (v) => {
+      isToolCalled = true;
       pointer.value = { files: { ...pointer.value?.files, ...v } };
     },
   });
@@ -49,6 +51,10 @@ export async function writeDocumentUntilReviewPassed<
     const tokenUsage = writer.getTokenUsage();
     ctx.usage().record(tokenUsage, ["analyze"]);
   });
+
+  if (isToolCalled === false) {
+    throw new Error("Failed to write document by unknown reason.");
+  }
 
   ctx.dispatch({
     type: "analyzeWrite",
