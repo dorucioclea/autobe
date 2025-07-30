@@ -1,4 +1,5 @@
 import { AutoBeTokenUsage } from "@autobe/agent";
+import { FileSystemIterator } from "@autobe/filesystem";
 import {
   AutoBeEventSnapshot,
   AutoBeHistory,
@@ -6,16 +7,41 @@ import {
 } from "@autobe/interface";
 import fs from "fs";
 import typia from "typia";
+import { v4 } from "uuid";
 
 import { TestGlobal } from "../TestGlobal";
 import { TestProject } from "../structures/TestProject";
 
 export namespace TestHistory {
-  export const getInitial = (project: TestProject): Promise<AutoBeHistory[]> =>
-    getHistories({
-      project,
-      type: "initial",
+  export const save = async (files: Record<string, string>): Promise<void> => {
+    await FileSystemIterator.save({
+      root: `${TestGlobal.ROOT}/assets/histories/${TestGlobal.getModel()}`,
+      overwrite: true,
+      files,
     });
+  };
+
+  export const getInitial = async (
+    project: TestProject,
+  ): Promise<AutoBeHistory[]> => {
+    const text: string = await fs.promises.readFile(
+      `${TestGlobal.ROOT}/scripts/${project}.md`,
+      "utf8",
+    );
+    return [
+      {
+        type: "userMessage",
+        id: v4(),
+        created_at: new Date().toISOString(),
+        contents: [
+          {
+            type: "text",
+            text,
+          },
+        ],
+      },
+    ];
+  };
 
   export const getAnalyze = (project: TestProject): Promise<AutoBeHistory[]> =>
     getHistories({
@@ -55,7 +81,7 @@ export namespace TestHistory {
   }): Promise<IAutoBeTokenUsageJson> => {
     const snapshots: AutoBeEventSnapshot[] = JSON.parse(
       await fs.promises.readFile(
-        `${TestGlobal.ROOT}/assets/histories/${props.project}.${props.type}.json`,
+        `${TestGlobal.ROOT}/assets/histories/${TestGlobal.getModel()}/${props.project}.${props.type}.json`,
         "utf8",
       ),
     );
@@ -66,7 +92,7 @@ export namespace TestHistory {
     project: TestProject;
     type: "initial" | "analyze" | "prisma" | "interface" | "test" | "realize";
   }): Promise<AutoBeHistory[]> => {
-    const location: string = `${TestGlobal.ROOT}/assets/histories/${props.project}.${props.type}.json`;
+    const location: string = `${TestGlobal.ROOT}/assets/histories/${TestGlobal.getModel()}/${props.project}.${props.type}.json`;
     const content: string = await fs.promises.readFile(location, "utf8");
     const histories: AutoBeHistory[] = JSON.parse(content);
 
