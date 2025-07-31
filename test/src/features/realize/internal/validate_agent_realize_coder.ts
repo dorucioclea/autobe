@@ -27,7 +27,7 @@ export const validate_agent_realize_coder = async (
       map.set(event.type, true);
     }
 
-    if (event.type === "realizeProgress") {
+    if (event.type === "realizeWrite" || event.type === "realizeCorrect") {
       console.log(
         event.filename,
         `${event.completed}/${event.total} completed.`,
@@ -38,7 +38,8 @@ export const validate_agent_realize_coder = async (
   };
 
   agent.on("realizeStart", enroll);
-  agent.on("realizeProgress", enroll);
+  agent.on("realizeWrite", enroll);
+  agent.on("realizeCorrect", enroll);
   agent.on("realizeValidate", enroll);
   agent.on("realizeComplete", enroll);
 
@@ -56,9 +57,10 @@ export const validate_agent_realize_coder = async (
       retry: 4,
     });
 
-  const result: AutoBeRealizeFunction[] = await go();
+  const result = await go();
+  const functions: AutoBeRealizeFunction[] = result.functions;
 
-  const codes = arrayToRecord(result, "location", "content");
+  const codes = arrayToRecord(functions, "location", "content");
 
   const histories = agent.getHistories();
   const prisma = agent.getContext().state().prisma?.compiled;
