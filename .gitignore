@@ -6,9 +6,13 @@ temporary/
 
 repositories/
 packages/*/README.md
+packages/*/LICENSE
 test/README.md
+test/LICENSE
 website/README.md
+website/LICENSE
 internals/*/README.md
+internals/*/LICENSE
 !internals/template/README.md
 
 *.log
