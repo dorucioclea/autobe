@@ -1,3 +1,4 @@
+import { ILlmSchema } from "@samchon/openapi";
 import dotenv from "dotenv";
 import dotenvExpand from "dotenv-expand";
 import path from "path";
@@ -29,15 +30,18 @@ export class TestGlobal {
     );
   }
 
-  public static getModel(): string {
-    return TestGlobal.env.VENDOR_MODEL ?? "openai/gpt-4.1";
+  public static getVendorModel(): string {
+    if (TestGlobal.env.VENDOR_MODEL === undefined) return "openai/gpt-4.1";
+    else if (TestGlobal.env.BASE_URL === undefined)
+      return `openai/${TestGlobal.env.VENDOR_MODEL}`;
+    return TestGlobal.env.VENDOR_MODEL;
   }
 }
 
 interface IEnvironments {
   API_KEY?: string;
   BASE_URL?: string;
-  SCHEMA_MODEL?: string;
+  SCHEMA_MODEL?: ILlmSchema.Model;
   VENDOR_MODEL?: string;
   SEMAPHORE?: string;
   BENCHMARK_RUNS_PER_SCENARIO?: string;
