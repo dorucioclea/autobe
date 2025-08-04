@@ -215,6 +215,14 @@ gantt
   Function Calling:     done, 2025-07-17, 31d
   Runtime Validation: active, 2025-08-01, 30d
 
+  section vscode extensions
+  Interlocking vscode:                      done, 2025-08-01, 1d
+  Interlocking react for webview:           done, 2025-08-04, 2d
+  Connect autobe without event listener: planned, 2025-08-06, 2d
+  File System:                           planned, 2025-08-11, 5d
+  Connect personal LLM:                  planned, 2025-08-18, 4d
+  Apply a lot of autobe events:          planned, 2025-08-25, 5d 
+
   section Complementation
   Benchmark:     done,   2025-06-12, 50d
   Demonstration: done,   2025-06-16, 14d
