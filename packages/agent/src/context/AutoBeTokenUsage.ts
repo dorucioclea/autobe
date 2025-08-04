@@ -1,45 +1,96 @@
-import { AgenticaTokenUsage } from "@agentica/core";
 import { IAutoBeTokenUsageJson } from "@autobe/interface";
 
+import { AutoBeTokenUsageComponent } from "./AutoBeTokenUsageComponent";
 import { IAutoBeApplication } from "./IAutoBeApplication";
 
+/**
+ * A class that represents the token usage of the AutoBe agent.
+ *
+ * @author @sunrabbit123
+ * @example
+ *   ```ts
+ *   const tokenUsage = new AutoBeTokenUsage();
+ *   ```;
+ */
 export class AutoBeTokenUsage {
-  public readonly facade: AgenticaTokenUsage;
-  public readonly analyze: AgenticaTokenUsage;
-  public readonly prisma: AgenticaTokenUsage;
-  public readonly interface: AgenticaTokenUsage;
-  public readonly test: AgenticaTokenUsage;
-  public readonly realize: AgenticaTokenUsage;
+  public readonly facade: AutoBeTokenUsageComponent;
+  public readonly analyze: AutoBeTokenUsageComponent;
+  public readonly prisma: AutoBeTokenUsageComponent;
+  public readonly interface: AutoBeTokenUsageComponent;
+  public readonly test: AutoBeTokenUsageComponent;
+  public readonly realize: AutoBeTokenUsageComponent;
 
   public constructor(props?: IAutoBeTokenUsageJson) {
     if (props === undefined) {
-      this.facade = new AgenticaTokenUsage();
-      this.analyze = new AgenticaTokenUsage();
-      this.prisma = new AgenticaTokenUsage();
-      this.interface = new AgenticaTokenUsage();
-      this.test = new AgenticaTokenUsage();
-      this.realize = new AgenticaTokenUsage();
+      this.facade = new AutoBeTokenUsageComponent();
+      this.analyze = new AutoBeTokenUsageComponent();
+      this.prisma = new AutoBeTokenUsageComponent();
+      this.interface = new AutoBeTokenUsageComponent();
+      this.test = new AutoBeTokenUsageComponent();
+      this.realize = new AutoBeTokenUsageComponent();
       return;
     }
 
-    this.facade = new AgenticaTokenUsage(props.facade);
-    this.analyze = new AgenticaTokenUsage(props.analyze);
-    this.prisma = new AgenticaTokenUsage(props.prisma);
-    this.interface = new AgenticaTokenUsage(props.interface);
-    this.test = new AgenticaTokenUsage(props.test);
-    this.realize = new AgenticaTokenUsage(props.realize);
+    this.facade = new AutoBeTokenUsageComponent(props.facade);
+    this.analyze = new AutoBeTokenUsageComponent(props.analyze);
+    this.prisma = new AutoBeTokenUsageComponent(props.prisma);
+    this.interface = new AutoBeTokenUsageComponent(props.interface);
+    this.test = new AutoBeTokenUsageComponent(props.test);
+    this.realize = new AutoBeTokenUsageComponent(props.realize);
   }
 
+  /**
+   * Unified token usage across all AI agents and processing phases.
+   *
+   * Provides the total token consumption for the entire vibe coding session,
+   * combining all input and output tokens used by every agent throughout the
+   * development pipeline. This aggregate view enables overall cost assessment
+   * and resource utilization analysis for complete project automation.
+   *
+   * @author @sunrabbit123
+   */
+  public get aggregate(): IAutoBeTokenUsageJson.IComponent {
+    return AutoBeTokenUsage.keys().reduce(
+      (acc, cur) => AutoBeTokenUsageComponent.plus(acc, this[cur]),
+      new AutoBeTokenUsageComponent(),
+    );
+  }
+
+  /**
+   * Record the token usage of the AutoBe agent.
+   *
+   * @author @sunrabbit123
+   * @example
+   *   ```ts
+   *   const tokenUsage = new AutoBeTokenUsage();
+   *   tokenUsage.record({ total: 100, input: { total: 100, cached: 0 }, output: { total: 100, reasoning: 0, accepted_prediction: 0, rejected_prediction: 0 } });
+   *   ```;
+   *
+   * @param usage - The token usage to record.
+   * @param additionalStages - The additional stages to record the token usage
+   *   for.
+   */
   public record(
-    usage: AgenticaTokenUsage,
+    usage: IAutoBeTokenUsageJson.IComponent,
     additionalStages: (keyof IAutoBeApplication)[] = [],
   ) {
-    this.facade.increment(usage);
     additionalStages.forEach((stage) => {
       this[stage].increment(usage);
     });
   }
 
+  /**
+   * Increment the token usage of the AutoBe agent.
+   *
+   * @author @sunrabbit123
+   * @example
+   *   ```ts
+   *   const tokenUsage = new AutoBeTokenUsage();
+   *   tokenUsage.increment({ total: 100, input: { total: 100, cached: 0 }, output: { total: 100, reasoning: 0, accepted_prediction: 0, rejected_prediction: 0 } });
+   *   ```;
+   *
+   * @param usage - The token usage to increment.
+   */
   public increment(usage: AutoBeTokenUsage) {
     AutoBeTokenUsage.keys().forEach((key) => {
       this[key].increment(usage[key]);
@@ -47,17 +98,41 @@ export class AutoBeTokenUsage {
     return this;
   }
 
+  /**
+   * Add the token usage of two AutoBe agents.
+   *
+   * @author @sunrabbit123
+   * @example
+   *   ```ts
+   *   const tokenUsage = AutoBeTokenUsage.plus(tokenUsageA, tokenUsageB);
+   *   ```;
+   *
+   * @param usageA - The first token usage to add.
+   * @param usageB - The second token usage to add.
+   */
   public static plus(usageA: AutoBeTokenUsage, usageB: AutoBeTokenUsage) {
     return new AutoBeTokenUsage({
-      facade: AgenticaTokenUsage.plus(usageA.facade, usageB.facade),
-      analyze: AgenticaTokenUsage.plus(usageA.analyze, usageB.analyze),
-      prisma: AgenticaTokenUsage.plus(usageA.prisma, usageB.prisma),
-      interface: AgenticaTokenUsage.plus(usageA.interface, usageB.interface),
-      test: AgenticaTokenUsage.plus(usageA.test, usageB.test),
-      realize: AgenticaTokenUsage.plus(usageA.realize, usageB.realize),
+      facade: AutoBeTokenUsageComponent.plus(usageA.facade, usageB.facade),
+      analyze: AutoBeTokenUsageComponent.plus(usageA.analyze, usageB.analyze),
+      prisma: AutoBeTokenUsageComponent.plus(usageA.prisma, usageB.prisma),
+      interface: AutoBeTokenUsageComponent.plus(
+        usageA.interface,
+        usageB.interface,
+      ),
+      test: AutoBeTokenUsageComponent.plus(usageA.test, usageB.test),
+      realize: AutoBeTokenUsageComponent.plus(usageA.realize, usageB.realize),
     });
   }
 
+  /**
+   * Convert the token usage to a JSON object.
+   *
+   * @author @sunrabbit123
+   * @example
+   *   ```ts
+   *   const json = tokenUsage.toJSON();
+   *   ```;
+   */
   public toJSON(): IAutoBeTokenUsageJson {
     return {
       facade: this.facade.toJSON(),
@@ -69,19 +144,25 @@ export class AutoBeTokenUsage {
     };
   }
 
-  /** @internal */
-  private static keys(): ("facade" | keyof IAutoBeApplication)[] {
-    return ["facade", "analyze", "prisma", "interface", "test", "realize"];
+  /**
+   * Get the keys of the token usage.
+   *
+   * @author @sunrabbit123
+   * @example
+   *   ```ts
+   *   const keys = AutoBeTokenUsage.keys();
+   *   ```;
+   *
+   * @internal
+   */
+  private static keys() {
+    return [
+      "facade",
+      "analyze",
+      "prisma",
+      "interface",
+      "test",
+      "realize",
+    ] as const;
   }
 }
-
-// /** Type check statements */
-// 1 as unknown as AutoBeTokenUsage satisfies {
-//   [key in "facade" | keyof IAutoBeApplication]: AgenticaTokenUsage;
-// };
-
-// 1 as unknown as IAutoBeTokenUsageJson satisfies {
-//   [key in "facade" | keyof IAutoBeApplication]: IAutoBeInternalTokenUsageJson;
-// };
-
-// 1 as unknown as IAutoBeInternalTokenUsageJson satisfies IAgenticaTokenUsageJson;
