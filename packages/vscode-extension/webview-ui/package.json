@@ -1,5 +1,6 @@
 {
   "name": "webview-ui",
+  "private": true,
   "version": "0.17.0",
   "description": "",
   "main": "index.js",

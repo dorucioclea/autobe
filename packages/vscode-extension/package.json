@@ -1,5 +1,6 @@
 {
   "name": "autobe-vscode-extension",
+  "private": true,
   "displayName": "AutoBe - Auto generate backend system",
   "description": "AutoBe VSCode Extension",
   "author": "Wrtn Technologies",
