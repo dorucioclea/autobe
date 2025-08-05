@@ -231,8 +231,7 @@ function createApplication<Model extends ILlmSchema.Model>(props: {
   const application: ILlmApplication<Model> = collection[
     props.model
   ] as unknown as ILlmApplication<Model>;
-
-  application.functions[0].validate = (next: unknown): IValidation => {
+  const validate = (next: unknown): IValidation => {
     const result: IValidation<IAutoBeTestScenarioApplication.IProps> =
       typia.validate<IAutoBeTestScenarioApplication.IProps>(next);
     if (result.success === false) return result;
@@ -288,7 +287,15 @@ function createApplication<Model extends ILlmSchema.Model>(props: {
   return {
     protocol: "class",
     name: "Make test plans",
-    application,
+    application: {
+      ...application,
+      functions: [
+        {
+          ...application.functions[0],
+          validate,
+        },
+      ],
+    },
     execute: {
       makeScenario: (next) => {
         props.build(next);

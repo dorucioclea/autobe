@@ -159,7 +159,7 @@ function createApplication<Model extends ILlmSchema.Model>(props: {
   const application: ILlmApplication<Model> = collection[
     props.model
   ] as unknown as ILlmApplication<Model>;
-  application.functions[0].validate = (next: unknown) => {
+  const validate = (next: unknown) => {
     const result: IValidation<IAutoBeInterfaceOperationApplication.IProps> =
       typia.validate<IAutoBeInterfaceOperationApplication.IProps>(next);
     if (result.success === false) return result;
@@ -204,7 +204,15 @@ function createApplication<Model extends ILlmSchema.Model>(props: {
   return {
     protocol: "class",
     name: "interface",
-    application,
+    application: {
+      ...application,
+      functions: [
+        {
+          ...application.functions[0],
+          validate,
+        },
+      ],
+    },
     execute: {
       makeOperations: (next) => {
         props.build(next.operations);

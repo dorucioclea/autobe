@@ -119,11 +119,11 @@ function createApplication<Model extends ILlmSchema.Model>(
   const application: ILlmApplication<Model> = collection[
     ctx.model
   ] as unknown as ILlmApplication<Model>;
-  // application.functions[0].validate = (
+  // const validate = (
   //   input: unknown,
-  // ): IValidation<IMakePrismaSchemaFileProps> => {
-  //   const result: IValidation<IMakePrismaSchemaFileProps> =
-  //     typia.validate<IMakePrismaSchemaFileProps>(input);
+  // ): IValidation<IAutoBePrismaSchemaApplication.IProps> => {
+  //   const result: IValidation<IAutoBePrismaSchemaApplication.IProps> =
+  //     typia.validate<IAutoBePrismaSchemaApplication.IProps>(input);
   //   if (result.success === false) return result;
 
   //   const everyModels: AutoBePrisma.IModel[] = result.data.models;
@@ -182,6 +182,15 @@ function createApplication<Model extends ILlmSchema.Model>(
   return {
     protocol: "class",
     name: "Prisma Generator",
+    // application: {
+    //   ...application,
+    //   functions: [
+    //     {
+    //       ...application.functions[0],
+    //       validate,
+    //     },
+    //   ],
+    // },
     application,
     execute: {
       makePrismaSchemaFile: (next) => {
