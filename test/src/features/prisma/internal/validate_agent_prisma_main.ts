@@ -1,4 +1,4 @@
-import { orchestrate } from "@autobe/agent";
+import { AutoBeTokenUsage, orchestrate } from "@autobe/agent";
 import { FileSystemIterator } from "@autobe/filesystem";
 import {
   AutoBeAssistantMessageHistory,
@@ -24,7 +24,7 @@ export const validate_agent_prisma_main = async (
 ) => {
   if (TestGlobal.env.API_KEY === undefined) return false;
 
-  const { agent } = await prepare_agent_prisma(factory, project);
+  const { agent, zero } = await prepare_agent_prisma(factory, project);
   const model: string = TestGlobal.getVendorModel();
   const snapshots: AutoBeEventSnapshot[] = [];
   const listen = (event: AutoBeEvent) => {
@@ -47,12 +47,22 @@ export const validate_agent_prisma_main = async (
     start = event;
   });
   agent.on("prismaComponents", (event) => {
+    console.log(
+      event.components.map((c) => c.tables.length).reduce((a, b) => a + b, 0),
+      event.components.map((c) => c.tables.length),
+      event.components,
+    );
     components = event;
   });
 
   const schemas: AutoBePrismaSchemasEvent[] = [];
   const insufficients: AutoBePrismaInsufficientEvent[] = [];
   agent.on("prismaSchemas", (event) => {
+    console.log(
+      "schemas",
+      event.file.models.length,
+      event.file.models.map((m) => m.name),
+    );
     schemas.push(event);
   });
   agent.on("prismaInsufficient", (event) => {
@@ -71,9 +81,10 @@ export const validate_agent_prisma_main = async (
     });
   });
   agent.on("prismaValidate", async (event) => {
+    console.log("prismaValidate", event.result.errors);
     validates.push(event);
     await FileSystemIterator.save({
-      root: `${TestGlobal.ROOT}/results/${project}/prisma-failure-${validates.length}`,
+      root: `${TestGlobal.ROOT}/results/${model}/${project}/prisma-failure-${validates.length}`,
       files: {
         "errors.json": JSON.stringify(event.result.errors),
         ...event.schemas,
@@ -134,6 +145,13 @@ export const validate_agent_prisma_main = async (
   if (process.argv.includes("--archive"))
     await TestHistory.save({
       [`${project}.prisma.json`]: JSON.stringify(agent.getHistories()),
-      [`${project}.prisma.snapshots.json`]: JSON.stringify(snapshots),
+      [`${project}.prisma.snapshots.json`]: JSON.stringify(
+        snapshots.map((s) => ({
+          event: s.event,
+          tokenUsage: new AutoBeTokenUsage(s.tokenUsage)
+            .decrement(zero)
+            .toJSON(),
+        })),
+      ),
     });
 };
