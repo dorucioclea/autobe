@@ -14,6 +14,7 @@
 # include webview build files
 !webview-ui/build
 !webview-ui/build/assets/*.js
+!webview-ui/build/assets/*.js.map
 !webview-ui/build/assets/*.css
 
 # include icons and image

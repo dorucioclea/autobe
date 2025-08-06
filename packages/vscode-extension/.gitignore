@@ -6,4 +6,4 @@ node_modules
 *.tgz
 LICENSE
 
-src/webview-ui/build
+/webview-ui/build

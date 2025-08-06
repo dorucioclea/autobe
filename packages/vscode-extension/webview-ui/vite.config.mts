@@ -1,6 +1,8 @@
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  plugins: [tailwindcss()],
   build: {
     outDir: "../webview-ui/build",
     emptyOutDir: true,
@@ -9,6 +11,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         entryFileNames: `assets/[name].js`,
+        assetFileNames: `assets/[name].[ext]`,
       },
     },
   },
