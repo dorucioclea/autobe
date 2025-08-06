@@ -15,7 +15,7 @@ export const getHtmlContent =
     const nonce = getNonce();
     return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%;">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
@@ -25,9 +25,9 @@ export const getHtmlContent =
     <script nonce="${nonce}"></script>
     <title>Auto BE</title>
   </head>
-  <body>
+  <body style="height: 100%;">
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <div id="root" style="height: 100%;"></div>
     <script nonce="${nonce}" type="module" src="${scriptUri}"></script>
   </body>
 </html>
