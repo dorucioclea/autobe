@@ -26,7 +26,6 @@
     "webview:build": "cd ./webview-ui && pnpm build && cd ..",
     "worker:build": "cd ./worker && pnpm build && cd ..",
     "build": "pnpm webview:build && pnpm worker:build && pnpm rspack",
-    "postbuild": "node build/postbuild.js",
     "rspack": "rspack build",
     "watch": "pnpm webview:build && pnpm rspack --watch"
   },
