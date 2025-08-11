@@ -41,7 +41,7 @@ export function AutoBePlaygroundEventMovie<Event extends AutoBeEvent>(
     case "prismaReview":
     case "interfaceOperations":
     case "interfaceOperationsReview":
-    case "interfaceAuthorization":
+    case "interfaceAuthorizations":
     case "interfaceSchemas":
     case "testWrite":
     case "realizeWrite":
