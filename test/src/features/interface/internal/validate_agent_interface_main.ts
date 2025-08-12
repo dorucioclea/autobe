@@ -36,7 +36,10 @@ export const validate_agent_interface_main = async (
   agent.on("interfaceGroups", listen);
   agent.on("interfaceEndpoints", listen);
   agent.on("interfaceOperations", listen);
+  agent.on("interfaceOperationsReview", listen);
+  agent.on("interfaceAuthorizations", listen);
   agent.on("interfaceSchemas", listen);
+  agent.on("interfaceSchemasReview", listen);
   agent.on("interfaceComplement", listen);
   agent.on("interfaceComplete", listen);
 
