@@ -52,15 +52,20 @@ const createMockAgent = async (
   const params: URLSearchParams = new URLSearchParams(
     path.indexOf("?") !== -1 ? path.split("?")[1] : "",
   );
-  const load = async <T>(title: string): Promise<T> => {
+  
+  const load = async <T>(title: string): Promise<T | null> => {
     const vendor: string = params.get("vendor") ?? "openai/gpt-4.1";
     const type: string = params.get("type") ?? "bbs-backend";
     const location: string = `${ROOT}/test/assets/histories/${vendor}/${type}.${title}.json`;
-    const content: string = await fs.promises.readFile(location, "utf-8");
-    return JSON.parse(content) as T;
+    try {
+      const content: string = await fs.promises.readFile(location, "utf-8");
+      return JSON.parse(content) as T;
+    } catch {
+      return null;
+    }
   };
   const preset: AutoBeMockAgent.IPreset = {
-    histories: await load(params.get("step") ?? "realize"),
+    histories: (await load(params.get("step") ?? "realize"))!,
     analyze: await load("analyze.snapshots"),
     prisma: await load("prisma.snapshots"),
     interface: await load("interface.snapshots"),
