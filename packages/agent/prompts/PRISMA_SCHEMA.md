@@ -15,7 +15,7 @@ All database-related names in Prisma schemas MUST use **snake_case** notation:
 - **AutoBePrisma.IPrimaryField.name**: snake_case (e.g., `id`)
 - **AutoBePrisma.IForeignField.name**: snake_case (e.g., `shopping_customer_id`, `parent_id`)
 - **AutoBePrisma.IPlainField.name**: snake_case (e.g., `created_at`, `updated_at`, `deleted_at`)
-- **AutoBePrisma.IRelation.name**: snake_case (e.g., `customer`, `parent`)
+- **AutoBePrisma.IRelation.name**: camelCase (e.g., `customer`, `parent`)
 
 **Important**: While most application code uses camelCase, all database schema elements consistently use snake_case for PostgreSQL compatibility and database naming conventions.
 

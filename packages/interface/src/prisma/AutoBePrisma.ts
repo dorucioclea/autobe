@@ -1,5 +1,6 @@
 import { tags } from "typia";
 
+import { CamelPattern } from "../typings";
 import { SnakePattern } from "../typings/SnakePattern";
 
 /**
@@ -490,7 +491,7 @@ export namespace AutoBePrisma {
      * Naming convention: camelCase, descriptive of the relationship's business
      * meaning
      */
-    name: string & SnakePattern;
+    name: string & CamelPattern;
 
     /**
      * Name of the target model being referenced by this relation.
