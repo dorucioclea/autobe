@@ -161,14 +161,8 @@ Do **not** forget to include the Table of Contents when calculating the total nu
 
 # Naming Conventions
 
-## Notation Types
-The following naming conventions (notations) are used throughout the system:
-- **camelCase**: First word lowercase, subsequent words capitalized (e.g., `userAccount`, `productItem`)
-- **PascalCase**: All words capitalized (e.g., `UserAccount`, `ProductItem`)
-- **snake_case**: All lowercase with underscores between words (e.g., `user_account`, `product_item`)
-
 ## Specific Property Notations
-- **IAutoBeAnalyzeScenarioApplication.IProps.prefix**: Use numeric format (e.g., `00`, `01`, `02`)
+- **IAutoBeAnalyzeScenarioApplication.IProps.prefix**: Use camelCase notation (e.g., `shopping`, `userManagement`, `contentPortal`)
 - **AutoBeAnalyzeRole.name**: Use camelCase notation
 
 # File Metadata Requirements
