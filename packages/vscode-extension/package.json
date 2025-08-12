@@ -33,6 +33,7 @@
     "@autobe/agent": "workspace:^",
     "@autobe/compiler": "workspace:^",
     "@autobe/interface": "workspace:^",
+    "@autobe/vscode-extension/interface": "workspace:^",
     "@rspack/cli": "^1.4.11",
     "@rspack/core": "^1.4.11",
     "@ryoppippi/unplugin-typia": "^2.6.5",

@@ -1,10 +1,17 @@
+import { AutoBeTokenUsage } from "@autobe/agent";
 import {
+  AutoBeEvent,
   AutoBeHistory,
   IAutoBeRpcListener,
   IAutoBeRpcService,
   IAutoBeTokenUsageJson,
 } from "@autobe/interface";
+import {
+  IAutoBeWebviewMessage,
+  IResponseGetConfig,
+} from "@autobe/vscode-extension/interface";
 import { WorkerConnector } from "tgrid";
+import typia from "typia";
 import { ExtensionContext, Uri, Webview, WebviewView } from "vscode";
 
 import {
@@ -12,10 +19,6 @@ import {
   AUTOBE_CHAT_SESSION_MAP,
   AUTOBE_CONFIG,
 } from "../constant/key";
-import {
-  IAutoBeWebviewMessage,
-  IResponseGetConfig,
-} from "../constant/message.dto";
 import { getNonce } from "../util/crypto";
 
 export const getAutoBeWebviewProvider = (context: ExtensionContext) => {
@@ -73,22 +76,23 @@ type RpcHeader = {
 
 type AutoBeWorkerConnector = WorkerConnector<
   RpcHeader,
-  IAutoBeRpcService,
-  IAutoBeRpcListener
+  IAutoBeRpcListener,
+  IAutoBeRpcService
 >;
+
+type Session = {
+  sessionId: string;
+  history: Array<AutoBeHistory>;
+  tokenUsage: IAutoBeTokenUsageJson;
+  agent?: AutoBeWorkerConnector;
+};
+
 class AutoBeWrapper {
   private readonly webview: Webview;
   private readonly context: ExtensionContext;
   public config: IResponseGetConfig["data"] | undefined;
 
-  private readonly chatSessionMap: Map<
-    string,
-    {
-      history: Array<AutoBeHistory>;
-      tokenUsage: IAutoBeTokenUsageJson;
-      agent?: WorkerConnector<RpcHeader, IAutoBeRpcService, IAutoBeRpcListener>;
-    }
-  > = new Map();
+  private readonly chatSessionMap: Map<string, Session> = new Map();
 
   constructor(webview: Webview, context: ExtensionContext) {
     this.webview = webview;
@@ -99,21 +103,11 @@ class AutoBeWrapper {
     const chatSessionMap = await this.context.globalState.get(
       AUTOBE_CHAT_SESSION_MAP,
     );
-    (
-      chatSessionMap as
-        | Array<
-            [
-              string,
-              {
-                history: AutoBeHistory[];
-                tokenUsage: IAutoBeTokenUsageJson;
-              },
-            ]
-          >
-        | undefined
-    )?.forEach(([sessionId, session]) => {
-      this.chatSessionMap.set(sessionId, session);
-    });
+    (chatSessionMap as Array<[string, Session]> | undefined)?.forEach(
+      ([sessionId, session]) => {
+        this.chatSessionMap.set(sessionId, session);
+      },
+    );
   }
 
   public async dispose() {
@@ -149,83 +143,75 @@ class AutoBeWrapper {
         break;
       }
       case "req_create_chat_session":
-        const sessionId = await this.createChatSession();
+        const session = await this.createChatSession();
         await this.webview.postMessage({
           type: "res_create_chat_session",
-          data: sessionId,
+          data: session.sessionId,
         });
 
-        // await this.conversate(sessionId, message.data.message);
+        await this.conversate({
+          session,
+          message: message.data.message,
+        });
         break;
     }
   }
 
   private async createChatSession() {
     const sessionId = "123123123";
-    return sessionId;
+    return {
+      sessionId,
+      history: [],
+      tokenUsage: new AutoBeTokenUsage().toJSON(),
+    };
   }
 
-  // private async conversate(sessionId: string, message: string) {
-  //   const session = this.chatSessionMap.get(sessionId);
+  private async conversate(props: { session: Session; message: string }) {
+    const config = this.config;
+    if (config?.apiKey === undefined) {
+      throw new Error("Config is not initialized");
+    }
 
-  //   const config = this.config;
-  //   if (config?.apiKey === undefined) {
-  //     throw new Error("Config is not initialized");
-  //   }
+    if (props.session.agent !== undefined) {
+      const history = await props.session.agent
+        .getDriver()
+        .conversate(props.message);
+      props.session.history.push(...history);
+      return;
+    }
 
-  //   const connector = new WorkerConnector(
-  //     {
-  //       apiKey: this.config?.apiKey ?? "",
-  //       model: this.config?.model ?? "chatgpt",
-  //       baseUrl: this.config?.baseUrl ?? "",
-  //       concurrencyRequest: Number(this.config?.concurrencyRequest ?? "16"),
-  //     },
-  //     {},
-  //     "process",
-  //   );
+    props.session.agent = new WorkerConnector(
+      {
+        apiKey: this.config?.apiKey ?? "",
+        model: this.config?.model ?? "chatgpt",
+        baseUrl: this.config?.baseUrl ?? "",
+        concurrencyRequest: Number(this.config?.concurrencyRequest ?? "16"),
+      },
+      typia.misc.literals<keyof IAutoBeRpcListener>().reduce(
+        (acc, cur) => ({
+          ...acc,
+          [cur]: async (message: AutoBeEvent) => {
+            await this.webview.postMessage({
+              type: "on_event_auto_be",
+              data: message,
+            });
+            props.session.tokenUsage = await props.session
+              .agent!.getDriver()
+              .getTokenUsage();
+            await this.webview.postMessage({
+              type: "on_event_update_token_usage",
+              data: props.session.tokenUsage,
+            });
+          },
+        }),
+        {} as IAutoBeRpcListener,
+      ),
+      "process",
+    );
 
-  //   (() => {
-  //     const defaultConfig = {
-  //       model: this.config?.model ?? "chatgpt",
-  //       vendor: {
-  //         api: new OpenAI({
-  //           apiKey: this.config?.apiKey ?? "",
-  //           baseURL: this.config?.baseUrl ?? "",
-  //         }),
-  //         model: this.config?.model ?? "gpt-4.1",
-  //         semaphore: Number(this.config?.concurrencyRequest ?? "16"),
-  //       },
-  //       compiler: (listener) => new AutoBeCompiler(listener),
-  //     } satisfies IAutoBeProps<ILlmSchema.Model>;
-  //     if (session !== undefined) {
-  //       return new AutoBeAgent({
-  //         ...defaultConfig,
-  //         histories: session.history,
-  //         tokenUsage: session.tokenUsage,
-  //       });
-  //     }
-  //     return new AutoBeAgent(defaultConfig);
-  //   })();
-  //   // this.registerAutoBeEventHandler(agent);
-  //   const result = await agent.conversate(message);
-
-  //   this.chatSessionMap.set(sessionId, {
-  //     history: agent.getHistories(),
-  //     tokenUsage: agent.getTokenUsage(),
-  //   });
-
-  //   return result;
-  // }
-
-  // private registerAutoBeEventHandler(agent: AutoBeAgent<ILlmSchema.Model>) {
-  //   AUTOBE_EVENT_TYPES.forEach((key) => {
-  //     agent.on(key, (ev) => {
-  //       this.webview.postMessage({
-  //         type: "on_event_auto_be",
-  //         data: ev,
-  //       });
-  //     });
-  //   });
-  //   return agent;
-  // }
+    const history = await props.session.agent
+      .getDriver()
+      .conversate(props.message);
+    props.session.history.push(...history);
+  }
 }

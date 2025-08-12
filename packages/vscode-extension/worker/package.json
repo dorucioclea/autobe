@@ -1,5 +1,5 @@
 {
-  "name": "worker",
+  "name": "@autobe/vscode-extension/worker",
   "version": "1.0.0",
   "private": true,
   "description": "",

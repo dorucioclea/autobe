@@ -1,3 +1,4 @@
+import { IAutoBeTokenUsageJson } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
 
 export type IAutoBeWebviewMessage =
@@ -56,4 +57,9 @@ export interface IResponseCreateChatSession {
 export interface IOnEventAutoBe {
   type: "on_event_auto_be";
   data: "";
+}
+
+export interface IOnEventUpdateTokenUsage {
+  type: "on_event_update_token_usage";
+  data: IAutoBeTokenUsageJson;
 }

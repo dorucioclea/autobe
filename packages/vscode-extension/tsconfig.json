@@ -25,5 +25,5 @@
 		]
 	},
 	"exclude": ["webview-ui/**/*"],
-	"include": ["src/**/*"]
+	"include": ["src/**/*", "interface/src/message.dto.ts"]
 }
