@@ -10,6 +10,7 @@ import { ILlmSchema } from "@samchon/openapi";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
+import { IProgress } from "../internal/IProgress";
 import { orchestrateAnalyzeReview } from "./orchestrateAnalyzeReview";
 import { orchestrateAnalyzeScenario } from "./orchestrateAnalyzeScenario";
 import { orchestrateAnalyzeWrite } from "./orchestrateAnalyzeWrite";
@@ -38,10 +39,10 @@ export const orchestrateAnalyze =
     else ctx.dispatch(scenario);
 
     // write documents
-    const writeProgress = {
+    const writeProgress: IProgress = {
       total: scenario.files.length,
       completed: 0,
-    } as const;
+    };
     const fileList: AutoBeAnalyzeFile[] = await Promise.all(
       scenario.files.map(async (file) => {
         const event: AutoBeAnalyzeWriteEvent = await orchestrateAnalyzeWrite(
@@ -55,10 +56,10 @@ export const orchestrateAnalyze =
     );
 
     // review documents
-    const reviewProgress = {
+    const reviewProgress: IProgress = {
       total: fileList.length,
       completed: 0,
-    } as const;
+    };
     const newFiles: AutoBeAnalyzeFile[] = await Promise.all(
       fileList.map(async (file, i) => {
         const event: AutoBeAnalyzeReviewEvent = await orchestrateAnalyzeReview(
@@ -68,7 +69,6 @@ export const orchestrateAnalyze =
           file,
           reviewProgress,
         );
-
         return {
           ...event.file,
           content: event.content,

@@ -3,8 +3,8 @@ import typia from "typia";
 
 export namespace TestLogger {
   export const event = (start: Date, event: AutoBeEvent): void => {
-    const time: number = new Date().getTime() - start.getTime();
-    const content: string[] = [`${event.type}: ${time.toLocaleString()} ms`];
+    const time: number = (new Date().getTime() - start.getTime()) / 60_000;
+    const content: string[] = [`${event.type}: ${time.toLocaleString()} mins`];
     if (typia.is<ProgressEvent>(event))
       content.push(`  - progress: (${event.completed} of ${event.total})`);
     if (typia.is<TokenUsageEvent>(event))

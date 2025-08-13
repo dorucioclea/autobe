@@ -114,8 +114,16 @@ export class AutoBeTokenUsageComponent
   public toJSON(): IAutoBeTokenUsageJson.IComponent {
     return {
       total: this.total,
-      input: this.input,
-      output: this.output,
+      input: {
+        total: this.input.total,
+        cached: this.input.cached,
+      },
+      output: {
+        total: this.output.total,
+        reasoning: this.output.reasoning,
+        accepted_prediction: this.output.accepted_prediction,
+        rejected_prediction: this.output.rejected_prediction,
+      },
     };
   }
 

@@ -10,6 +10,7 @@ import typia from "typia";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
+import { IProgress } from "../internal/IProgress";
 import { transformAnalyzeReviewerHistories } from "./histories/transformAnalyzeReviewerHistories";
 import { IAutoBeAnalyzeReviewApplication } from "./structures/IAutoBeAnalyzeReviewApplication";
 
@@ -18,10 +19,7 @@ export const orchestrateAnalyzeReview = async <Model extends ILlmSchema.Model>(
   scenario: AutoBeAnalyzeScenarioEvent,
   otherFiles: AutoBeAnalyzeFile[],
   myFile: AutoBeAnalyzeFile,
-  progress: {
-    total: number;
-    completed: number;
-  },
+  progress: IProgress,
 ): Promise<AutoBeAnalyzeReviewEvent> => {
   const pointer: IPointer<IAutoBeAnalyzeReviewApplication.IProps | null> = {
     value: null,
@@ -49,7 +47,7 @@ export const orchestrateAnalyzeReview = async <Model extends ILlmSchema.Model>(
     content: pointer.value.content,
     tokenUsage,
     total: progress.total,
-    completed: progress.completed,
+    completed: ++progress.completed,
     step: (ctx.state().analyze?.step ?? -1) + 1,
     created_at: new Date().toISOString(),
   };

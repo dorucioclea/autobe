@@ -1,16 +1,15 @@
 import { IAgenticaController } from "@agentica/core";
 import {
   AutoBePrisma,
+  AutoBePrismaCorrectEvent,
   IAutoBeCompiler,
   IAutoBePrismaValidation,
-  IAutoBeTokenUsageJson,
 } from "@autobe/interface";
 import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import { IPointer } from "tstl";
 import typia from "typia";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
-import { AutoBeTokenUsage } from "../../context/AutoBeTokenUsage";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
 import { forceRetry } from "../../utils/forceRetry";
 import { transformPrismaCorrectHistories } from "./histories/transformPrismaCorrectHistories";
@@ -60,32 +59,7 @@ async function iterate<Model extends ILlmSchema.Model>(
     created_at: new Date().toISOString(),
   });
   const next: IExecutionResult = await process(ctx, result);
-  const correction: AutoBePrisma.IApplication = {
-    files: application.files.map((file) => ({
-      filename: file.filename,
-      namespace: file.namespace,
-      models: file.models.map((model) => {
-        const newbie = next.models.find((m) => m.name === model.name);
-        return newbie ?? model;
-      }),
-    })),
-  };
-  ctx.dispatch({
-    type: "prismaCorrect",
-    failure: result,
-    correction,
-    planning: next.planning,
-    tokenUsage: next.tokenUsage,
-    step: ctx.state().analyze?.step ?? 0,
-    created_at: new Date().toISOString(),
-  });
-  return iterate(
-    ctx,
-    {
-      files: correction.files,
-    },
-    life - 1,
-  );
+  return iterate(ctx, next.correction, life - 1);
 }
 
 async function process<Model extends ILlmSchema.Model>(
@@ -96,10 +70,10 @@ async function process<Model extends ILlmSchema.Model>(
   const count: number = getTableCount(failure);
   if (count <= capacity) return forceRetry(() => execute(ctx, failure));
 
+  let correction: AutoBePrisma.IApplication = failure.data;
   const volume: number = Math.ceil(count / capacity);
   const plannings: string[] = [];
   const models: Record<string, AutoBePrisma.IModel> = {};
-  const tokenUsage: AutoBeTokenUsage = new AutoBeTokenUsage();
   let i: number = 0;
 
   while (i++ < volume && failure.errors.length !== 0) {
@@ -118,27 +92,21 @@ async function process<Model extends ILlmSchema.Model>(
         })(),
       }),
     );
-    tokenUsage.record(next.tokenUsage, ["prisma"]);
     plannings.push(next.planning);
     for (const m of next.models) models[m.name] = m;
 
     const compiler: IAutoBeCompiler = await ctx.compiler();
-    const application: AutoBePrisma.IApplication = {
-      ...failure.data,
-      files: failure.data.files.map((file) => ({
-        ...file,
-        models: file.models.map((m) => models[m.name] ?? m),
-      })),
-    };
-    const result: IAutoBePrismaValidation =
-      await compiler.prisma.validate(application);
+    const result: IAutoBePrismaValidation = await compiler.prisma.validate(
+      next.correction,
+    );
+    correction = next.correction;
     if (result.success === true) break;
     else failure = result;
   }
   return {
     planning: plannings.join("\n\n"),
     models: Object.values(models),
-    tokenUsage: tokenUsage.toJSON().aggregate,
+    correction,
   };
 }
 
@@ -167,14 +135,29 @@ async function execute<Model extends ILlmSchema.Model>(
     throw new Error(
       "Unreachable error: PrismaCompilerAgent.pointer.value is null",
     );
+  const correction: AutoBePrisma.IApplication = {
+    files: failure.data.files.map((file) => ({
+      filename: file.filename,
+      namespace: file.namespace,
+      models: file.models.map((model) => {
+        const newbie = pointer.value?.models.find((m) => m.name === model.name);
+        return newbie ?? model;
+      }),
+    })),
+  };
+  ctx.dispatch({
+    type: "prismaCorrect",
+    failure,
+    planning: pointer.value.planning,
+    correction: correction,
+    tokenUsage,
+    step: ctx.state().analyze?.step ?? 0,
+    created_at: new Date().toISOString(),
+  } satisfies AutoBePrismaCorrectEvent);
   return {
     ...pointer.value,
-    tokenUsage,
+    correction,
   };
-}
-
-interface IExecutionResult extends IAutoBePrismaCorrectApplication.IProps {
-  tokenUsage: IAutoBeTokenUsageJson.IComponent;
 }
 
 function createController<Model extends ILlmSchema.Model>(props: {
@@ -215,3 +198,7 @@ const collection = {
   deepseek: claude,
   "3.1": claude,
 };
+
+interface IExecutionResult extends IAutoBePrismaCorrectApplication.IProps {
+  correction: AutoBePrisma.IApplication;
+}
