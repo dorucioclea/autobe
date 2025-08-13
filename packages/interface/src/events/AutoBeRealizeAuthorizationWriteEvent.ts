@@ -1,4 +1,5 @@
 import { AutoBeRealizeAuthorization } from "../histories/contents/AutoBeRealizeAuthorization";
+import { IAutoBeTokenUsageJson } from "../json/IAutoBeTokenUsageJson";
 import { AutoBeEventBase } from "./AutoBeEventBase";
 
 /**
@@ -66,4 +67,20 @@ export interface AutoBeRealizeAuthorizationWriteEvent
    * project scope and security requirements.
    */
   step: number;
+
+  /**
+   * Token consumption metrics for generating authorization components.
+   *
+   * Tracks the AI model's token usage during the creation of authorization
+   * infrastructure including decorators, providers, and payload interfaces.
+   * This metric provides visibility into the AI resources required for
+   * implementing role-based access control, helping optimize the generation
+   * of security-critical components.
+   *
+   * The token usage encompasses understanding security requirements from the
+   * API specification and generating comprehensive authorization code that
+   * enforces access policies while maintaining type safety and runtime
+   * validation.
+   */
+  tokenUsage: IAutoBeTokenUsageJson.IComponent;
 }

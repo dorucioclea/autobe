@@ -1,4 +1,4 @@
-import { IAgenticaController, MicroAgentica } from "@agentica/core";
+import { IAgenticaController } from "@agentica/core";
 import { AutoBePrisma } from "@autobe/interface";
 import { AutoBePrismaSchemasEvent } from "@autobe/interface/src/events/AutoBePrismaSchemasEvent";
 import { ILlmApplication, ILlmSchema, IValidation } from "@samchon/openapi";
@@ -14,41 +14,28 @@ import { IAutoBePrismaSchemaApplication } from "./structures/IAutoBePrismaSchema
 
 export async function orchestratePrismaSchemas<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
-  components: AutoBePrisma.IComponent[],
+  componentList: AutoBePrisma.IComponent[],
 ): Promise<AutoBePrismaSchemasEvent[]> {
   const start: Date = new Date();
-  const total: number = components
+  const total: number = componentList
     .map((c) => c.tables.length)
     .reduce((x, y) => x + y, 0);
-  let completed: number = 0;
+  const completed: IPointer<number> = { value: 0 };
   return await Promise.all(
-    components.map(async (comp) => {
-      const targetComponent: AutoBePrisma.IComponent = comp;
-      const otherComponents: AutoBePrisma.IComponent[] = components.filter(
-        (y) => comp !== y,
+    componentList.map(async (component) => {
+      const otherTables: string[] = componentList
+        .filter((y) => component !== y)
+        .map((c) => c.tables)
+        .flat();
+      const event: AutoBePrismaSchemasEvent = await forceRetry(() =>
+        process(ctx, {
+          component,
+          otherTables,
+          start,
+          total,
+          completed,
+        }),
       );
-      const result: IAutoBePrismaSchemaApplication.IProps = await forceRetry(
-        () =>
-          process(
-            ctx,
-            targetComponent,
-            otherComponents.map((c) => c.tables).flat(),
-          ),
-      );
-      const event: AutoBePrismaSchemasEvent = {
-        type: "prismaSchemas",
-        created_at: start.toISOString(),
-        plan: result.plan,
-        models: result.models,
-        file: {
-          filename: comp.filename,
-          namespace: comp.namespace,
-          models: result.models,
-        },
-        completed: (completed += comp.tables.length),
-        total,
-        step: ctx.state().analyze?.step ?? 0,
-      };
       ctx.dispatch(event);
       return event;
     }),
@@ -57,13 +44,18 @@ export async function orchestratePrismaSchemas<Model extends ILlmSchema.Model>(
 
 async function process<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
-  targetComponent: AutoBePrisma.IComponent,
-  otherTables: string[],
-): Promise<IAutoBePrismaSchemaApplication.IProps> {
+  props: {
+    component: AutoBePrisma.IComponent;
+    otherTables: string[];
+    start: Date;
+    total: number;
+    completed: IPointer<number>;
+  },
+): Promise<AutoBePrismaSchemasEvent> {
   const pointer: IPointer<IAutoBePrismaSchemaApplication.IProps | null> = {
     value: null,
   };
-  const agentica: MicroAgentica<Model> = ctx.createAgent({
+  const { tokenUsage } = await ctx.conversate({
     source: "prismaSchemas",
     histories: transformPrismaSchemaHistories(
       ctx
@@ -72,26 +64,36 @@ async function process<Model extends ILlmSchema.Model>(
         .reduce((acc, cur) => {
           return Object.assign(acc, cur);
         }, {}) ?? {},
-      targetComponent,
-      otherTables,
+      props.component,
+      props.otherTables,
     ),
     controller: createController(ctx, {
-      targetComponent,
-      otherTables,
+      targetComponent: props.component,
+      otherTables: props.otherTables,
       build: (next) => {
         pointer.value = next;
       },
     }),
     enforceFunctionCall: true,
-  });
-
-  await agentica.conversate("Make prisma schema file please").finally(() => {
-    const tokenUsage = agentica.getTokenUsage().aggregate;
-    ctx.usage().record(tokenUsage, ["prisma"]);
+    message: "Make prisma schema file please",
   });
   if (pointer.value === null)
     throw new Error("Unreachable code: Prisma Schema not generated");
-  return pointer.value;
+  return {
+    type: "prismaSchemas",
+    created_at: props.start.toISOString(),
+    plan: pointer.value.plan,
+    models: pointer.value.models,
+    file: {
+      filename: props.component.filename,
+      namespace: props.component.namespace,
+      models: pointer.value.models,
+    },
+    tokenUsage,
+    completed: (props.completed.value += props.component.tables.length),
+    total: props.total,
+    step: ctx.state().analyze?.step ?? 0,
+  } satisfies AutoBePrismaSchemasEvent;
 }
 
 function createController<Model extends ILlmSchema.Model>(

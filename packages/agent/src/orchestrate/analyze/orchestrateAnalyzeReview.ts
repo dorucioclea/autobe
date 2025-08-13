@@ -1,4 +1,4 @@
-import { IAgenticaController, MicroAgentica } from "@agentica/core";
+import { IAgenticaController } from "@agentica/core";
 import {
   AutoBeAnalyzeReviewEvent,
   AutoBeAnalyzeScenarioEvent,
@@ -26,7 +26,7 @@ export const orchestrateAnalyzeReview = async <Model extends ILlmSchema.Model>(
   const pointer: IPointer<IAutoBeAnalyzeReviewApplication.IProps | null> = {
     value: null,
   };
-  const agent: MicroAgentica<Model> = ctx.createAgent({
+  const { tokenUsage } = await ctx.conversate({
     source: "analyzeReview",
     controller: createController({
       model: ctx.model,
@@ -36,11 +36,7 @@ export const orchestrateAnalyzeReview = async <Model extends ILlmSchema.Model>(
       ...transformAnalyzeReviewerHistories(scenario, otherFiles, myFile),
     ],
     enforceFunctionCall: true,
-  });
-  const command = `proceed with the review of these files only.` as const;
-  await agent.conversate(command).finally(() => {
-    const tokenUsage = agent.getTokenUsage().aggregate;
-    ctx.usage().record(tokenUsage, ["analyze"]);
+    message: "Review the requirement document",
   });
   if (pointer.value === null)
     throw new Error("Failed to extract review information.");
@@ -51,6 +47,7 @@ export const orchestrateAnalyzeReview = async <Model extends ILlmSchema.Model>(
     plan: pointer.value.plan,
     review: pointer.value.review,
     content: pointer.value.content,
+    tokenUsage,
     total: progress.total,
     completed: progress.completed,
     step: (ctx.state().analyze?.step ?? -1) + 1,

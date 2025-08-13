@@ -1,8 +1,6 @@
 import {
   AgenticaAssistantMessageHistory,
   IAgenticaController,
-  MicroAgentica,
-  MicroAgenticaHistory,
 } from "@agentica/core";
 import { AutoBeAssistantMessageHistory } from "@autobe/interface";
 import { AutoBePrismaComponentsEvent } from "@autobe/interface/src/events/AutoBePrismaComponentsEvent";
@@ -19,20 +17,20 @@ import { IAutoBePrismaComponentApplication } from "./structures/IAutoBePrismaCom
 
 export const orchestratePrismaComponents = <Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
-  content: string = "Please extract files and tables from the given documents.",
+  message: string = "Please extract files and tables from the given documents.",
 ): Promise<AutoBeAssistantMessageHistory | AutoBePrismaComponentsEvent> =>
-  forceRetry(() => orchestrate(ctx, content));
+  forceRetry(() => orchestrate(ctx, message));
 
 async function orchestrate<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
-  content: string,
+  message: string,
 ): Promise<AutoBeAssistantMessageHistory | AutoBePrismaComponentsEvent> {
   const start: Date = new Date();
   const pointer: IPointer<IAutoBePrismaComponentApplication.IProps | null> = {
     value: null,
   };
   const prefix: string | null = ctx.state().analyze?.prefix ?? null;
-  const agentica: MicroAgentica<Model> = ctx.createAgent({
+  const { histories, tokenUsage } = await ctx.conversate({
     source: "prismaComponents",
     histories: transformPrismaComponentsHistories(ctx.state(), prefix),
     controller: createController({
@@ -42,14 +40,8 @@ async function orchestrate<Model extends ILlmSchema.Model>(
       },
     }),
     enforceFunctionCall: false,
+    message,
   });
-
-  const histories: MicroAgenticaHistory<Model>[] = await agentica
-    .conversate(content)
-    .finally(() => {
-      const tokenUsage = agentica.getTokenUsage().aggregate;
-      ctx.usage().record(tokenUsage, ["prisma"]);
-    });
   if (histories.at(-1)?.type === "assistantMessage")
     return {
       ...(histories.at(-1)! as AgenticaAssistantMessageHistory),
@@ -67,6 +59,7 @@ async function orchestrate<Model extends ILlmSchema.Model>(
     review: pointer.value.review,
     decision: pointer.value.decision,
     components: pointer.value.components,
+    tokenUsage,
     step: ctx.state().analyze?.step ?? 0,
   };
 }

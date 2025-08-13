@@ -1,8 +1,6 @@
 import {
   AgenticaAssistantMessageHistory,
   IAgenticaController,
-  MicroAgentica,
-  MicroAgenticaHistory,
 } from "@agentica/core";
 import {
   AutoBeAnalyzeScenarioEvent,
@@ -27,7 +25,7 @@ export const orchestrateAnalyzeScenario = async <
   const pointer: IPointer<IAutoBeAnalyzeScenarioApplication.IProps | null> = {
     value: null,
   };
-  const agentica: MicroAgentica<Model> = ctx.createAgent({
+  const { histories, tokenUsage } = await ctx.conversate({
     source: "analyzeScenario",
     controller: createController<Model>({
       model: ctx.model,
@@ -37,20 +35,13 @@ export const orchestrateAnalyzeScenario = async <
     }),
     histories: transformAnalyzeSceHistories(ctx),
     enforceFunctionCall: false,
+    message: [
+      `Design a complete list of documents and user roles for this project.`,
+      `Define user roles that can authenticate via API and create appropriate documentation files.`,
+      `You must respect the number of documents specified by the user.`,
+      `Note that the user's locale is in ${ctx.locale}.`,
+    ].join("\n"),
   });
-  const histories: MicroAgenticaHistory<Model>[] = await agentica
-    .conversate(
-      [
-        `Design a complete list of documents and user roles for this project.`,
-        `Define user roles that can authenticate via API and create appropriate documentation files.`,
-        `You must respect the number of documents specified by the user.`,
-        `Note that the user's locale is in ${ctx.locale}.`,
-      ].join("\n"),
-    )
-    .finally(() => {
-      const tokenUsage = agentica.getTokenUsage().aggregate;
-      ctx.usage().record(tokenUsage, ["analyze"]);
-    });
   if (histories.at(-1)?.type === "assistantMessage")
     return {
       ...(histories.at(-1)! as AgenticaAssistantMessageHistory),
@@ -68,6 +59,7 @@ export const orchestrateAnalyzeScenario = async <
     language: pointer.value.language,
     roles: pointer.value.roles,
     files: pointer.value.files,
+    tokenUsage,
     step: (ctx.state().analyze?.step ?? -1) + 1,
     created_at: start.toISOString(),
   };

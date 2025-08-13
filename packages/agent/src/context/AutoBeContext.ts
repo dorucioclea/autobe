@@ -1,7 +1,7 @@
 import {
   IAgenticaVendor,
   IMicroAgenticaHistoryJson,
-  MicroAgentica,
+  MicroAgenticaHistory,
 } from "@agentica/core";
 import {
   AutoBeAnalyzeHistory,
@@ -17,6 +17,7 @@ import {
   IAutoBeCompiler,
   IAutoBeCompilerListener,
   IAutoBeGetFilesOptions,
+  IAutoBeTokenUsageJson,
 } from "@autobe/interface";
 import { ILlmController, ILlmSchema } from "@samchon/openapi";
 
@@ -46,9 +47,9 @@ export interface AutoBeContext<Model extends ILlmSchema.Model> {
   ) => AutoBeAssistantMessageHistory;
 
   // factories
-  createAgent: (
-    props: AutoBeContext.IAgentProps<Model>,
-  ) => MicroAgentica<Model>;
+  conversate(
+    props: AutoBeContext.IConversate<Model>,
+  ): Promise<AutoBeContext.IResult<Model>>;
 }
 export namespace AutoBeContext {
   export type DispatchHistory<
@@ -64,10 +65,15 @@ export namespace AutoBeContext {
     testComplete: AutoBeTestHistory;
     realizeComplete: AutoBeRealizeHistory;
   };
-  export interface IAgentProps<Model extends ILlmSchema.Model> {
+  export interface IConversate<Model extends ILlmSchema.Model> {
     source: AutoBeEventSource;
     controller: ILlmController<Model>;
     histories: Array<IMicroAgenticaHistoryJson>;
     enforceFunctionCall: boolean;
+    message: string;
+  }
+  export interface IResult<Model extends ILlmSchema.Model> {
+    histories: MicroAgenticaHistory<Model>[];
+    tokenUsage: IAutoBeTokenUsageJson.IComponent;
   }
 }

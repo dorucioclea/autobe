@@ -1,56 +1,49 @@
-import { IAgenticaController, MicroAgentica } from "@agentica/core";
+import { IAgenticaController } from "@agentica/core";
 import { AutoBeAnalyzeRole, AutoBeOpenApi } from "@autobe/interface";
+import { AutoBeInterfaceAuthorizationEvent } from "@autobe/interface/src/events/AutoBeInterfaceAuthorizationEvent";
 import { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import { IPointer } from "tstl";
 import typia from "typia";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
+import { IProgress } from "../internal/IProgress";
 import { transformInterfaceAuthorizationsHistories } from "./histories/transformInterfaceAuthorizationsHistories";
 import { IAutoBeInterfaceAuthorizationsApplication } from "./structures/IAutoBeInterfaceAuthorizationsApplication";
 
 export async function orchestrateInterfaceAuthorizations<
   Model extends ILlmSchema.Model,
 >(ctx: AutoBeContext<Model>): Promise<AutoBeOpenApi.IOperation[]> {
-  // const start: Date = new Date();
-
   const roles: AutoBeAnalyzeRole[] = ctx.state().analyze?.roles ?? [];
-
-  const operations: AutoBeOpenApi.IOperation[] = [];
-
-  let completed: number = 0;
-
-  await Promise.all(
+  const progress: IProgress = {
+    total: roles.length,
+    completed: 0,
+  };
+  const operations: AutoBeOpenApi.IOperation[][] = await Promise.all(
     roles.map(async (role) => {
-      const authorization: IAutoBeInterfaceAuthorizationsApplication.IProps =
-        await process(ctx, role);
-
-      operations.push(...authorization.operations);
-
-      ctx.dispatch({
-        type: "interfaceAuthorizations",
-        operations: authorization.operations,
-        completed: ++completed,
-        created_at: new Date().toISOString(),
-        step: ctx.state().analyze?.step ?? 0,
-        total: roles.length,
-      });
+      const event: AutoBeInterfaceAuthorizationEvent = await process(
+        ctx,
+        role,
+        progress,
+      );
+      ctx.dispatch(event);
+      return event.operations;
     }),
   );
-
-  return operations;
+  return operations.flat();
 }
 
 async function process<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   role: AutoBeAnalyzeRole,
-): Promise<IAutoBeInterfaceAuthorizationsApplication.IProps> {
+  progress: IProgress,
+): Promise<AutoBeInterfaceAuthorizationEvent> {
   const pointer: IPointer<IAutoBeInterfaceAuthorizationsApplication.IProps | null> =
     {
       value: null,
     };
-  const agentica: MicroAgentica<Model> = ctx.createAgent({
-    source: "interfaceAuthorizations",
+  const { tokenUsage } = await ctx.conversate({
+    source: "interfaceAuthorization",
     histories: transformInterfaceAuthorizationsHistories(ctx.state(), role),
     controller: createController({
       model: ctx.model,
@@ -59,15 +52,20 @@ async function process<Model extends ILlmSchema.Model>(
       },
     }),
     enforceFunctionCall: true,
+    message: "Create Authorization Operation for the given roles",
   });
-  await agentica.conversate(
-    "Create Authorization Operation for the given roles",
-  );
-
   if (pointer.value === null)
     throw new Error("Failed to generate authorization operation.");
 
-  return pointer.value;
+  return {
+    type: "interfaceAuthorization",
+    operations: pointer.value.operations,
+    completed: ++progress.completed,
+    tokenUsage,
+    created_at: new Date().toISOString(),
+    step: ctx.state().analyze?.step ?? 0,
+    total: progress.total,
+  } satisfies AutoBeInterfaceAuthorizationEvent;
 }
 
 function createController<Model extends ILlmSchema.Model>(props: {

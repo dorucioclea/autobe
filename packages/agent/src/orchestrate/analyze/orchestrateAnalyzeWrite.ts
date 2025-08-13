@@ -1,4 +1,4 @@
-import { IAgenticaController, MicroAgentica } from "@agentica/core";
+import { IAgenticaController } from "@agentica/core";
 import {
   AutoBeAnalyzeScenarioEvent,
   AutoBeAnalyzeWriteEvent,
@@ -25,7 +25,7 @@ export const orchestrateAnalyzeWrite = async <Model extends ILlmSchema.Model>(
   const pointer: IPointer<IAutoBeAnalyzeWriteApplication.IProps | null> = {
     value: null,
   };
-  const agentica: MicroAgentica<Model> = ctx.createAgent({
+  const { tokenUsage } = await ctx.conversate({
     source: "analyzeWrite",
     controller: createController<Model>({
       model: ctx.model,
@@ -33,21 +33,18 @@ export const orchestrateAnalyzeWrite = async <Model extends ILlmSchema.Model>(
     }),
     histories: transformAnalyzeWriteHistories(scenario, file),
     enforceFunctionCall: true,
+    message: "Write requirement analysis report.",
   });
-  await agentica.conversate("Write Document.").finally(() => {
-    const tokenUsage = agentica.getTokenUsage().aggregate;
-    ctx.usage().record(tokenUsage, ["analyze"]);
-  });
-
-  if (pointer.value === null) {
+  if (pointer.value === null)
     throw new Error("The Analyze Agent failed to create the document.");
-  }
+
   const event: AutoBeAnalyzeWriteEvent = {
     type: "analyzeWrite",
     file: {
       ...file,
       content: pointer.value.content,
     },
+    tokenUsage: tokenUsage,
     step: (ctx.state().analyze?.step ?? -1) + 1,
     total: progress.total,
     completed: ++progress.completed,
