@@ -40,10 +40,6 @@ export class TestGlobal {
   public static get archive(): boolean {
     return process.argv.includes("--archive");
   }
-
-  public static get trace(): boolean {
-    return process.argv.includes("--trace");
-  }
 }
 
 interface IEnvironments {

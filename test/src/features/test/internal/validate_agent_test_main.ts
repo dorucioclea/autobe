@@ -28,7 +28,7 @@ export const validate_agent_test_main = async (
   const snapshots: AutoBeEventSnapshot[] = [];
   const start: Date = new Date();
   const listen = (event: AutoBeEvent) => {
-    if (TestGlobal.trace) TestLogger.event(start, event);
+    if (TestGlobal.archive) TestLogger.event(start, event);
     snapshots.push({
       event,
       tokenUsage: agent.getTokenUsage().toJSON(),

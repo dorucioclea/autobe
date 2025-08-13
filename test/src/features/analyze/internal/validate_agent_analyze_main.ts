@@ -34,7 +34,7 @@ export const validate_agent_analyze_main = async (
 
   const agent: AutoBeAgent<ILlmSchema.Model> = factory.createAgent([history]);
   const listen = (event: AutoBeEvent) => {
-    if (TestGlobal.trace) TestLogger.event(start, event);
+    if (TestGlobal.archive) TestLogger.event(start, event);
     snapshots.push({
       event,
       tokenUsage: agent.getTokenUsage().toJSON(),

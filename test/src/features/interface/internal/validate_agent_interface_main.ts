@@ -12,6 +12,7 @@ import typia from "typia";
 import { TestFactory } from "../../../TestFactory";
 import { TestGlobal } from "../../../TestGlobal";
 import { TestHistory } from "../../../internal/TestHistory";
+import { TestLogger } from "../../../internal/TestLogger";
 import { TestProject } from "../../../structures/TestProject";
 import { prepare_agent_interface } from "./prepare_agent_interface";
 
@@ -24,8 +25,10 @@ export const validate_agent_interface_main = async (
   // PREPARE AGENT
   const { agent, zero } = await prepare_agent_interface(factory, project);
   const snapshots: AutoBeEventSnapshot[] = [];
+  const start: Date = new Date();
 
   const listen = (event: AutoBeEvent) => {
+    if (TestGlobal.archive) TestLogger.event(start, event);
     snapshots.push({
       event,
       tokenUsage: agent.getTokenUsage().toJSON(),
