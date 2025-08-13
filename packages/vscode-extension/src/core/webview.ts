@@ -214,12 +214,13 @@ class AutoBeWrapper {
   }
 
   private async createChatSession() {
-    const sessionId = crypto.randomUUID();
-    return {
-      sessionId,
+    const session = {
+      sessionId: crypto.randomUUID(),
       history: [],
       tokenUsage: new AutoBeTokenUsage().toJSON(),
-    };
+    } satisfies Session;
+    this.chatSessionMap.set(session.sessionId, session);
+    return session;
   }
 
   private async conversate(props: { session: Session; message: string }) {
