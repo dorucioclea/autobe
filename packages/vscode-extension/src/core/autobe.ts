@@ -38,6 +38,7 @@ type Session = {
   sessionId: string;
   history: Array<AutoBeHistory>;
   tokenUsage: IAutoBeTokenUsageJson;
+  events: Array<AutoBeEvent>;
   agent?: AutoBeWorkerConnector;
 };
 
@@ -54,13 +55,14 @@ export class AutoBeWrapper {
   }
 
   public async initialize() {
-    const chatSessionMap = typia.json.assertParse<
-      Array<{
-        sessionId: string;
-        history: AutoBeHistory[];
-        tokenUsage: IAutoBeTokenUsageJson;
-      }>
-    >((await this.context.globalState.get(AUTOBE_CHAT_SESSION_MAP)) ?? "[]");
+    const chatSessionMap = JSON.parse(
+      (await this.context.globalState.get(AUTOBE_CHAT_SESSION_MAP)) ?? "[]",
+    ) as Array<{
+      sessionId: string;
+      history: AutoBeHistory[];
+      tokenUsage: IAutoBeTokenUsageJson;
+      events: AutoBeEvent[];
+    }>;
     chatSessionMap.forEach((session) => {
       this.chatSessionMap.set(session.sessionId, session);
     });
@@ -73,12 +75,13 @@ export class AutoBeWrapper {
   private async save() {
     await this.context.globalState.update(
       AUTOBE_CHAT_SESSION_MAP,
-      typia.json.assertStringify(
+      JSON.stringify(
         Array.from(this.chatSessionMap.entries()).map(
           ([sessionId, session]) => ({
             sessionId,
             history: session.history,
             tokenUsage: session.tokenUsage,
+            events: session.events,
           }),
         ),
       ),
@@ -237,12 +240,14 @@ export class AutoBeWrapper {
         if (session === undefined) {
           throw new Error("Session not found");
         }
+
         await this.postMessage({
           type: "res_get_session_detail",
           data: {
             sessionId: session.sessionId,
             history: session.history,
             tokenUsage: session.tokenUsage,
+            events: session.events,
           },
         });
         return;
@@ -254,6 +259,7 @@ export class AutoBeWrapper {
     const session = {
       sessionId: crypto.randomUUID(),
       history: [],
+      events: [],
       tokenUsage: new AutoBeTokenUsage().toJSON(),
     } satisfies Session;
     this.chatSessionMap.set(session.sessionId, session);
@@ -294,7 +300,7 @@ export class AutoBeWrapper {
               sessionId: props.session.sessionId,
               data: message,
             });
-
+            props.session.events.push(message);
             props.session.tokenUsage = await props.session
               .agent!.getDriver()
               .getTokenUsage();

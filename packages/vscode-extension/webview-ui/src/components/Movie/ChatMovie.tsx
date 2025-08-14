@@ -18,6 +18,14 @@ interface IChatMovieProps {
 
 const ChatMovie = forwardRef<HTMLDivElement, IChatMovieProps>((props, ref) => {
   const { histories, events } = props;
+  const logList = [
+    ...histories.map((v) => ({ ...v, _type: "history" }) as const),
+    ...events.map((v) => ({ ...v, _type: "event" }) as const),
+  ].sort(
+    (a, b) =>
+      new Date(a.created_at).valueOf() - new Date(b.created_at).valueOf(),
+  );
+
   return (
     <div className="flex flex-col h-full w-full">
       {props.tokenUsage && <TokenUsageCard tokenUsage={props.tokenUsage} />}
@@ -49,12 +57,13 @@ const ChatMovie = forwardRef<HTMLDivElement, IChatMovieProps>((props, ref) => {
 
       <div ref={ref} className="flex-1 overflow-auto p-4">
         <div>
-          {histories.map((v, i) => (
-            <AutoBeHistoryMovie key={i} history={v} />
-          ))}
-          {events.map((v, i) => (
-            <AutoBeEventsMovie key={i} event={v} />
-          ))}
+          {logList.map((v, i) =>
+            v._type === "history" ? (
+              <AutoBeHistoryMovie key={i} history={v} />
+            ) : (
+              <AutoBeEventsMovie key={i} event={v} />
+            ),
+          )}
         </div>
       </div>
     </div>

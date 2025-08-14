@@ -156,7 +156,7 @@ const Chat = () => {
         setTokenUsage(message.data);
         break;
       case "res_get_session_detail":
-        setEvent([]);
+        setEvent(message.data.events);
         setHistories(message.data.history);
         setTokenUsage(message.data.tokenUsage);
         break;
