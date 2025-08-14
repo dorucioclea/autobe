@@ -78,6 +78,8 @@ const AutoBeEventsMovie = (props: IAutoBeEventsMovieProps) => {
     case "realizeAuthorizationComplete":
     case "realizeTestReset":
     case "realizeTestComplete":
+    case "vendorRequest":
+    case "vendorResponse":
       return <div>{event.type}</div>;
     default:
       event satisfies never;
