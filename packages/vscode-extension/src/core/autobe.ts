@@ -70,6 +70,10 @@ export class AutoBeWrapper {
       AUTOBE_CHAT_SESSION_MAP,
       Array.from(this.chatSessionMap.entries()),
     );
+    this.chatSessionMap.forEach((session) => {
+      session.agent?.close();
+    });
+    this.chatSessionMap.clear();
   }
 
   private async postMessage(message: IAutoBeWebviewMessage) {
