@@ -6,9 +6,11 @@ import {
   AutoBeOpenApi,
 } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
+import { v4 } from "uuid";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
+import { predicateStateMessage } from "../../utils/predicateStateMessage";
 import { orchestrateInterfaceAuthorizations } from "./orchestrateInterfaceAuthorizations";
 import { orchestrateInterfaceComplement } from "./orchestrateInterfaceComplement";
 import { orchestrateInterfaceEndpoints } from "./orchestrateInterfaceEndpoints";
@@ -21,8 +23,20 @@ export const orchestrateInterface =
   async (
     props: IAutoBeApplicationProps,
   ): Promise<AutoBeAssistantMessageHistory | AutoBeInterfaceHistory> => {
-    // ENDPOINTS
+    // PREDICATION
     const start: Date = new Date();
+    const predicate: string | null = predicateStateMessage(
+      ctx.state(),
+      "interface",
+    );
+    if (predicate !== null)
+      return ctx.assistantMessage({
+        type: "assistantMessage",
+        id: v4(),
+        created_at: start.toISOString(),
+        text: predicate,
+        completed_at: new Date().toISOString(),
+      });
     ctx.dispatch({
       type: "interfaceStart",
       created_at: start.toISOString(),
@@ -30,10 +44,10 @@ export const orchestrateInterface =
       step: ctx.state().analyze?.step ?? 0,
     });
 
-    const init: AutoBeAssistantMessageHistory | AutoBeInterfaceGroupsEvent =
+    // ENDPOINTS
+    const init: AutoBeInterfaceGroupsEvent =
       await orchestrateInterfaceGroups(ctx);
-    if (init.type === "assistantMessage") return ctx.assistantMessage(init);
-    else ctx.dispatch(init);
+    ctx.dispatch(init);
 
     // AUTHORIZATION
     const authorizations: AutoBeOpenApi.IOperation[] =

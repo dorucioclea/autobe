@@ -10,9 +10,11 @@ import {
 } from "@autobe/interface";
 import { AutoBePrismaSchemasEvent } from "@autobe/interface/src/events/AutoBePrismaSchemasEvent";
 import { ILlmSchema } from "@samchon/openapi";
+import { v4 } from "uuid";
 
 import { AutoBeContext } from "../../context/AutoBeContext";
 import { IAutoBeApplicationProps } from "../../context/IAutoBeApplicationProps";
+import { predicateStateMessage } from "../../utils/predicateStateMessage";
 import { orchestratePrismaComponents } from "./orchestratePrismaComponent";
 import { orchestratePrismaCorrect } from "./orchestratePrismaCorrect";
 import { orchestratePrismaReview } from "./orchestratePrismaReview";
@@ -22,7 +24,17 @@ export const orchestratePrisma = async <Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   props: IAutoBeApplicationProps,
 ): Promise<AutoBePrismaHistory | AutoBeAssistantMessageHistory> => {
+  // PREDICATION
   const start: Date = new Date();
+  const predicate: string | null = predicateStateMessage(ctx.state(), "prisma");
+  if (predicate !== null)
+    return ctx.assistantMessage({
+      type: "assistantMessage",
+      id: v4(),
+      created_at: start.toISOString(),
+      text: predicate,
+      completed_at: new Date().toISOString(),
+    });
   ctx.dispatch({
     type: "prismaStart",
     created_at: start.toISOString(),
@@ -31,12 +43,9 @@ export const orchestratePrisma = async <Model extends ILlmSchema.Model>(
   });
 
   // COMPONENTS
-  const componentEvent:
-    | AutoBeAssistantMessageHistory
-    | AutoBePrismaComponentsEvent = await orchestratePrismaComponents(ctx);
-  if (componentEvent.type === "assistantMessage")
-    return ctx.assistantMessage(componentEvent);
-  else ctx.dispatch(componentEvent);
+  const componentEvent: AutoBePrismaComponentsEvent =
+    await orchestratePrismaComponents(ctx);
+  ctx.dispatch(componentEvent);
 
   // CONSTRUCT AST DATA
   const schemaEvents: AutoBePrismaSchemasEvent[] =
