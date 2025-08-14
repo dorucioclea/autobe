@@ -17,7 +17,7 @@ const log = (level: string, message: string, error?: Error) => {
   if (error?.message) {
     fullMessage += ` ${error.message}`;
   }
-  OutputChannel.appendLine(`${level} ${fullMessage}`);
+  OutputChannel.appendLine(`[${getTimestamp()}] ${level} ${fullMessage}`);
   console.log(`[${getTimestamp()}] ${level} ${fullMessage}`);
   if (error?.stack) {
     console.log(`Stack trace:\n${error.stack}`);
