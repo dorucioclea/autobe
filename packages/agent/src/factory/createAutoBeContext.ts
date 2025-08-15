@@ -75,6 +75,8 @@ export const createAutoBeContext = <Model extends ILlmSchema.Model>(props: {
         histories: next.histories,
         controllers: [next.controller],
       });
+      const validates: AgenticaValidateEvent<Model>[] = [];
+
       agent.on("request", (event) => {
         if (next.enforceFunctionCall === true && event.body.tools)
           event.body.tool_choice = "required";
@@ -97,6 +99,9 @@ export const createAutoBeContext = <Model extends ILlmSchema.Model>(props: {
           })
           .catch(() => {});
       });
+      agent.on("validate", (event) => {
+        validates.push(event);
+      });
 
       const histories: MicroAgenticaHistory<Model>[] = await agent.conversate(
         next.message,
@@ -113,6 +118,13 @@ export const createAutoBeContext = <Model extends ILlmSchema.Model>(props: {
         next.enforceFunctionCall === true &&
         histories.every((h) => h.type !== "execute")
       ) {
+        console.log(
+          histories.map((h) => h.type),
+          histories.at(-1)?.type === "assistantMessage"
+            ? histories.at(-1)
+            : null,
+          validates.at(-1),
+        );
         if (histories.at(-1)?.type === "assistantMessage")
           console.log(histories.at(-1)); // @todo - temporary way
         throw new Error(
