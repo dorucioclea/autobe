@@ -1,4 +1,8 @@
-import { MicroAgentica, MicroAgenticaHistory } from "@agentica/core";
+import {
+  AgenticaValidateEvent,
+  MicroAgentica,
+  MicroAgenticaHistory,
+} from "@agentica/core";
 import {
   AutoBeAnalyzeCompleteEvent,
   AutoBeAnalyzeHistory,
