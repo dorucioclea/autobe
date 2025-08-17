@@ -12,7 +12,10 @@ import ProgressEventsMovie, {
 } from "./ProgressEventsMovie";
 import AnalyzeComplete from "./analyze/AnalyzeComplete";
 import AnalyzeScenario from "./analyze/AnalyzeScenario";
+import PrismaComplete from "./prisma/PrismaComplete";
 import PrismaComponents from "./prisma/PrismaComponents";
+import PrismaCorrect from "./prisma/PrismaCorrect";
+import PrismaValidate from "./prisma/PrismaValidate";
 
 interface IAutoBeEventsMovieProps {
   event: AutoBeEvent;
@@ -59,15 +62,21 @@ const AutoBeEventsMovie = (props: IAutoBeEventsMovieProps) => {
     case "prismaComponents": {
       return <PrismaComponents event={event} />;
     }
+    case "prismaValidate": {
+      return <PrismaValidate event={event} />;
+    }
+    case "prismaCorrect": {
+      return <PrismaCorrect event={event} />;
+    }
+    case "prismaComplete": {
+      return <PrismaComplete event={event} />;
+    }
     case "analyzeComplete":
       return <AnalyzeComplete event={event} />;
     case "interfaceGroups":
     case "interfaceComplement":
     case "interfaceComplete":
     case "prismaInsufficient":
-    case "prismaValidate":
-    case "prismaCorrect":
-    case "prismaComplete":
     case "testValidate":
     case "testCorrect":
     case "testComplete":
