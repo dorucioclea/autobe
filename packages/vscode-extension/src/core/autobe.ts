@@ -22,6 +22,7 @@ import {
   AUTOBE_CONFIG,
   AUTOBE_SESSION_STORAGE_FILE_NAME,
 } from "../constant/key";
+import { loadReplayData } from "../util/replay";
 
 type RpcHeader = {
   apiKey: string;
@@ -81,7 +82,11 @@ export class AutoBeWrapper {
     chatSessionMap.forEach((session) => {
       this.chatSessionMap.set(session.sessionId, session);
     });
-    // await loadReplayData(this.chatSessionMap, "bbs-backend.interface");
+
+    /** @todo remove this codes this codes is for development purposes */
+    await loadReplayData(this.chatSessionMap, "bbs-backend.interface");
+    await loadReplayData(this.chatSessionMap, "bbs-backend.test");
+    await loadReplayData(this.chatSessionMap, "bbs-backend.realize");
 
     Logger.debug(
       `AutoBeWrapper initialize: ${(chatSessionMap as any)?.length}`,
