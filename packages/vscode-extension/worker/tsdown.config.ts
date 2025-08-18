@@ -18,6 +18,7 @@ export default defineConfig({
     "@autobe/compiler",
     "@autobe/agent",
     "@autobe/rpc",
+    "@agentica/core",
     "openai",
     "tgrid",
     "typia",

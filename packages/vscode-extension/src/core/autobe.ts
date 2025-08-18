@@ -36,7 +36,7 @@ type AutoBeWorkerConnector = WorkerConnector<
   IAutoBeRpcService
 >;
 
-type Session = {
+export type Session = {
   sessionId: string;
   history: Array<AutoBeHistory>;
   tokenUsage: IAutoBeTokenUsageJson;
@@ -81,6 +81,8 @@ export class AutoBeWrapper {
     chatSessionMap.forEach((session) => {
       this.chatSessionMap.set(session.sessionId, session);
     });
+    // await loadReplayData(this.chatSessionMap, "bbs-backend.interface");
+
     Logger.debug(
       `AutoBeWrapper initialize: ${(chatSessionMap as any)?.length}`,
     );
@@ -234,7 +236,8 @@ export class AutoBeWrapper {
             lastConversation:
               session.history.find((v) => "text" in v)?.text ?? "",
             updatedAt: new Date(
-              session.history[session.history.length - 1].created_at,
+              session.history[session.history.length - 1]?.created_at ||
+                Date.now(),
             ).valueOf(),
             sessionId,
             tokenUsage: {

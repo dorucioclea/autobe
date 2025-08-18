@@ -26,3 +26,6 @@
 
 # include icons and image
 !assets/icons/**
+
+# include replay data
+!.replay
