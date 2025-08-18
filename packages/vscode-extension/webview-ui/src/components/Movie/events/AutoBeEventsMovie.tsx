@@ -16,6 +16,7 @@ import {
 import PrismaComplete from "./prisma/PrismaComplete";
 import PrismaComponents from "./prisma/PrismaComponents";
 import PrismaCorrect from "./prisma/PrismaCorrect";
+import { PrismaInsufficient } from "./prisma/PrismaInsufficient";
 import PrismaValidate from "./prisma/PrismaValidate";
 import { TestComplete } from "./test/TestComplete";
 import { TestCorrect } from "./test/TestCorrect";
@@ -75,6 +76,8 @@ const AutoBeEventsMovie = (props: IAutoBeEventsMovieProps) => {
     case "prismaComplete": {
       return <PrismaComplete event={event} />;
     }
+    case "prismaInsufficient":
+      return <PrismaInsufficient event={event} />;
     case "analyzeComplete":
       return <AnalyzeComplete event={event} />;
     case "interfaceGroups": {
@@ -92,7 +95,6 @@ const AutoBeEventsMovie = (props: IAutoBeEventsMovieProps) => {
       return <TestCorrect event={event} />;
     case "testComplete":
       return <TestComplete event={event} />;
-    case "prismaInsufficient":
     case "realizeValidate":
     case "realizeComplete":
     case "realizeAuthorizationValidate":
