@@ -1,8 +1,7 @@
 import { AutoBeRealizeCompleteEvent } from "@autobe/interface";
 
-import EventBubble from "../../../common/EventBubble";
 import ExpandableList from "../../../common/ExpandableList";
-import InfoCard from "../../../common/InfoCard";
+import CompleteEventBase from "../common/CompleteEventBase";
 
 interface IRealizeCompleteProps {
   event: AutoBeRealizeCompleteEvent;
@@ -42,20 +41,29 @@ const AuthorizationItem = ({
 };
 
 const RealizeComplete = ({ event }: IRealizeCompleteProps) => {
+  // 파일 목록을 CompleteEventBase 형식으로 변환
+  const files = [
+    ...Object.entries(event.controllers || {}).map(([filename, content]) => ({
+      filename: `controllers/${filename}.ts`,
+      content,
+    })),
+    ...(event.functions || []).map((func, index) => ({
+      filename: `functions/${func.name || `function-${index}`}.ts`,
+      content: func.content || "",
+    })),
+  ];
+
   return (
-    <EventBubble
-      iconPath="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    <CompleteEventBase
       title="구현 완료"
+      message={`비즈니스 로직 구현이 완료되었습니다. 총 ${event.authorizations.length}개의 인증 데코레이터가 생성되었습니다. 전체 vibe coding 파이프라인이 성공적으로 완료되었습니다.`}
       theme="orange"
       timestamp={event.created_at}
+      iconPath="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      files={files}
+      enableFileSave={true}
+      defaultDirectory="realize"
     >
-      {/* 완료 메시지 */}
-      <InfoCard title="구현 완료" theme="orange">
-        비즈니스 로직 구현이 완료되었습니다. 총 {event.authorizations.length}
-        개의 인증 데코레이터가 생성되었습니다. 전체 vibe coding 파이프라인이
-        성공적으로 완료되었습니다.
-      </InfoCard>
-
       {/* 생성된 인증 데코레이터들 */}
       {event.authorizations.length > 0 && (
         <ExpandableList
@@ -82,7 +90,7 @@ const RealizeComplete = ({ event }: IRealizeCompleteProps) => {
       )}
 
       {/* 추가 정보 */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
         <div className="text-xs text-gray-600">
           <div className="flex items-center justify-between">
             <span>인증 데코레이터:</span>
@@ -104,7 +112,7 @@ const RealizeComplete = ({ event }: IRealizeCompleteProps) => {
           )}
         </div>
       </div>
-    </EventBubble>
+    </CompleteEventBase>
   );
 };
 

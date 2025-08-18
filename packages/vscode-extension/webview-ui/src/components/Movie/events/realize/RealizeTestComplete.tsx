@@ -1,8 +1,7 @@
 import { AutoBeRealizeTestCompleteEvent } from "@autobe/interface";
 
-import EventBubble from "../../../common/EventBubble";
 import ExpandableList from "../../../common/ExpandableList";
-import InfoCard from "../../../common/InfoCard";
+import CompleteEventBase from "../common/CompleteEventBase";
 
 interface IRealizeTestCompleteProps {
   event: AutoBeRealizeTestCompleteEvent;
@@ -13,20 +12,14 @@ const RealizeTestComplete = ({ event }: IRealizeTestCompleteProps) => {
   const failedTests = event.operations.filter((op) => op.error);
 
   return (
-    <EventBubble
-      iconPath="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    <CompleteEventBase
       title="테스트 완료"
+      message={`총 ${event.operations.length}개의 테스트가 실행되었습니다.${successfulTests.length > 0 ? ` ${successfulTests.length}개 성공,` : ""}${failedTests.length > 0 ? ` ${failedTests.length}개 실패` : ""}${event.operations.length > 0 ? "." : ""}`}
       theme="green"
       timestamp={event.created_at}
+      iconPath="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      enableFileSave={false}
     >
-      {/* 테스트 결과 메시지 */}
-      <InfoCard title="테스트 실행 완료" theme="green">
-        총 {event.operations.length}개의 테스트가 실행되었습니다.
-        {successfulTests.length > 0 && ` ${successfulTests.length}개 성공,`}
-        {failedTests.length > 0 && ` ${failedTests.length}개 실패`}
-        {event.operations.length > 0 && "."}
-      </InfoCard>
-
       {/* 성공한 테스트들 */}
       {successfulTests.length > 0 && (
         <ExpandableList
@@ -104,7 +97,7 @@ const RealizeTestComplete = ({ event }: IRealizeTestCompleteProps) => {
       )}
 
       {/* 추가 정보 */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
         <div className="text-xs text-gray-600">
           <div className="flex items-center justify-between">
             <span>총 테스트:</span>
@@ -134,7 +127,7 @@ const RealizeTestComplete = ({ event }: IRealizeTestCompleteProps) => {
           </div>
         </div>
       </div>
-    </EventBubble>
+    </CompleteEventBase>
   );
 };
 

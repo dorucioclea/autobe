@@ -1,7 +1,6 @@
 import { AutoBeInterfaceCompleteEvent, AutoBeOpenApi } from "@autobe/interface";
 
-import EventBubble from "../../../common/EventBubble";
-import InfoCard from "../../../common/InfoCard";
+import CompleteEventBase from "../common/CompleteEventBase";
 
 interface IInterfaceCompleteProps {
   event: AutoBeInterfaceCompleteEvent;
@@ -76,27 +75,33 @@ const OpenApiInfo = ({ document }: { document: AutoBeOpenApi.IDocument }) => {
 };
 
 const InterfaceComplete = ({ event }: IInterfaceCompleteProps) => {
+  // OpenAPI 문서를 파일로 변환
+  const files = [
+    {
+      filename: "openapi.json",
+      content: JSON.stringify(event.document, null, 2),
+    },
+  ];
+
   return (
-    <EventBubble
-      iconPath="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    <CompleteEventBase
       title="API 설계 완료"
+      message="RESTful API 설계가 완료되었습니다. OpenAPI 명세가 생성되었고 NestJS 애플리케이션 코드가 준비되었습니다."
       theme="purple"
       timestamp={event.created_at}
+      iconPath="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      files={files}
+      enableFileSave={true}
+      defaultDirectory="interface"
     >
-      {/* 완료 메시지 */}
-      <InfoCard title="API 설계 완료" theme="purple">
-        RESTful API 설계가 완료되었습니다. OpenAPI 명세가 생성되었고 NestJS
-        애플리케이션 코드가 준비되었습니다.
-      </InfoCard>
-
       {/* OpenAPI 문서 정보 */}
       <OpenApiInfo document={event.document} />
 
       {/* 추가 정보 */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <div className="text-xs text-gray-600">
-          {event.elapsed && (
-            <div className="flex items-center justify-between mt-1">
+      {event.elapsed && (
+        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="text-xs text-gray-600">
+            <div className="flex items-center justify-between">
               <span>소요 시간:</span>
               <span className="font-medium">
                 {event.elapsed >= 60000
@@ -104,10 +109,10 @@ const InterfaceComplete = ({ event }: IInterfaceCompleteProps) => {
                   : `${Math.round(event.elapsed / 1000)}초`}
               </span>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-    </EventBubble>
+      )}
+    </CompleteEventBase>
   );
 };
 

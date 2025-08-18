@@ -86,11 +86,13 @@ const HistoryBubble = ({
           </div>
         </div>
 
-        <div className="mt-1 ml-1">
-          <span className="text-xs text-gray-400">
-            {timestamp ? formatTime(timestamp) : "Assistant"}
-          </span>
-        </div>
+        {timestamp && (
+          <div className="mt-1 ml-1">
+            <span className="text-xs text-gray-400">
+              {formatTime(timestamp)}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
