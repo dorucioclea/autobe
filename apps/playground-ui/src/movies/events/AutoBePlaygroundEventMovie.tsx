@@ -13,7 +13,7 @@ import { AutoBePlaygroundValidateEventMovie } from "./AutoBePlaygroundValidateEv
 export function AutoBePlaygroundEventMovie<Event extends AutoBeEvent>(
   props: AutoBePlaygroundEventMovie.IProps<Event>,
 ) {
-  const back: Event = props.events[props.events.length - 1];
+  const back: Event = props.events[props.events.length - 1]!;
   switch (back.type) {
     case "userMessage":
       return <AutoBeUserMessageMovie message={back.contents} />;
@@ -87,6 +87,7 @@ export function AutoBePlaygroundEventMovie<Event extends AutoBeEvent>(
         />
       );
     // DISCARD
+    case "consentFunctionCall":
     case "prismaCorrect":
     case "testCorrect":
     case "realizeAuthorizationCorrect":
