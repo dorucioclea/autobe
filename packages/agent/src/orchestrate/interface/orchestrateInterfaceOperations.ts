@@ -73,11 +73,10 @@ async function divideAndConquer<Model extends ILlmSchema.Model>(
     );
   for (let i: number = 0; i < retry; ++i) {
     if (remained.empty() === true || unique.size() >= endpoints.length) break;
-    const operations: AutoBeOpenApi.IOperation[] = await process(
-      ctx,
-      remained,
-      operationsProgress,
-    );
+    const operations: AutoBeOpenApi.IOperation[] = remained.size()
+      ? await process(ctx, remained, operationsProgress)
+      : [];
+
     for (const item of operations) {
       unique.set(item, item);
       remained.erase(item);

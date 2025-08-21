@@ -98,6 +98,35 @@ export namespace IAutoBeInterfaceOperationApplication {
      * endpoint. Multiple roles can be specified to allow different types of
      * users to access the same endpoint.
      *
+     * ## ⚠️ CRITICAL: Role Multiplication Effect
+     *
+     * **EACH ROLE IN THIS ARRAY GENERATES A SEPARATE ENDPOINT**
+     *
+     * - If you specify `["admin", "moderator", "member"]`, this creates 3
+     *   separate endpoints
+     * - Total generated endpoints = operations × average roles.length
+     * - Example: 100 operations with 3 roles each = 300 actual endpoints
+     *
+     * ## 🔴 AVOID OVER-GENERATION
+     *
+     * **DO NOT create role-specific endpoints when a public endpoint would
+     * suffice:**
+     *
+     * - ❌ BAD: Separate GET endpoints for admin, member, moderator to view the
+     *   same public data
+     * - ✅ GOOD: Single public endpoint `[]` with role-based filtering in business
+     *   logic
+     *
+     * **DO NOT enumerate all possible roles when the Prisma schema uses a
+     * single User table:**
+     *
+     * - If Prisma has a User table with role/permission fields, you likely only
+     *   need `["user"]`
+     * - Avoid listing `["admin", "seller", "buyer", "moderator", ...]`
+     *   unnecessarily
+     * - The actual role checking happens in business logic, not at the endpoint
+     *   level
+     *
      * ## Naming Convention
      *
      * DO: Use camelCase for all role names.
@@ -107,6 +136,8 @@ export namespace IAutoBeInterfaceOperationApplication {
      * - Set to empty array `[]` for public endpoints that require no
      *   authentication
      * - Set to array with role strings for role-restricted endpoints
+     * - **MINIMIZE the number of roles per endpoint to prevent explosion**
+     * - Consider if the endpoint can be public with role-based filtering instead
      * - The role names match exactly with the user type/role defined in the
      *   database
      * - This will be used by the Realize Agent to generate appropriate decorator
@@ -116,11 +147,26 @@ export namespace IAutoBeInterfaceOperationApplication {
      *
      * ## Examples
      *
-     * - `[]` - Public endpoint, no authentication required
-     * - `["user"]` - Any authenticated user can access
-     * - `["admin"]` - Only admin users can access
+     * - `[]` - Public endpoint, no authentication required (PREFERRED for read
+     *   operations)
+     * - `["user"]` - Any authenticated user can access (PREFERRED for
+     *   user-specific operations)
+     * - `["admin"]` - Only admin users can access (USE SPARINGLY)
      * - `["admin", "moderator"]` - Both admin and moderator users can access
-     * - `["seller"]` - Only seller users can access
+     *   (AVOID if possible)
+     * - `["seller"]` - Only seller users can access (ONLY if Seller is a separate
+     *   table)
+     *
+     * ## Best Practices
+     *
+     * 1. **Start with public `[]` for all read operations** unless sensitive data
+     *    is involved
+     * 2. **Use single role `["user"]` for authenticated operations** and handle
+     *    permissions in business logic
+     * 3. **Only use multiple roles when absolutely necessary** for different
+     *    business logic paths
+     * 4. **Remember: Fewer roles = Fewer endpoints = Better performance and
+     *    maintainability**
      *
      * Note: The actual authentication/authorization implementation will be
      * handled by decorators at the controller level, and the provider function
