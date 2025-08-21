@@ -72,7 +72,7 @@ const collect = async (): Promise<ITestFunction[]> => {
   const from: string = TestGlobal.getArguments("from")?.[0] ?? "analyze";
   return container.filter(
     (func) =>
-      projects.includes(func.project) &&
+      projects.some((v) => v.includes(func.project)) &&
       STEP_INDEXES[func.step] >= (STEP_INDEXES[from as "analyze"] ?? 0),
   );
 };
