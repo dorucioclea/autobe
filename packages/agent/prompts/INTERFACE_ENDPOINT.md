@@ -41,9 +41,10 @@ Analyze the provided information and generate a SELECTIVE array of API endpoints
 - NEVER assume common fields like `deleted_at`, `created_by`, `updated_by`, `is_deleted` exist unless explicitly defined in the schema
 - If the Prisma schema lacks soft delete fields, the DELETE endpoint will perform hard delete
 - Verify every field reference against the provided Prisma schema JSON
-- **Check the `entityRole` property**: 
-  - Tables with `entityRole: "primary"` typically need endpoints
-  - Tables with `entityRole: "supporting"` often don't need endpoints or need read-only endpoints
+- **Check the `stance` property and generate endpoints accordingly**: 
+  - Tables with `stance: "primary"` → Full CRUD endpoints (PATCH, GET, POST, PUT, DELETE)
+  - Tables with `stance: "subsidiary"` → Nested endpoints through parent only, NO independent operations
+  - Tables with `stance: "snapshot"` → Read-only endpoints (GET, PATCH for search), NO write operations
 
 ## 2.2. System-Generated Data Restrictions
 
@@ -126,12 +127,23 @@ makeEndpoints({
    - Use `/articles` instead of `/bbs/articles`
    - Keep paths clean and simple without domain or service prefixes
 
-4. **NO role-based prefixes**
+4. **CRITICAL: Snapshot tables must be hidden from API paths**
+   - **NEVER expose snapshot tables or "snapshot" keyword in API endpoint paths**
+   - **Even if a table is directly related to a snapshot table, do NOT reference the snapshot relationship in the path**
+   - Example: `shopping_sale_snapshot_review_comments` → `/shopping/sales/{saleId}/reviews/comments` 
+     * NOT `/shopping/sales/snapshots/reviews/comments`
+     * NOT `/shopping/sales/{saleId}/snapshots/{snapshotId}/reviews/comments`
+   - Example: `bbs_article_snapshots` → `/articles` (the snapshot table itself becomes just `/articles`)
+   - Example: `bbs_article_snapshot_files` → `/articles/{articleId}/files` (files connected to snapshots are accessed as if connected to articles)
+   - Snapshot tables are internal implementation details for versioning/history and must be completely hidden from REST API design
+   - The API should present a clean business-oriented interface without exposing the underlying snapshot architecture
+
+5. **NO role-based prefixes**
    - Use `/users/{userId}` instead of `/admin/users/{userId}`
    - Use `/posts/{postId}` instead of `/my/posts/{postId}`
    - Authorization and access control will be handled separately, not in the path structure
 
-5. **Structure hierarchical relationships with nested paths**
+6. **Structure hierarchical relationships with nested paths**
    - Example: For child entities, use `/sales/{saleId}/snapshots` for sale snapshots
    - Use parent-child relationship in URL structure when appropriate
 
@@ -236,7 +248,7 @@ For EACH **primary business entity** identified in the requirements document, Pr
 - **Function Call Required**: You MUST use the `makeEndpoints()` function to submit your results
 - **Path Validation**: EVERY path MUST pass the validation rules above
 - **Selective Coverage**: Generate endpoints for PRIMARY business entities, not every table
-- **Conservative Approach**: Skip system-managed tables and supporting tables unless explicitly needed
+- **Conservative Approach**: Skip system-managed tables and subsidiary/snapshot tables unless explicitly needed
 - **Strict Output Format**: ONLY include objects with `path` and `method` properties in your function call
 - **No Additional Properties**: Do NOT include any properties beyond `path` and `method`
 - **Clean Paths**: Paths should be clean without prefixes or role indicators
@@ -255,10 +267,35 @@ For EACH **primary business entity** identified in the requirements document, Pr
    - Map entities to appropriate API endpoint groups
 
 3. **Endpoint Generation (Selective)**:
-   - Evaluate each entity's `entityRole` property if available
-   - For PRIMARY entities: Consider full CRUD endpoints
-   - For SUPPORTING entities: Carefully evaluate if endpoints are needed
-   - For SYSTEM tables: Usually only GET/PATCH for viewing/searching, NO write operations
+   - Evaluate each entity's `stance` property carefully
+   
+   **For PRIMARY stance entities**:
+   - ✅ Generate PATCH `/entities` - Search/filter with complex criteria across ALL instances
+   - ✅ Generate GET `/entities/{id}` - Retrieve specific entity
+   - ✅ Generate POST `/entities` - Create new entity independently
+   - ✅ Generate PUT `/entities/{id}` - Update entity
+   - ✅ Generate DELETE `/entities/{id}` - Delete entity
+   - Example: `bbs_article_comments` is PRIMARY because users need to:
+     * Search all comments by a user across all articles
+     * Moderate comments independently
+     * Edit/delete their comments directly
+   
+   **For SUBSIDIARY stance entities**:
+   - ❌ NO independent creation endpoints (managed through parent)
+   - ❌ NO independent search across all instances
+   - ✅ MAY have GET `/parent/{parentId}/subsidiaries` - List within parent context
+   - ✅ MAY have POST `/parent/{parentId}/subsidiaries` - Create through parent
+   - ✅ MAY have PUT `/parent/{parentId}/subsidiaries/{id}` - Update through parent
+   - ✅ MAY have DELETE `/parent/{parentId}/subsidiaries/{id}` - Delete through parent
+   - Example: `bbs_article_snapshot_files` - files attached to snapshots, managed via snapshot operations
+   
+   **For SNAPSHOT stance entities**:
+   - ✅ Generate GET `/entities/{id}` - View historical state
+   - ✅ Generate PATCH `/entities` - Search/filter historical data (read-only)
+   - ❌ NO POST endpoints - Snapshots are created automatically by system
+   - ❌ NO PUT endpoints - Historical data is immutable
+   - ❌ NO DELETE endpoints - Audit trail must be preserved
+   - Example: `bbs_article_snapshots` - historical states for audit/versioning
    - Convert names to camelCase (e.g., `attachment-files` → `attachmentFiles`)
    - Ensure paths are clean without prefixes or role indicators
 
@@ -286,6 +323,9 @@ Your implementation MUST be SELECTIVE and THOUGHTFUL, focusing on entities that 
 | `/my/posts` | `/posts` | Remove ownership prefix |
 | `/shopping/sales/snapshots` | `/sales/{saleId}/snapshots` | Remove prefix, add hierarchy |
 | `/bbs/articles/{id}/comments` | `/articles/{articleId}/comments` | Clean nested structure |
+| `/shopping/sales/snapshots/reviews/comments` | `/shopping/sales/{saleId}/reviews/comments` | Remove "snapshot" - it's implementation detail |
+| `/bbs/articles/snapshots` | `/articles` | Remove "snapshot" from all paths |
+| `/bbs/articles/snapshots/files` | `/articles/{articleId}/files` | Always remove "snapshot" from paths |
 
 ## 10. Example Cases
 
