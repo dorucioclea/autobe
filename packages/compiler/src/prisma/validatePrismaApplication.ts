@@ -85,15 +85,16 @@ function validateDuplicatedFiles(
           path: `application.files[${container.index}]`,
           table: null,
           field: null,
-          message: [
-            `File ${container.file.filename} is duplicated.`,
-            "",
-            "Accessors of the other duplicated files are:",
-            "",
-            ...array
+          message: StringUtil.trim`
+            File ${container.file.filename} is duplicated.
+
+            Accessors of the other duplicated files are:
+
+            ${array
               .filter((_oppo, j) => i !== j)
-              .map((oppo) => `- application.files[${oppo.index}]`),
-          ].join("\n"),
+              .map((oppo) => `- application.files[${oppo.index}]`)
+              .join("\n")},
+          `,
         });
       });
   return errors;
@@ -123,18 +124,19 @@ function validateDuplicatedModels(
           path: `application.files[${container.fileIndex}].models[${container.modelIndex}]`,
           table: container.model.name,
           field: null,
-          message: [
-            `Model ${container.model.name} is duplicated.`,
-            "",
-            "Accessors of the other duplicated models are:",
-            "",
-            ...array
+          message: StringUtil.trim`
+            Model ${container.model.name} is duplicated.
+            
+            Accessors of the other duplicated models are:
+            
+            ${array
               .filter((_oppo, j) => i !== j)
               .map(
                 (oppo) =>
                   `- application.files[${oppo.fileIndex}].models[${oppo.modelIndex}]`,
-              ),
-          ].join("\n"),
+              )
+              .join("\n")},
+          `,
         });
       });
   return errors;
@@ -172,13 +174,16 @@ function validateDuplicatedFields(
           path,
           table: model.name,
           field,
-          message: [
-            `Field ${field} is duplicated.`,
-            "",
-            "Accessors of the other duplicated fields are:",
-            "",
-            ...array.filter((_oppo, j) => i !== j).map((a) => `- ${a}`),
-          ].join("\n"),
+          message: StringUtil.trim`
+            Field ${field} is duplicated.
+            
+            Accessors of the other duplicated fields are:
+            
+            ${array
+              .filter((_oppo, j) => i !== j)
+              .map((a) => `- ${a}`)
+              .join("\n")},
+          `,
         });
       });
 
@@ -190,12 +195,37 @@ function validateDuplicatedFields(
         table: model.name,
         field: field.name,
         message: StringUtil.trim`
-          There's a same named table in the application.
+          Field name conflicts with an existing table name.
 
-          Check whether the field has been designed for denormalization
-          like pre-calculation. If do so, remove the field.
+          **What happened?**
+          The field "${field.name}" in model "${model.name}" has the same name as another table "${field.name}".
+          This can cause confusion and potential issues in the generated code.
 
-          Otherwise, change the field name to something else.
+          **Why is this a problem?**
+          - Naming conflicts can lead to ambiguous references in your code
+          - It may cause issues with Prisma's relation inference
+          - It makes the schema harder to understand and maintain
+
+          **How to fix this:**
+          
+          1. **If this is a denormalization field (pre-calculated value):**
+             - Consider if this field is really necessary
+             - If it's storing aggregated data from the related table, it might be better to calculate it dynamically
+             - Remove the field if it's redundant
+
+          2. **If this is a legitimate field:**
+             - Rename the field to be more descriptive
+             - Good naming examples:
+               - Instead of "user", use "user_name" or "user_id"
+               - Instead of "order", use "order_status" or "order_count"
+               - Instead of "product", use "product_name" or "product_code"
+
+          3. **Naming best practices:**
+             - Use specific, descriptive names that indicate the field's purpose
+             - Avoid using table names as field names
+             - Consider adding a suffix or prefix to clarify the field's role
+
+          Please rename the field or remove it if unnecessary.
         `,
       });
   });
@@ -235,13 +265,16 @@ function validateDuplicatedIndexes(
           path,
           table: model.name,
           field: null,
-          message: [
-            `Duplicated index found (${fieldNames.join(", ")}).`,
-            "",
-            "Accessors of the other duplicated indexes are:",
-            "",
-            ...array.filter((_oppo, j) => i !== j).map((a) => `- ${a}`),
-          ].join("\n"),
+          message: StringUtil.trim`
+            Duplicated index found (${fieldNames.join(", ")}).
+            
+            Accessors of the other duplicated indexes are:
+            
+            ${array
+              .filter((_oppo, j) => i !== j)
+              .map((a) => `- ${a}`)
+              .join("\n")},
+          `,
         });
       });
 
@@ -281,13 +314,44 @@ function validateDuplicatedIndexes(
           table: model.name,
           field: null,
           message: StringUtil.trim`
-            Subset unique index found (${subset.join(", ")}).
-            
-            You have defined an unique index with multiple fields,
-            but its subset is already defined as an unique index.
-            
-            Consider to change the unique index to a plain index,
-            or drop the redundant unique index please.
+            Redundant subset unique index detected.
+
+            **What is a subset unique index problem?**
+            When you have a unique index on multiple fields, any subset of those fields is automatically unique too.
+            This is a fundamental property of unique constraints in databases.
+
+            **Current situation:**
+            - You have a unique index on: (${unique.fieldNames.join(", ")})
+            - But there's already a unique index on its subset: (${subset.join(", ")})
+            - This makes the larger unique index redundant for uniqueness purposes
+
+            **Why is this a problem?**
+            1. **Logical redundancy**: If (A) is unique, then (A, B) is automatically unique
+            2. **Performance overhead**: Maintaining unnecessary indexes slows down write operations
+            3. **Storage waste**: Each index consumes disk space
+            4. **Confusion**: It's unclear which uniqueness constraint is the intended one
+
+            **Example to illustrate:**
+            If email is unique, then (email, name) is automatically unique because:
+            - No two records can have the same email
+            - Therefore, no two records can have the same (email, name) combination
+
+            **How to fix:**
+            Choose one of these solutions based on your needs:
+
+            1. **If you need uniqueness only:**
+               - Keep just the subset unique index: (${subset.join(", ")})
+               - Remove the larger unique index
+
+            2. **If you need the multi-field index for query performance:**
+               - Keep the subset as unique index: (${subset.join(", ")})
+               - Change the larger index to a plain (non-unique) index for performance
+
+            3. **If the subset unique was added by mistake:**
+               - Remove the subset unique index
+               - Keep the multi-field unique index
+
+            Please review your uniqueness requirements and adjust accordingly.
           `,
         });
     });
@@ -306,12 +370,42 @@ function validateDuplicatedIndexes(
           table: model.name,
           field: null,
           message: StringUtil.trim`
-            Superset plain index found (${y.fieldNames.join(", ")}).
-            
-            You have defined a plain index with multiple fields,
-            but its superset is already defined as another plain index.
-            
-            As subset index is vulnerable, drop this plain index please.
+            Inefficient subset index detected - superset index exists.
+
+            **What is a subset/superset index problem?**
+            In database indexing, when you have an index on (A, B, C), it can efficiently serve queries 
+            that filter by A, or by (A, B), or by (A, B, C). This is called index prefix matching.
+
+            **Current situation:**
+            - You have a plain index on: (${x.fieldNames.join(", ")})
+            - But there's already a plain index on its superset: (${y.fieldNames.join(", ")})
+            - The subset index is redundant because the superset can handle the same queries
+
+            **Why is this a problem?**
+            1. **Query efficiency**: The superset index can handle all queries the subset can
+            2. **Storage waste**: You're maintaining two indexes where one would suffice
+            3. **Write performance**: Each index slows down INSERT, UPDATE, and DELETE operations
+            4. **Maintenance overhead**: More indexes mean more work for the database
+
+            **How indexes work (example):**
+            If you have an index on (country, city, street):
+            - ✅ Can efficiently find by country
+            - ✅ Can efficiently find by country + city
+            - ✅ Can efficiently find by country + city + street
+            - ❌ Cannot efficiently find by city alone
+            - ❌ Cannot efficiently find by street alone
+
+            **How to fix:**
+            Remove the subset index (${x.fieldNames.join(", ")}) because:
+            - The superset index (${y.fieldNames.join(", ")}) already covers these queries
+            - You'll save storage space and improve write performance
+            - Query performance will remain the same
+
+            **When to keep both indexes:**
+            Only if the subset index is UNIQUE (which it isn't in this case), as unique 
+            constraints serve a different purpose than performance optimization.
+
+            Please remove the redundant subset index.
           `,
         });
     });
@@ -413,9 +507,37 @@ function validateIndexes(
           table: model.name,
           field: null,
           message: StringUtil.trim`
-            GIN index can only be used on string typed field.
-            However, the target field ${gin.fieldName} does not exist
-            in the {@link plainFields}.
+            GIN index cannot be applied to this field.
+
+            **What is a GIN index?**
+            GIN (Generalized Inverted Index) is a special index type in PostgreSQL designed for 
+            full-text search and operations on complex data types. In AutoBE, GIN indexes are 
+            used exclusively for string fields to enable efficient text searching.
+
+            **Current problem:**
+            The field "${gin.fieldName}" specified for GIN index does not exist in the plain fields 
+            of model "${model.name}".
+
+            **Possible causes:**
+            1. The field name is misspelled
+            2. The field is a foreign key field (not a plain field)
+            3. The field was removed but the index definition remained
+
+            **How to fix:**
+            1. Check if the field name is correct
+            2. Ensure the field exists in the plainFields array
+            3. Make sure the field is of type "string" (GIN indexes only work with strings)
+            4. If the field doesn't exist, either:
+               - Add the missing string field to plainFields
+               - Remove this GIN index definition
+
+            **Example of correct GIN index usage:**
+            plainFields: [
+              { name: "content", type: "string" }  // ✓ Can use GIN index
+            ]
+            ginIndexes: [
+              { fieldName: "content" }  // ✓ Correct
+            ]
           `,
         });
       else if (model.plainFields[pIndex].type !== "string")
@@ -424,11 +546,43 @@ function validateIndexes(
           table: model.name,
           field: model.plainFields[pIndex].name,
           message: StringUtil.trim`
-            GIN index can only be used on string typed field.
-            However, the target field ${gin.fieldName} is not string,
-            but ${model.plainFields[pIndex].type}.
-            
-            - accessor of the wrong typed field: ${`${accessor}.plainFields[${pIndex}].type`},
+            GIN index type mismatch - requires string field.
+
+            **What is a GIN index?**
+            GIN (Generalized Inverted Index) is PostgreSQL's specialized index for full-text search.
+            It's designed to efficiently search within text content, making it perfect for features like:
+            - Search functionality in articles or posts
+            - Finding keywords in product descriptions
+            - Filtering by text content
+
+            **Current problem:**
+            You're trying to apply a GIN index to field "${gin.fieldName}" which is of type "${model.plainFields[pIndex].type}".
+            GIN indexes can ONLY be applied to "string" type fields.
+
+            **Why string fields only?**
+            GIN indexes work by breaking down text into searchable tokens (words, phrases).
+            Other data types like numbers, booleans, or dates don't have this text structure.
+
+            **How to fix:**
+
+            1. **If you need text search on this field:**
+               - Change the field type to "string"
+               - Example: If storing a product code as number, consider storing as string instead
+
+            2. **If the field should remain as ${model.plainFields[pIndex].type}:**
+               - Remove the GIN index for this field
+               - Use a regular index instead (plainIndexes)
+               - Consider if you really need an index on this field
+
+            3. **Alternative indexing strategies:**
+               - For ${model.plainFields[pIndex].type} fields, use plainIndexes for general performance
+               - For unique ${model.plainFields[pIndex].type} values, use uniqueIndexes
+               - GIN indexes should be reserved for text search scenarios only
+
+            **Location of the field:**
+            - Field definition: ${`${accessor}.plainFields[${pIndex}]`}
+
+            Please either change the field type to "string" or remove the GIN index.
           `,
         });
     },
@@ -466,22 +620,51 @@ function validateReferences(
             message: StringUtil.trim`
               Cross-reference dependency detected between models.
 
-              - accessor of opposite side: application.files[${target.fileIndex}].models[${target.modelIndex}].foreignFields[${j}].relation.targetModel
+              **What is Cross-reference dependency?**
+              A cross-reference dependency (also known as circular dependency) occurs when two models 
+              reference each other through foreign key fields. This creates a circular relationship 
+              where Model A references Model B, and Model B also references Model A.
 
-              Cross-references (circular dependencies) are not permitted in AutoBe Prisma schemas.
+              **Current situation:**
+              - ${model.name} model has a foreign key field "${field.name}" that references ${field.relation.targetModel}
+              - ${field.relation.targetModel} model also has a foreign key field that references ${model.name}
+              - Location of opposite reference: application.files[${target.fileIndex}].models[${target.modelIndex}].foreignFields[${j}].relation.targetModel
 
-              To resolve this issue:
+              **Why is this a problem?**
+              Circular dependencies can cause issues with:
+              - Database initialization (which table to create first?)
+              - Data insertion (which record to insert first?)
+              - Cascading updates and deletes
+              - Query performance and complexity
 
-              1. Remove one of the foreign key fields from either model
-              2. Keep only the foreign key that represents the primary relationship direction
-              3. Remove any related indexes that reference the deleted foreign key field
+              **How to fix this:**
+              You need to remove one of the foreign key relationships. Here's how to decide:
 
-              The foreign key field to remove is typically:
+              1. **Identify the primary relationship direction**
+                 - Which model is the "parent" and which is the "child"?
+                 - Which relationship is essential for your business logic?
+                 - Example: In User ↔ Profile, User is typically the parent
 
-              - A redundant field that can be computed from the existing relationship
-              - A field that duplicates information already accessible through the primary relationship
+              2. **Remove the redundant foreign key**
+                 - Keep the foreign key in the child model pointing to the parent
+                 - Remove the foreign key in the parent model pointing to the child
+                 - You can still access the reverse relationship through Prisma's implicit relations
 
-              Please eliminate the circular dependency and try again.`,
+              3. **Update any affected indexes**
+                 - Remove indexes that include the deleted foreign key field
+                 - Update composite indexes if necessary
+
+              **Example solution:**
+              If you have:
+              - User model with profileId foreign key
+              - Profile model with userId foreign key
+              
+              You should:
+              - Keep userId in Profile (child references parent)
+              - Remove profileId from User
+              - Access user's profile through: user.profile (Prisma will handle this)
+
+              Please eliminate the circular dependency and regenerate the schema.`,
           });
         }
       });
