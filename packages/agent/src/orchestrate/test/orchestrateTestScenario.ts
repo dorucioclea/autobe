@@ -1,10 +1,11 @@
 import { IAgenticaController } from "@agentica/core";
 import {
+  AutoBeInterfaceAuthorization,
   AutoBeOpenApi,
   AutoBeProgressEventBase,
   AutoBeTestScenario,
 } from "@autobe/interface";
-import { AutoBeEndpointComparator } from "@autobe/utils";
+import { AutoBeEndpointComparator, MapUtil, StringUtil } from "@autobe/utils";
 import { ILlmApplication, ILlmSchema, IValidation } from "@samchon/openapi";
 import { HashMap, IPointer, Pair } from "tstl";
 import typia from "typia";
@@ -14,6 +15,7 @@ import { assertSchemaModel } from "../../context/assertSchemaModel";
 import { divideArray } from "../../utils/divideArray";
 import { transformTestScenarioHistories } from "./histories/transformTestScenarioHistories";
 import { IAutoBeTestScenarioApplication } from "./structures/IAutoBeTestScenarioApplication";
+import { IAutoBeTestScenarioAuthorizationRole } from "./structures/IAutoBeTestScenarioAuthorizationRole";
 
 export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
@@ -41,6 +43,7 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
       AutoBeEndpointComparator.hashCode,
       AutoBeEndpointComparator.equals,
     );
+
   const endpointNotFound: string = [
     `You have to select one of the endpoints below`,
     "",
@@ -113,13 +116,23 @@ const divideAndConquer = async <Model extends ILlmSchema.Model>(
   const pointer: IPointer<IAutoBeTestScenarioApplication.IScenarioGroup[]> = {
     value: [],
   };
+
+  const authorizations: AutoBeInterfaceAuthorization[] =
+    ctx.state().interface?.authorizations ?? [];
+
   const { tokenUsage } = await ctx.conversate({
     source: "testScenarios",
-    histories: transformTestScenarioHistories(entire, include, exclude),
+    histories: transformTestScenarioHistories(
+      ctx.state(),
+      entire,
+      include,
+      exclude,
+    ),
     controller: createController({
       model: ctx.model,
       endpointNotFound,
       dict,
+      authorizations,
       build: (next) => {
         pointer.value ??= [];
         pointer.value.push(...next.scenarioGroups);
@@ -157,6 +170,7 @@ function createController<Model extends ILlmSchema.Model>(props: {
   model: Model;
   endpointNotFound: string;
   dict: HashMap<AutoBeOpenApi.IEndpoint, AutoBeOpenApi.IOperation>;
+  authorizations: AutoBeInterfaceAuthorization[];
   build: (next: IAutoBeTestScenarioApplication.IProps) => void;
 }): IAgenticaController.IClass<Model> {
   assertSchemaModel(props.model);
@@ -169,19 +183,8 @@ function createController<Model extends ILlmSchema.Model>(props: {
     if (result.success === false) return result;
 
     // merge to unique scenario groups
-    const scenarioGroups: IAutoBeTestScenarioApplication.IScenarioGroup[] = [];
-    result.data.scenarioGroups.forEach((sg) => {
-      const created = scenarioGroups.find(
-        (el) =>
-          el.endpoint.method === sg.endpoint.method &&
-          el.endpoint.path === sg.endpoint.path,
-      );
-      if (created) {
-        created.scenarios.push(...sg.scenarios);
-      } else {
-        scenarioGroups.push(sg);
-      }
-    });
+    const scenarioGroups: IAutoBeTestScenarioApplication.IScenarioGroup[] =
+      uniqueScenarioGroups(result.data.scenarioGroups);
 
     // validate endpoints
     const errors: IValidation.IError[] = [];
@@ -203,6 +206,125 @@ function createController<Model extends ILlmSchema.Model>(props: {
               description: props.endpointNotFound,
             });
         });
+      });
+    });
+
+    // Authentication Correction
+    const entireRoles: Map<string, IAutoBeTestScenarioAuthorizationRole> =
+      new Map();
+    for (const authorization of props.authorizations) {
+      for (const op of authorization.operations) {
+        if (op.authorizationType === null) continue;
+        const value: IAutoBeTestScenarioAuthorizationRole = MapUtil.take(
+          entireRoles,
+          authorization.role,
+          () => ({
+            name: authorization.role,
+            join: null,
+            login: null,
+          }),
+        );
+        if (op.authorizationType === "join") value.join = op;
+        else if (op.authorizationType === "login") value.login = op;
+      }
+    }
+
+    scenarioGroups.forEach((group) => {
+      if (props.dict.has(group.endpoint) === false) return;
+
+      const operation: AutoBeOpenApi.IOperation = props.dict.get(
+        group.endpoint,
+      );
+      group.scenarios.forEach((scenario) => {
+        // gathere authorization roles
+        const localRoles: Map<string, IAutoBeTestScenarioAuthorizationRole> =
+          new Map();
+        const add = (operation: AutoBeOpenApi.IOperation) => {
+          const role: string | null = operation.authorizationRole;
+          if (role === null) return;
+          MapUtil.take(localRoles, role, () => ({
+            name: role,
+            join: null,
+            login: null,
+          }));
+        };
+        add(operation);
+        scenario.dependencies.forEach((d) => {
+          if (props.dict.has(d.endpoint) === false) return;
+          const depOperation: AutoBeOpenApi.IOperation = props.dict.get(
+            d.endpoint,
+          );
+          add(depOperation);
+        });
+
+        // Single role case - add join operation
+        if (localRoles.size === 1) {
+          const role: IAutoBeTestScenarioAuthorizationRole = localRoles
+            .values()
+            .next().value!;
+          if (role.join === null) {
+            const joinOperation: AutoBeOpenApi.IOperation | null =
+              entireRoles.get(role.name)?.join ?? null;
+            if (joinOperation === null) throw new Error("Unreachable code");
+
+            scenario.dependencies.push({
+              endpoint: {
+                method: joinOperation.method,
+                path: joinOperation.path,
+              },
+              purpose: StringUtil.trim`
+                Essential authentication prerequisite: 
+                This join operation (${joinOperation.method} ${joinOperation.path}) must be executed before any operations requiring '${role.name}' role authorization. 
+                It establishes the necessary user account and authentication context for the '${role.name}' role, enabling subsequent API calls that depend on this specific authorization level. 
+                Without this join operation, the main scenario endpoint and its dependencies will fail due to insufficient authentication credentials.
+              `,
+            });
+          }
+        }
+
+        // Multiple roles case - add both join and login operations
+        if (localRoles.size > 1) {
+          for (const role of localRoles.values()) {
+            if (role.join === null) {
+              const joinOperation: AutoBeOpenApi.IOperation | null =
+                entireRoles.get(role.name)?.join ?? null;
+              if (joinOperation === null) throw new Error("Unreachable code");
+
+              scenario.dependencies.push({
+                endpoint: {
+                  path: joinOperation.path,
+                  method: joinOperation.method,
+                },
+                purpose: StringUtil.trim`
+                  Multi-actor authentication setup: 
+                  This join operation (${joinOperation.method} ${joinOperation.path}) is required to establish a '${role.name}' role user account in the system. 
+                  This scenario involves multiple authorization roles, requiring separate user accounts for each role to properly test cross-role interactions and authorization boundaries. 
+                  The join operation creates the foundational user identity that will be used throughout the test scenario for '${role.name}' specific operations.
+                  This join operation is required for the '${role.name}' role authentication.
+                `,
+              });
+            }
+            if (role.login === null) {
+              const loginOperation: AutoBeOpenApi.IOperation | null =
+                entireRoles.get(role.name)?.login ?? null;
+              if (loginOperation === null) throw new Error("Unreachable code");
+
+              scenario.dependencies.push({
+                endpoint: {
+                  path: loginOperation.path,
+                  method: loginOperation.method,
+                },
+                purpose: StringUtil.trim`
+                  Role switching authentication: 
+                  This login operation (${loginOperation.method} ${loginOperation.path}) enables dynamic user role switching during test execution for the '${role.name}' role. 
+                  In scenarios with multiple actors, the test agent needs to authenticate as different users to simulate real-world multi-user interactions. 
+                  This login operation ensures proper session management and authorization context switching, allowing the test to validate permissions, access controls, and business logic that span across different user roles within a single test scenario.
+                  This login operation may be required for user role swapping between multiple actors.
+                `,
+              });
+            }
+          }
+        }
       });
     });
     return errors.length === 0
@@ -236,6 +358,17 @@ function createController<Model extends ILlmSchema.Model>(props: {
     } satisfies IAutoBeTestScenarioApplication,
   };
 }
+
+const uniqueScenarioGroups = (
+  groups: IAutoBeTestScenarioApplication.IScenarioGroup[],
+): IAutoBeTestScenarioApplication.IScenarioGroup[] =>
+  new HashMap(
+    groups.map((g) => new Pair(g.endpoint, g)),
+    AutoBeEndpointComparator.hashCode,
+    AutoBeEndpointComparator.equals,
+  )
+    .toJSON()
+    .map((it) => it.second);
 
 const collection = {
   chatgpt: (validate: Validator) =>
