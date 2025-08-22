@@ -33,8 +33,8 @@ catalogs:
       specifier: ^1.1.0
       version: 1.1.1
     embed-typescript:
-      specifier: ^1.0.1
-      version: 1.1.0
+      specifier: ^1.2.0
+      version: 1.2.0
     prisma-markdown:
       specifier: ^3.0.0
       version: 3.0.1
@@ -532,7 +532,7 @@ importers:
         version: 1.1.1(prisma@6.13.0(typescript@5.9.2))(typescript@5.9.2)
       embed-typescript:
         specifier: catalog:samchon
-        version: 1.1.0(typescript@5.9.2)
+        version: 1.2.0(typescript@5.9.2)
       import2:
         specifier: ^1.0.3
         version: 1.0.3
@@ -3701,8 +3701,8 @@ packages:
   embed-prisma@1.1.1:
     resolution: {integrity: sha512-7mCZiecuPzwwn9XYEDYx5IiY4o4hIvXqeGlJyFhtJtvVxpB6Kh1tlj4FQDvV77qb08bBnbOXaM3l2wU5xboPdw==}
 
-  embed-typescript@1.1.0:
-    resolution: {integrity: sha512-MHEb5/zSKoxfShHEdjMBnZL9RQEl6qHcl3Pw4UN3C99Ru+Ul9fiySxyD6R1eYkQ9S++HhSL98krp+euHvczN9w==}
+  embed-typescript@1.2.0:
+    resolution: {integrity: sha512-/xIsRPhNDKXVzSlRoPnlpHkEcemXM0N4VI6buRhdVt/Jbr+EmyPcRds0GpFbWip4Dpd/fIf1H46Ak/3+LgfNKg==}
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.0 <6.0.0'
@@ -9872,7 +9872,7 @@ snapshots:
       - prisma
       - typescript
 
-  embed-typescript@1.1.0(typescript@5.9.2):
+  embed-typescript@1.2.0(typescript@5.9.2):
     dependencies:
       tstl: 3.0.0
       typescript: 5.9.2
