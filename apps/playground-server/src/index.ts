@@ -1,3 +1,2 @@
+export * from "./AutoBePlaygroundModule";
 export * from "./AutoBePlaygroundServer";
-export * from "./IAutoBePlaygroundServerProps";
-export * from "./IAutoBePlaygroundPredicate";
