@@ -81,32 +81,55 @@ The final deliverable must be a structured output containing scenario groups wit
 * **Public Endpoints**: If `authorizationRole` is null, no authentication is required unless the scenario logically needs it for business context.
 * **Authentication Flow Order**: Always establish authentication context before testing protected endpoints, and maintain proper sequence when switching between roles.
 
-**Authentication Pattern Examples with Detailed Flow:**
+**🔥 CRITICAL: JOIN vs LOGIN Usage Rules**
+
+**`join` Operation Rules:**
+- `join` operation **AUTOMATICALLY LOGS IN** the newly created user
+- After `join`, the user context is **IMMEDIATELY** established
+- Use `join` when creating a **NEW** user account
+- Use `join` for **ALL user context switching to new users** - this is the primary method for switching to a different user
+
+**`login` Operation Rules:**
+- Use `login` **ONLY** when switching back to a **PREVIOUSLY CREATED** user account that was created earlier in the same test scenario
+- **Avoid using** `login` immediately after `join` unless specifically required by the test scenario
+- Use `login` when you need to switch back to a previously created user
+
+**When `login` after `join` might be needed:**
+- Testing login functionality specifically after account creation
+- Scenarios that explicitly test the login flow after registration
+- Business workflows that require explicit re-authentication
+
+
+**When `login` is Actually Needed:**
+- **Switching back to previously created users**: When you need to return to a user that was created earlier in the test scenario
+- **Testing login functionality specifically**: When the test scenario explicitly focuses on testing the login operation itself
+- **Explicit business requirement**: When the business workflow explicitly requires re-authentication
 
 **Single Role Testing Pattern:**
 1. Execute `join` operation to create a user with the required role
 2. Execute the target API operation with that user's context
 ```
 Example: Testing admin product creation
-Step 1: POST /auth/admin/join (create admin user) 
+Step 1: POST /auth/admin/join (create admin user - automatically logged in) 
 Step 2: POST /admin/products (create product with admin role)
 ```
 
 **Multi-Role Testing Pattern:**
-1. Execute `join` operation to create first user (Role A)
+1. Execute `join` operation to create first user (Role A) - context established
 2. Execute operations with Role A context
-3. Execute `join` operation to create second user (Role B)  
+3. Execute `join` operation to create second user (Role B) - context switches to Role B
 4. Execute operations with Role B context
-5. Use `login` operation to switch back to Role A if needed
+5. **Only if needed**: Use `login` operation to switch back to Role A
 6. Continue testing with switched role context
+
 ```
-Example: Testing product creation and review workflow
-Step 1: POST /auth/sellers/join (create seller)
-Step 2: POST /products (seller creates product)
-Step 3: POST /auth/customers/join (create customer)
-Step 4: POST /products/{id}/reviews (customer reviews product)
-Step 5: POST /auth/sellers/login (switch back to seller)
-Step 6: GET /sellers/products/reviews (seller checks reviews)
+Example: User ownership validation test
+Step 1: POST /auth/users/join (create user1 - context established)
+Step 2: POST /todos (user1 creates todo)
+Step 3: POST /auth/users/join (create user2 - context switches to user2)
+Step 4: DELETE /todos/{id} (user2 tries to delete user1's todo - should fail)
+Step 5: POST /auth/users/login (switch back to user1 - only now we use login)
+Step 6: GET /todos (verify todo still exists as user1)
 ```
 
 **Public Endpoint Pattern:**
@@ -118,10 +141,10 @@ Optional Step 2: POST /auth/customers/join (only if scenario continues with cust
 ```
 
 **AUTHENTICATION SEQUENCE REQUIREMENTS:**
-- **Role Establishment**: Always use `join` to create a new user account with the required role
-- **Role Switching**: Use `login` when switching between existing user accounts in multi-role scenarios  
+- **New User Creation & Context Switch**: Use `join` only - user context is automatically established and switches to the new user
+- **Return to Previous User**: Use `login` only when switching back to a user that was created earlier in the test scenario
 - **Sequential Order**: Authentication operations must be listed in dependencies in the correct execution order
-- **Context Persistence**: Consider that user context persists until explicitly switched via `login`
+- **Context Persistence**: Consider that user context persists until explicitly switched via another `join` or `login`
 - **Dependency Purpose**: Clearly explain the authentication sequence and reasoning in each dependency's `purpose` field
 
 ## 3. Output: `IAutoBeTestScenarioApplication.IProps` Structure
@@ -148,12 +171,12 @@ Each `scenario` contains a natural-language test description (`draft`), a clearl
             {
               endpoint: { method: "post", path: "/shopping/sellers/auth/join" },
               purpose:
-                "Create a seller account with permission to create products. This must be done first to establish the required seller role authentication context."
+                "Create a seller account with permission to create products. This establishes the required seller role authentication context automatically."
             },
             {
               endpoint: { method: "post", path: "/shopping/sellers/sales" },
               purpose:
-                "Create the first product with a specific SKU to establish the conflict condition. This must be done after seller creation and uses the seller's authentication context."
+                "Create the first product with a specific SKU to establish the conflict condition. This uses the seller's established authentication context from the join operation."
             }
           ]
         }
@@ -325,7 +348,7 @@ Test scenarios must cover not only successful business flows but also various er
 
 * It is critical to explicitly declare *all* prerequisite API calls necessary to prepare the test context within the `dependencies` array, with special attention to authentication requirements.
 * Dependencies represent logical requirements for the scenario and may require strict execution order, especially for authentication flows.
-* When there *is* a required sequence, such as creating a user before creating a product tied to that user, you **must** clearly indicate this order in both the scenario's `draft` description and in the `purpose` explanation of each dependency.
+* When there *is* a required sequence, such as creating a user before creating a resource tied to that user, you **must** clearly indicate this order in both the scenario's `draft` description and in the `purpose` explanation of each dependency.
 * Authentication sequences are particularly order-sensitive and must be explicitly described with proper role establishment flow.
 * This explicit approach prevents using placeholder or fake data (like dummy UUIDs) and instead ensures that all data setup is conducted via real API calls, increasing test reliability and maintainability.
 * Providing clear and detailed `draft` text describing the full user workflow, authentication context, and error expectations helps downstream agents or developers generate complete and realistic test implementations.
@@ -366,7 +389,8 @@ By following these guidelines, generated test scenarios will be comprehensive, a
 ### 8.4. Authentication Verification
 
 * [ ] For endpoints with authorizationRole: Are appropriate "join" operations included in dependencies for single-role scenarios?
-* [ ] For multi-role scenarios: Are both "join" and "login" operations included for proper role switching with clear sequence?
+* [ ] For multi-role scenarios: Are "join" operations used for each new user creation and context switching?
+* [ ] For returning to previous users: Is "login" used only when switching back to previously created users?
 * [ ] For public endpoints: Is authentication skipped unless scenario logically requires it?
 * [ ] Are authentication sequences properly described in dependency purposes with role establishment details?
 * [ ] Is authentication context established before testing protected endpoints with proper flow order?
