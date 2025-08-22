@@ -1,13 +1,13 @@
 import { AutoBeEvent, IAutoBeRpcService } from "@autobe/interface";
 import {
   AutoBeAssistantMessageMovie,
+  AutoBeProgressEventMovie,
   AutoBeScenarioEventMovie,
   AutoBeStartEventMovie,
   AutoBeUserMessageMovie,
 } from "@autobe/ui";
 
 import { AutoBePlaygroundCompleteEventMovie } from "./AutoBePlaygroundCompleteEventMovie";
-import { AutoBePlaygroundProgressEventMovie } from "./AutoBePlaygroundProgressEventMovie";
 import { AutoBePlaygroundValidateEventMovie } from "./AutoBePlaygroundValidateEventMovie";
 
 export function AutoBePlaygroundEventMovie<Event extends AutoBeEvent>(
@@ -55,9 +55,7 @@ export function AutoBePlaygroundEventMovie<Event extends AutoBeEvent>(
     case "realizeWrite":
     case "realizeAuthorizationWrite":
     case "realizeTestOperation":
-      return (
-        <AutoBePlaygroundProgressEventMovie event={back} last={props.last} />
-      );
+      return <AutoBeProgressEventMovie event={back} />;
     // VALIDATE EVENTS
     case "prismaInsufficient":
     case "prismaValidate":
@@ -87,7 +85,6 @@ export function AutoBePlaygroundEventMovie<Event extends AutoBeEvent>(
         />
       );
     // DISCARD
-    case "consentFunctionCall":
     case "prismaCorrect":
     case "testCorrect":
     case "realizeAuthorizationCorrect":

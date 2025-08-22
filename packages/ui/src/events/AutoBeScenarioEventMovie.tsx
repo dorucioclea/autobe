@@ -6,6 +6,8 @@ import {
 } from "@autobe/interface";
 import { JSX } from "react";
 
+import { formatTime } from "../utils/time";
+
 export interface IAutoBeScenarioEventMovieProps {
   event:
     | AutoBeAnalyzeScenarioEvent
@@ -18,16 +20,6 @@ export const AutoBeScenarioEventMovie = (
 ) => {
   const { event } = props;
   const { title, description } = getState(event);
-
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    });
-  };
 
   return (
     <div

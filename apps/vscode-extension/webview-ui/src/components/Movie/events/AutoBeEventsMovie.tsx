@@ -1,14 +1,13 @@
 import { AutoBeEvent } from "@autobe/interface";
 import {
   AutoBeAssistantMessageMovie,
+  AutoBeProgressEventMovie,
   AutoBeScenarioEventMovie,
   AutoBeStartEventMovie,
   AutoBeUserMessageMovie,
 } from "@autobe/ui";
 
-import ProgressEventsMovie, {
-  IProgressEventsMovieProps,
-} from "./ProgressEventsMovie";
+import { IProgressEventsMovieProps } from "./ProgressEventsMovie";
 import AnalyzeComplete from "./analyze/AnalyzeComplete";
 import { InterfaceComplement, InterfaceComplete } from "./interface";
 import PrismaComplete from "./prisma/PrismaComplete";
@@ -43,7 +42,7 @@ const AutoBeEventsMovie = (props: IAutoBeEventsMovieProps) => {
   const { event } = props;
 
   if (isAutoBeProgressEventBase(event)) {
-    return <ProgressEventsMovie event={event} />;
+    return <AutoBeProgressEventMovie event={event} />;
   }
 
   switch (event.type) {
@@ -124,7 +123,9 @@ const AutoBeEventsMovie = (props: IAutoBeEventsMovieProps) => {
     }
     case "consentFunctionCall":
     case "vendorRequest":
-    case "vendorResponse": {
+    case "vendorResponse":
+    case "jsonParseError":
+    case "jsonValidateError": {
       return null;
     }
     default:
