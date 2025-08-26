@@ -73,7 +73,6 @@ export const orchestrateRealize =
       total: scenarios.length,
       completed: 0,
     };
-    const writeProgressId: string = v7();
     const writeEvents: AutoBeRealizeWriteEvent[] = await executeCachedBatch(
       scenarios.map((scenario) => async () => {
         const code = await orchestrateRealizeWrite(ctx, {
@@ -81,7 +80,6 @@ export const orchestrateRealize =
           authorization: scenario.decoratorEvent ?? null,
           scenario,
           progress: writeProgress,
-          id: writeProgressId,
         });
         return code;
       }),
