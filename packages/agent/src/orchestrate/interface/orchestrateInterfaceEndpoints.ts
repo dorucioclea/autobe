@@ -25,15 +25,16 @@ export async function orchestrateInterfaceEndpoints<
   authorizations: AutoBeOpenApi.IOperation[],
   content: string = `Make endpoints for the given assets`,
 ): Promise<AutoBeOpenApi.IEndpoint[]> {
+  const progressId: string = v7();
   const progress: AutoBeProgressEventBase = {
-    id: v7(),
     total: groups.length,
     completed: 0,
   };
   const endpoints: AutoBeOpenApi.IEndpoint[] = (
     await executeCachedBatch(
       groups.map(
-        (g) => () => process(ctx, g, content, progress, authorizations),
+        (g) => () =>
+          process(ctx, g, content, progress, authorizations, progressId),
       ),
     )
   ).flat();
@@ -50,6 +51,7 @@ async function process<Model extends ILlmSchema.Model>(
   message: string,
   progress: AutoBeProgressEventBase,
   authorizations: AutoBeOpenApi.IOperation[],
+  progressId: string,
 ): Promise<AutoBeOpenApi.IEndpoint[]> {
   const start: Date = new Date();
   const pointer: IPointer<AutoBeOpenApi.IEndpoint[] | null> = {
@@ -76,7 +78,7 @@ async function process<Model extends ILlmSchema.Model>(
 
   const event: AutoBeInterfaceEndpointsEvent = {
     type: "interfaceEndpoints",
-    id: progress.id,
+    id: progressId,
     endpoints: new HashSet(
       pointer.value,
       OpenApiEndpointComparator.hashCode,

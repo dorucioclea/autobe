@@ -23,10 +23,10 @@ export async function orchestrateInterfaceAuthorizations<
 >(ctx: AutoBeContext<Model>): Promise<AutoBeInterfaceAuthorization[]> {
   const roles: AutoBeAnalyzeRole[] = ctx.state().analyze?.roles ?? [];
   const progress: AutoBeProgressEventBase = {
-    id: v7(),
     total: roles.length,
     completed: 0,
   };
+  const progressId: string = v7();
   const authorizations: AutoBeInterfaceAuthorization[] =
     await executeCachedBatch(
       roles.map((role) => async () => {
@@ -34,6 +34,7 @@ export async function orchestrateInterfaceAuthorizations<
           ctx,
           role,
           progress,
+          progressId,
         );
         ctx.dispatch(event);
         return {
@@ -50,6 +51,7 @@ async function process<Model extends ILlmSchema.Model>(
   ctx: AutoBeContext<Model>,
   role: AutoBeAnalyzeRole,
   progress: AutoBeProgressEventBase,
+  progressId: string,
 ): Promise<AutoBeInterfaceAuthorizationEvent> {
   const pointer: IPointer<IAutoBeInterfaceAuthorizationsApplication.IProps | null> =
     {
@@ -73,7 +75,7 @@ async function process<Model extends ILlmSchema.Model>(
 
   return {
     type: "interfaceAuthorization",
-    id: progress.id,
+    id: progressId,
     operations: pointer.value.operations,
     completed: ++progress.completed,
     tokenUsage,

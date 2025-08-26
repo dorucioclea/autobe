@@ -28,6 +28,7 @@ export const orchestrateAnalyze =
 
     ctx.dispatch({
       type: "analyzeStart",
+      id: v7(),
       reason: props.reason,
       step,
       created_at: startTime.toISOString(),
@@ -42,28 +43,29 @@ export const orchestrateAnalyze =
 
     // write documents
     const writeProgress: AutoBeProgressEventBase = {
-      id: v7(),
       total: scenario.files.length,
       completed: 0,
     };
+    const progressId: string = v7();
     const fileList: AutoBeAnalyzeFile[] = await executeCachedBatch(
       scenario.files.map((file) => async () => {
-        const event: AutoBeAnalyzeWriteEvent = await orchestrateAnalyzeWrite(
+        const event: AutoBeAnalyzeWriteEvent = await orchestrateAnalyzeWrite({
           ctx,
           scenario,
           file,
-          writeProgress,
-        );
+          progress: writeProgress,
+          id: progressId,
+        });
         return event.file;
       }),
     );
 
     // review documents
     const reviewProgress: AutoBeProgressEventBase = {
-      id: v7(),
       total: fileList.length,
       completed: 0,
     };
+    const reviewProgressId: string = v7();
     const newFiles: AutoBeAnalyzeFile[] = await executeCachedBatch(
       fileList.map((file, i) => async () => {
         try {
@@ -74,6 +76,7 @@ export const orchestrateAnalyze =
               fileList.filter((_, j) => j !== i), // other files
               file,
               reviewProgress,
+              reviewProgressId,
             );
           return {
             ...event.file,
@@ -88,6 +91,7 @@ export const orchestrateAnalyze =
     // Complete the analysis
     return ctx.dispatch({
       type: "analyzeComplete",
+      id: v7(),
       roles: scenario.roles,
       prefix: scenario.prefix,
       files: newFiles,

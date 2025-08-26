@@ -25,10 +25,10 @@ export async function orchestrateTestWrite<Model extends ILlmSchema.Model>(
   scenarios: AutoBeTestScenario[],
 ): Promise<IAutoBeTestWriteResult[]> {
   const progress: AutoBeProgressEventBase = {
-    id: v7(),
     total: scenarios.length,
     completed: 0,
   };
+  const id: string = v7();
   const result: Array<IAutoBeTestWriteResult | null> = await executeCachedBatch(
     /**
      * Generate test code for each scenario. Maps through plans array to create
@@ -39,12 +39,13 @@ export async function orchestrateTestWrite<Model extends ILlmSchema.Model>(
       try {
         const artifacts: IAutoBeTestScenarioArtifacts =
           await getTestScenarioArtifacts(ctx, scenario);
-        const event: AutoBeTestWriteEvent = await process(
+        const event: AutoBeTestWriteEvent = await process({
           ctx,
           scenario,
           artifacts,
           progress,
-        );
+          id,
+        });
         ctx.dispatch(event);
         return {
           scenario,
@@ -68,12 +69,14 @@ export async function orchestrateTestWrite<Model extends ILlmSchema.Model>(
  * @param scenario - The test scenario information to generate code for
  * @param artifacts - The artifacts containing the reference files and schemas
  */
-async function process<Model extends ILlmSchema.Model>(
-  ctx: AutoBeContext<Model>,
-  scenario: AutoBeTestScenario,
-  artifacts: IAutoBeTestScenarioArtifacts,
-  progress: AutoBeProgressEventBase,
-): Promise<AutoBeTestWriteEvent> {
+async function process<Model extends ILlmSchema.Model>(props: {
+  ctx: AutoBeContext<Model>;
+  scenario: AutoBeTestScenario;
+  artifacts: IAutoBeTestScenarioArtifacts;
+  progress: AutoBeProgressEventBase;
+  id: string;
+}): Promise<AutoBeTestWriteEvent> {
+  const { ctx, scenario, artifacts, progress, id } = props;
   const pointer: IPointer<IAutoBeTestWriteApplication.IProps | null> = {
     value: null,
   };
@@ -96,7 +99,7 @@ async function process<Model extends ILlmSchema.Model>(
   pointer.value.final = await compiler.typescript.beautify(pointer.value.final);
   return {
     type: "testWrite",
-    id: progress.id,
+    id: id,
     created_at: new Date().toISOString(),
     location: `test/features/api/${pointer.value.domain}/${scenario.functionName}.ts`,
     ...pointer.value,

@@ -49,6 +49,7 @@ export const orchestrateRealize =
       });
     ctx.dispatch({
       type: "realizeStart",
+      id: v7(),
       created_at: start.toISOString(),
       reason: props.reason,
       step: ctx.state().test?.step ?? 0,
@@ -69,21 +70,19 @@ export const orchestrateRealize =
       });
 
     const writeProgress: AutoBeProgressEventBase = {
-      id: v7(),
       total: scenarios.length,
       completed: 0,
     };
+    const writeProgressId: string = v7();
     const writeEvents: AutoBeRealizeWriteEvent[] = await executeCachedBatch(
       scenarios.map((scenario) => async () => {
-        const code: AutoBeRealizeWriteEvent = await orchestrateRealizeWrite(
-          ctx,
-          {
-            totalAuthorizations: authorizations,
-            authorization: scenario.decoratorEvent ?? null,
-            scenario,
-            progress: writeProgress,
-          },
-        );
+        const code = await orchestrateRealizeWrite(ctx, {
+          totalAuthorizations: authorizations,
+          authorization: scenario.decoratorEvent ?? null,
+          scenario,
+          progress: writeProgress,
+          id: writeProgressId,
+        });
         return code;
       }),
     );
@@ -180,6 +179,7 @@ export const orchestrateRealize =
 
     return ctx.dispatch({
       type: "realizeComplete",
+      id: v7(),
       created_at: new Date().toISOString(),
       functions,
       authorizations,

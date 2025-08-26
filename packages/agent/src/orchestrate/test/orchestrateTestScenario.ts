@@ -55,10 +55,10 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
   ].join("\n");
 
   const progress: AutoBeProgressEventBase = {
-    id: v7(),
     total: operations.length,
     completed: 0,
   };
+  const id: string = v7();
   const exclude: IAutoBeTestScenarioApplication.IScenarioGroup[] = [];
   let include: AutoBeOpenApi.IOperation[] = Array.from(operations);
 
@@ -78,6 +78,7 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
             include,
             exclude.map((x) => x.endpoint),
             progress,
+            id,
           )),
         );
       }),
@@ -115,7 +116,8 @@ const divideAndConquer = async <Model extends ILlmSchema.Model>(
   include: AutoBeOpenApi.IOperation[],
   exclude: AutoBeOpenApi.IEndpoint[],
   progress: AutoBeProgressEventBase,
-) => {
+  id: string,
+): Promise<IAutoBeTestScenarioApplication.IScenarioGroup[]> => {
   const pointer: IPointer<IAutoBeTestScenarioApplication.IScenarioGroup[]> = {
     value: [],
   };
@@ -147,7 +149,7 @@ const divideAndConquer = async <Model extends ILlmSchema.Model>(
   if (pointer.value.length === 0) return [];
   ctx.dispatch({
     type: "testScenarios",
-    id: progress.id,
+    id: id,
     tokenUsage,
     scenarios: pointer.value
       .map((v) =>
