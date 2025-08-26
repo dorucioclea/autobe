@@ -16,22 +16,7 @@ import { tags } from "typia";
  * @template Type The literal string type that uniquely identifies the event
  */
 export interface AutoBeEventBase<Type extends string> {
-  /**
-   * A unique identifier for the event group.
-   *
-   * Ensures that event occurrences can be distinguished even when they share
-   * the same name. This prevents metric collisions across different event
-   * sources or instances, enabling accurate tracking and aggregation.
-   *
-   * Especially critical when accumulating `completed` counts: multiple events
-   * with the same name can still be tracked independently thanks to this ID.
-   *
-   * Example use cases:
-   *
-   * - Distinguishing between similar code-generation tasks running in parallel.
-   * - Separating progress metrics for identical interface design steps triggered
-   *   by different agents.
-   */
+  /** A unique identifier for the event. */
   id: string;
 
   /**
