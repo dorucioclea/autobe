@@ -6,6 +6,7 @@ import {
   AutoBeTestCompleteEvent,
   IAutoBeGetFilesOptions,
 } from "@autobe/interface";
+import StackBlitzSDK from "@stackblitz/sdk";
 import JsZip from "jszip";
 import { useState } from "react";
 import { VariadicSingleton } from "tstl";
@@ -58,10 +59,16 @@ export const AutoBeCompleteEventMovie = (
       .map((str) => new TextEncoder().encode(str).length)
       .reduce((a, b) => a + b, 0);
     setSize(size);
-
-    // StackBlitz SDK 사용 (실제 구현 시 필요)
-    // StackBlitzSDK.openProject(...);
-    console.log("Opening StackBlitz with files:", Object.keys(files).length);
+    StackBlitzSDK.openProject(
+      {
+        title: `AutoBE Generated Backend Server (${props.event.type})`,
+        template: "node",
+        files,
+      },
+      {
+        newWindow: true,
+      },
+    );
   };
 
   const download = async (dbms: "postgres" | "sqlite") => {

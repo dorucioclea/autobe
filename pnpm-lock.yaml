@@ -715,6 +715,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@stackblitz/sdk':
+        specifier: ^1.11.0
+        version: 1.11.0
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
