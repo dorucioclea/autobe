@@ -4,10 +4,12 @@ import {
   AutoBeUserMessageImageContent,
 } from "@autobe/interface";
 
-import { IAutoBePlaygroundBucket } from "../structures/IAutoBePlaygroundBucket";
-import { IAutoBePlaygroundUploadConfig } from "../structures/IAutoBePlaygroundUploadConfig";
-
-export namespace AutoBePlaygroundFileUploader {
+export namespace AutoBeFileUploader {
+  interface IConfig {
+    supportAudio?: boolean;
+    file?: (file: File) => Promise<{ id: string }>;
+    image?: (file: File) => Promise<{ url: string }>;
+  }
   export const isValidFileExtension = (
     filename: string,
     supportAudio: boolean,
@@ -62,10 +64,7 @@ export namespace AutoBePlaygroundFileUploader {
     const format = FORMATS[extension];
     return format?.mimeType || "application/octet-stream";
   };
-  export const compose = async (
-    config: IAutoBePlaygroundUploadConfig,
-    file: File,
-  ): Promise<IAutoBePlaygroundBucket> => {
+  export const compose = async (config: IConfig, file: File) => {
     // Validate file extension first
     if (
       !isValidFileExtension(
@@ -139,7 +138,7 @@ export namespace AutoBePlaygroundFileUploader {
     });
 
   const composeImageContent = async (
-    config: IAutoBePlaygroundUploadConfig,
+    config: IConfig,
     file: File,
   ): Promise<AutoBeUserMessageImageContent> => ({
     type: "image",
@@ -163,7 +162,7 @@ export namespace AutoBePlaygroundFileUploader {
   });
 
   const composeFileContent = async (
-    config: IAutoBePlaygroundUploadConfig,
+    config: IConfig,
     file: File,
   ): Promise<AutoBeUserMessageFileContent> => {
     // Get MIME type for the file

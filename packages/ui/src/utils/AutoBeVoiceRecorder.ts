@@ -1,11 +1,13 @@
 import { AutoBeUserMessageAudioContent } from "@autobe/interface";
 
-import { IAutoBePlaygroundBucket } from "../structures/IAutoBePlaygroundBucket";
-import { AutoBePlaygroundFileUploader } from "./AutoBePlaygroundFileUploader";
+import { AutoBeFileUploader } from "./AutoBeFileUploader";
 
-export namespace AutoBePlaygroundVoiceRecorder {
+export namespace AutoBeVoiceRecorder {
   export const start = async (
-    complete: (content: IAutoBePlaygroundBucket) => void,
+    onComplete: (content: {
+      file: File;
+      content: AutoBeUserMessageAudioContent;
+    }) => void,
   ): Promise<MediaRecorder> => {
     const stream: MediaStream = await navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -24,14 +26,13 @@ export namespace AutoBePlaygroundVoiceRecorder {
           type: "audio/wav",
         });
 
-        const base64 =
-          await AutoBePlaygroundFileUploader.convertToBase64(audioFile);
+        const base64 = await AutoBeFileUploader.convertToBase64(audioFile);
         const content: AutoBeUserMessageAudioContent = {
           type: "audio",
           data: base64,
           format: "wav",
         };
-        complete({
+        onComplete({
           file: audioFile,
           content,
         });

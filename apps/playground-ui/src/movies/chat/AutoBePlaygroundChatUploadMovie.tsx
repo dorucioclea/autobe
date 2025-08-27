@@ -1,13 +1,16 @@
 import { AutoBeUserMessageContent } from "@autobe/interface";
-import { AutoBeChatUploadSendButton, AutoBeFileUploadBox } from "@autobe/ui";
+import {
+  AutoBeChatUploadSendButton,
+  AutoBeFileUploadBox,
+  AutoBeVoiceRecoderButton,
+} from "@autobe/ui";
+import { AutoBeFileUploader } from "@autobe/ui/utils";
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, Chip, Paper, TextField, Typography } from "@mui/material";
 import { ReactNode, RefObject, useEffect, useRef, useState } from "react";
 
 import { IAutoBePlaygroundBucket } from "../../structures/IAutoBePlaygroundBucket";
 import { IAutoBePlaygroundUploadConfig } from "../../structures/IAutoBePlaygroundUploadConfig";
-import { AutoBePlaygroundFileUploader } from "../../utils/AutoBePlaygroundFileUploader";
-import { AutoBePlaygroundChatVoiceMovie } from "./AutoBePlaygroundChatVoiceMovie";
 
 export const AutoBePlaygroundChatUploadMovie = (
   props: AutoBePlaygroundChatUploadMovie.IProps,
@@ -69,10 +72,7 @@ export const AutoBePlaygroundChatUploadMovie = (
     for (const file of fileList) {
       try {
         newFiles.push(
-          await AutoBePlaygroundFileUploader.compose(
-            props.uploadConfig ?? {},
-            file,
-          ),
+          await AutoBeFileUploader.compose(props.uploadConfig ?? {}, file),
         );
       } catch (error) {
         errorFileNames.push(file.name);
@@ -257,7 +257,7 @@ export const AutoBePlaygroundChatUploadMovie = (
           ref={fileInputRef}
           type="file"
           multiple
-          accept={AutoBePlaygroundFileUploader.getAcceptAttribute(
+          accept={AutoBeFileUploader.getAcceptAttribute(
             props.uploadConfig?.supportAudio ?? false,
             !!props.uploadConfig?.file,
           )}
@@ -282,9 +282,9 @@ export const AutoBePlaygroundChatUploadMovie = (
             enabled={enabled}
           />
           {props.uploadConfig?.supportAudio === true ? (
-            <AutoBePlaygroundChatVoiceMovie
+            <AutoBeVoiceRecoderButton
               enabled={enabled}
-              complete={(b) => setBuckets((o) => [...o, b])}
+              onComplete={(content) => setBuckets((o) => [...o, content])}
             />
           ) : null}
           <AutoBeChatUploadSendButton
