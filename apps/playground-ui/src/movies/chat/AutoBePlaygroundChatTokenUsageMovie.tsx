@@ -31,7 +31,7 @@ export function AutoBePlaygroundChatTokenUsageMovie(
           </TableRow>
           <TableRow>
             <TableCell>Input</TableCell>
-            <TableCell>{aggregate.total.toLocaleString()}</TableCell>
+            <TableCell>{aggregate.input.total.toLocaleString()}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell>Input (Cached)</TableCell>
