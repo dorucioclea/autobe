@@ -10,8 +10,8 @@ import {
   AutoBeChatUploadSendButton,
   AutoBeFileUploadBox,
   AutoBeVoiceRecoderButton,
-} from ".";
-import { AutoBeFileUploader } from "./utils";
+} from "..";
+import { AutoBeFileUploader } from "../utils";
 
 export interface IAutoBeBucket {
   file: File;
