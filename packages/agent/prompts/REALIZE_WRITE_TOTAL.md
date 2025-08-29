@@ -1423,11 +1423,109 @@ MyGlobal.prisma.users.findFirst({
 });
 ```
 
+* **ALWAYS use MyGlobal for all global utilities**:
+```typescript
+// ✅ CORRECT: Use MyGlobal namespace for password operations
+const hashedPassword = await MyGlobal.password.hash(plainPassword);
+const isValid = await MyGlobal.password.verify(plainPassword, hashedPassword);
+
+// ✅ CORRECT: Use MyGlobal for environment variables
+const jwtSecret = MyGlobal.env.JWT_SECRET_KEY;
+const apiPort = MyGlobal.env.API_PORT;
+
+// ✅ CORRECT: Use MyGlobal for testing flag
+if (MyGlobal.testing) {
+  // Test-specific logic
+}
+```
+
+* **🚨 NEVER use GlobalThis or direct global access**:
+```typescript
+// ❌ ABSOLUTELY FORBIDDEN: GlobalThis access
+GlobalThis.MyGlobal.password.hash(plainPassword);
+GlobalThis.crypto.pbkdf2(...);
+
+// ❌ ABSOLUTELY FORBIDDEN: Direct global access without MyGlobal
+password.hash(plainPassword);
+crypto.pbkdf2(plainPassword, salt, ...);
+process.env.JWT_SECRET_KEY; // Use MyGlobal.env instead
+```
+
+**CRITICAL**: MyGlobal provides centralized, consistent access to:
+- Database operations (`MyGlobal.prisma`)
+- Password hashing utilities (`MyGlobal.password.hash()`, `MyGlobal.password.verify()`)
+- Environment variables (`MyGlobal.env`)
+- Testing flags (`MyGlobal.testing`)
+
+All global resources MUST be accessed through MyGlobal to ensure proper initialization, error handling, and consistency.
+
 * Never use `MyGlobal.logs.create(...)` directly — always go through `MyGlobal.prisma`.
 
 ---
 
 ## 📚 Prisma Usage Guide
+
+### 🏛️ Database Engine Compatibility
+
+**CRITICAL**: Our system supports both **PostgreSQL** and **SQLite** database engines. All Prisma operations, methods, and options MUST be compatible with both engines.
+
+**ABSOLUTE REQUIREMENTS:**
+- ✅ **Use only cross-compatible Prisma methods** that work identically on both PostgreSQL and SQLite
+- ✅ **Use only cross-compatible query options** (where, orderBy, select, include, etc.)
+- ✅ **Use only cross-compatible data types** and field configurations
+- ❌ **NEVER use PostgreSQL-specific features** (e.g., PostgreSQL arrays, JSON operators, full-text search)
+- ❌ **NEVER use SQLite-specific features** that don't exist in PostgreSQL
+- ❌ **NEVER use database-specific SQL functions** in raw queries
+
+**Common Compatibility Issues to Avoid:**
+- Database-specific JSON operations (`@db.JsonB` vs `@db.Text`)
+- Engine-specific date/time functions and formatting
+- Platform-specific data type behaviors (BigInt handling differences)
+- Database-specific indexing strategies (partial indexes, expression indexes)
+- Raw SQL queries with engine-specific syntax
+- Database-specific constraints and triggers
+
+**Examples of Forbidden Operations:**
+```typescript
+// ❌ PostgreSQL-specific JSON operations
+where: {
+  metadata: {
+    path: ["settings", "enabled"],
+    equals: true
+  }
+}
+
+// ❌ Database-specific raw queries
+await prisma.$queryRaw`SELECT * FROM users WHERE created_at::date = current_date`
+
+// ❌ PostgreSQL-specific array operations
+where: {
+  tags: {
+    has: "important"
+  }
+}
+```
+
+**✅ Use Cross-Compatible Patterns:**
+```typescript
+// ✅ Standard Prisma operations that work on both engines
+where: {
+  created_at: {
+    gte: startDate,
+    lte: endDate
+  }
+}
+
+// ✅ Standard string operations
+where: {
+  title: {
+    contains: searchTerm,
+    mode: "insensitive"
+  }
+}
+```
+
+**Rule**: When in doubt, test the operation on both PostgreSQL and SQLite environments before implementation.
 
 When working with Prisma, follow these critical rules to ensure consistency and correctness:
 

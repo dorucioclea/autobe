@@ -1,14 +1,18 @@
 import {
   AutoBeEvent,
   AutoBeHistory,
+  IAutoBeGetFilesOptions,
   IAutoBeTokenUsageJson,
 } from "@autobe/interface";
-import { forwardRef } from "react";
+import {
+  AutoBeChatBanner,
+  AutoBeEventMovie,
+  AutoBeProgressEventMovie,
+} from "@autobe/ui";
+import { IAutoBeAgentInformationProps } from "node_modules/@autobe/ui/src/banner/AutoBeAgentInformation";
+import { forwardRef, useEffect, useState } from "react";
 
-import TokenUsageCard from "../TokenUsageCard";
-import AutoBeEventsMovie, {
-  isAutoBeProgressEventBase,
-} from "./events/AutoBeEventsMovie";
+import useVsCode from "../../hooks/use-vscode";
 import AutoBeHistoryMovie from "./histories/AutoBeHistoryMovie";
 
 interface IChatMovieProps {
@@ -16,10 +20,48 @@ interface IChatMovieProps {
   events: Array<AutoBeEvent>;
   tokenUsage: IAutoBeTokenUsageJson | null;
   onGoBack?: () => void;
+  getFiles: (
+    options?: Partial<IAutoBeGetFilesOptions>,
+  ) => Promise<Record<string, string>>;
 }
+
+export const isAutoBeProgressEventBase = (
+  event: AutoBeEvent,
+): event is AutoBeProgressEventMovie.IProps["event"] => {
+  return (
+    "total" in event &&
+    "completed" in event &&
+    typeof event.total === "number" &&
+    typeof event.completed === "number"
+  );
+};
 
 const ChatMovie = forwardRef<HTMLDivElement, IChatMovieProps>((props, ref) => {
   const { histories, events } = props;
+  const [header, setHeader] = useState<
+    IAutoBeAgentInformationProps["header"] | null
+  >(null);
+  const vscode = useVsCode();
+
+  useEffect(() => {
+    vscode.onMessage((message) => {
+      if (message.type === "res_get_config") {
+        setHeader({
+          model: "chatgpt",
+          locale: "ko-KR",
+          vendor: {
+            model: message.data.model ?? "gpt-4.1",
+            semaphore: 16,
+          },
+          timezone: "Asia/Seoul",
+        });
+      }
+    });
+    vscode.postMessage({
+      type: "req_get_config",
+    });
+  }, []);
+
   const compactEvents = events.filter((v, idx) => {
     if (idx === events.length - 1) {
       return true;
@@ -42,7 +84,9 @@ const ChatMovie = forwardRef<HTMLDivElement, IChatMovieProps>((props, ref) => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      {props.tokenUsage && <TokenUsageCard tokenUsage={props.tokenUsage} />}
+      {props.tokenUsage && header && (
+        <AutoBeChatBanner header={header} tokenUsage={props.tokenUsage} />
+      )}
 
       {/* 뒤로 가기 버튼 */}
       {props.onGoBack && (
@@ -70,12 +114,17 @@ const ChatMovie = forwardRef<HTMLDivElement, IChatMovieProps>((props, ref) => {
       )}
 
       <div ref={ref} className="flex-1 overflow-auto p-4">
-        <div>
+        <div className="flex flex-col gap-4">
           {logList.map((v, i) =>
             v._type === "history" ? (
               <AutoBeHistoryMovie key={i} history={v} />
             ) : (
-              <AutoBeEventsMovie key={i} event={v} />
+              <AutoBeEventMovie
+                key={i}
+                getFiles={props.getFiles}
+                events={[v]}
+                last={i === logList.length - 1}
+              />
             ),
           )}
         </div>

@@ -1,14 +1,11 @@
 export * from "./events";
 export { default as AutoBeAssistantMessageMovie } from "./AutoBeAssistantMessageMovie";
 export { default as AutoBeUserMessageMovie } from "./AutoBeUserMessageMovie";
-export {
-  default as AutoBeFileUploadBox,
-  type AutoBeFileUploadBox as IAutoBeFileUploadBox,
-} from "./AutoBeFileUploadBox";
 export { default as ChatBubble } from "./common/ChatBubble";
-export { AutoBeChatUploadSendButton } from "./AutoBeChatUploadSendButton";
 export type {
   IChatBubbleProps,
   IContentRendererProps,
 } from "./common/ChatBubble";
-export { AutoBeVoiceRecoderButton } from "./AutoBeVoiceRecoderButton";
+export { AutoBeFileUploader } from "./utils";
+export * from "./upload";
+export * from "./banner";

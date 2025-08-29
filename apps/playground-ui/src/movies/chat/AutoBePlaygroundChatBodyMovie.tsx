@@ -1,25 +1,33 @@
-import { AutoBeUserMessageContent, IAutoBeRpcService } from "@autobe/interface";
+import {
+  AutoBeUserMessageContent,
+  IAutoBePlaygroundHeader,
+  IAutoBeRpcService,
+  IAutoBeTokenUsageJson,
+} from "@autobe/interface";
+import {
+  AutoBeChatBanner,
+  AutoBeChatUploadBox,
+  AutoBeEventMovie,
+} from "@autobe/ui";
+import { useMediaQuery } from "@autobe/ui/hooks";
 import { Box, Container } from "@mui/material";
+import { ILlmSchema } from "@samchon/openapi";
 import { RefObject, useEffect, useRef } from "react";
 
 import { AutoBePlaygroundGlobal } from "../../AutoBePlaygroundGlobal";
 import { IAutoBePlaygroundEventGroup } from "../../structures/IAutoBePlaygroundEventGroup";
 import { IAutoBePlaygroundUploadConfig } from "../../structures/IAutoBePlaygroundUploadConfig";
-import { AutoBePlaygroundEventMovie } from "../events/AutoBePlaygroundEventMovie";
-import { AutoBePlaygroundChatUploadMovie } from "./AutoBePlaygroundChatUploadMovie";
 
 export const AutoBePlaygroundChatBodyMovie = (
   props: AutoBePlaygroundChatBodyMovie.IProps,
 ) => {
   const bodyContainerRef = useRef<HTMLDivElement>(null);
-  const listener: RefObject<AutoBePlaygroundChatUploadMovie.IListener> = useRef(
-    {
-      handleDragEnter: () => {},
-      handleDragLeave: () => {},
-      handleDrop: () => {},
-      handleDragOver: () => {},
-    },
-  );
+  const listener: RefObject<AutoBeChatUploadBox.IListener> = useRef({
+    handleDragEnter: () => {},
+    handleDragLeave: () => {},
+    handleDrop: () => {},
+    handleDragOver: () => {},
+  });
 
   useEffect(() => {
     if (props.eventGroups.length === 0) return;
@@ -29,6 +37,7 @@ export const AutoBePlaygroundChatBodyMovie = (
     });
   }, [props.eventGroups.length]);
 
+  const isMinWidthLg = useMediaQuery(useMediaQuery.MIN_WIDTH_LG);
   return (
     <div
       onDragEnter={(e) => listener.current.handleDragEnter(e)}
@@ -46,6 +55,10 @@ export const AutoBePlaygroundChatBodyMovie = (
         backgroundColor: "lightblue",
       }}
     >
+      {!isMinWidthLg && (
+        <AutoBeChatBanner header={props.header} tokenUsage={props.tokenUsage} />
+      )}
+
       <Container
         style={{
           paddingBottom: 120,
@@ -61,9 +74,9 @@ export const AutoBePlaygroundChatBodyMovie = (
         ref={bodyContainerRef}
       >
         {props.eventGroups.map((e, index) => (
-          <AutoBePlaygroundEventMovie
+          <AutoBeEventMovie
             key={index}
-            service={props.service}
+            getFiles={props.service.getFiles}
             events={e.events}
             last={index === props.eventGroups.length - 1}
           />
@@ -82,7 +95,7 @@ export const AutoBePlaygroundChatBodyMovie = (
           pb: 2,
         }}
       >
-        <AutoBePlaygroundChatUploadMovie
+        <AutoBeChatUploadBox
           listener={listener}
           uploadConfig={props.uploadConfig}
           conversate={props.conversate}
@@ -100,5 +113,7 @@ export namespace AutoBePlaygroundChatBodyMovie {
     conversate: (messages: AutoBeUserMessageContent[]) => Promise<void>;
     setError: (error: Error) => void;
     uploadConfig?: IAutoBePlaygroundUploadConfig;
+    tokenUsage: IAutoBeTokenUsageJson | null;
+    header: IAutoBePlaygroundHeader<ILlmSchema.Model>;
   }
 }
