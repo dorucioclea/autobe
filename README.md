@@ -219,7 +219,7 @@ gantt
   section VSCode Extensions
   Interlocking VSCode:                   done, 2025-08-01, 1d
   Interlocking React for WebView:        done, 2025-08-04, 2d
-  Connect autobe without event listener: planned, 2025-08-06, 2d
+  Connect autobe without event listener: done, 2025-08-06, 2d
   File System:                           done, 2025-08-11, 5d
   Connect personal LLM:                  done, 2025-08-18, 4d
   Apply a lot of AutoBE events:          done, 2025-08-25, 5d 
