@@ -143,16 +143,7 @@ export const CollapsibleEventGroup = <T,>(
           }}
         >
           {events.map((event, index) => (
-            <div
-              key={index}
-              style={{
-                border: "1px solid #e2e8f0",
-                borderRadius: "0.5rem",
-                overflow: "hidden",
-              }}
-            >
-              {renderEvent(event, index)}
-            </div>
+            <div key={index}>{renderEvent(event, index)}</div>
           ))}
         </div>
       )}

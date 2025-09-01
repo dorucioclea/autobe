@@ -21,7 +21,8 @@ export const ProgressBar = (props: IProgressBarProps) => {
     showLabel = true,
   } = props;
 
-  const percentage = Math.round((current / total) * 100);
+  const calibratedCurrent = current > total ? total : current;
+  const percentage = Math.round((calibratedCurrent / total) * 100);
 
   return (
     <>
@@ -53,7 +54,7 @@ export const ProgressBar = (props: IProgressBarProps) => {
             textAlign: "center",
           }}
         >
-          {current} / {total} completed
+          {calibratedCurrent} / {total} completed
         </div>
       )}
     </>

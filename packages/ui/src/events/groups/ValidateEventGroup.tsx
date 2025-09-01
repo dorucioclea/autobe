@@ -110,7 +110,7 @@ export const ValidateEventGroup = (props: IValidateEventGroupProps) => {
             style={{
               width: "12px",
               height: "12px",
-              backgroundColor: "#ef4444",
+              backgroundColor: "#f59e0b",
               borderRadius: "2px",
             }}
           />
@@ -122,13 +122,13 @@ export const ValidateEventGroup = (props: IValidateEventGroupProps) => {
 
   const getGroupIconType = () => {
     if (errorEvents === 0) return "success"; // All successful
-    if (successEvents === 0) return "error"; // All failed
+    if (successEvents === 0) return "warning"; // All failed
     return "warning"; // Mixed results
   };
 
   const getGroupVariant = () => {
     if (errorEvents === 0) return "success"; // All successful
-    if (successEvents === 0) return "error"; // All failed
+    if (successEvents === 0) return "warning"; // All failed
     return "warning"; // Mixed results
   };
 

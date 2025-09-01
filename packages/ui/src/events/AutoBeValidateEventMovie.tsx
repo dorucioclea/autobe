@@ -30,13 +30,13 @@ export const AutoBeValidateEventMovie = (
 
   const getCardVariant = () => {
     if (isSuccess) return "success";
-    if (isError) return "error";
+    if (isError) return "warning";
     return "warning";
   };
 
   const getIconType = () => {
     if (isSuccess) return "success";
-    if (isError) return "error";
+    if (isError) return "warning";
     return "warning";
   };
 
