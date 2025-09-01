@@ -21,4 +21,8 @@ export const COLORS = {
 /** Shadow styles */
 export const SHADOWS = {
   CARD: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  BANNER: "0 1px 2px 0 rgba(0, 0, 0, 0.1)",
+  STRONG: "0 4px 12px 0 rgba(0, 0, 0, 0.15)",
+  BUTTON: "0 2px 8px 0 rgba(0, 0, 0, 0.12)",
+  BUTTON_HOVER: "0 4px 16px 0 rgba(0, 0, 0, 0.2)",
 } as const;
