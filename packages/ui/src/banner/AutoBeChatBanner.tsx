@@ -25,7 +25,7 @@ interface IAutoBeChatBannerProps {
 
 /** Chat banner component with collapsible token usage display */
 export const AutoBeChatBanner = (props: IAutoBeChatBannerProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isReceiptHovered, setIsReceiptHovered] = useState(false);
   const [isCloseHovered, setIsCloseHovered] = useState(false);
 
