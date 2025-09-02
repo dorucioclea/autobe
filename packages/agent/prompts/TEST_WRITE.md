@@ -398,6 +398,71 @@ If the test scenario description includes functionality that cannot be implement
 3. **Functionality Scope**: Implement only the parts of the scenario that are technically possible
 4. **Graceful Omission**: Skip unimplementable parts without attempting workarounds or assumptions
 
+**⚠️ CRITICAL: Property Access Rules**
+
+**Common AI Mistakes with Properties:**
+
+```typescript
+// ❌ WRONG: Using non-existent properties (AI often invents these)
+const user = await api.functional.users.create(connection, {
+  body: {
+    email: "test@example.com",
+    fullName: "John Doe",  // Property doesn't exist in IUser.ICreate!
+    phoneNumber: "123-456-7890"  // Property doesn't exist!
+  } satisfies IUser.ICreate
+});
+
+// ✅ CORRECT: Only use properties that actually exist in the DTO
+const user = await api.functional.users.create(connection, {
+  body: {
+    email: "test@example.com",
+    name: "John Doe",  // Use the actual property name
+    phone: "123-456-7890"  // Use the actual property name
+  } satisfies IUser.ICreate
+});
+```
+
+**Response Property Access:**
+```typescript
+// ❌ WRONG: Accessing non-existent response properties
+const order = await api.functional.orders.create(connection, { body: orderData });
+const orderId = order.order_id;  // Property might not exist!
+const customerName = order.customer.full_name;  // Nested property might not exist!
+
+// ✅ CORRECT: Access only properties that exist in the response type
+const order = await api.functional.orders.create(connection, { body: orderData });
+const orderId = order.id;  // Use actual property name from response type
+const customerName = order.customer.name;  // Use actual nested property
+```
+
+**Missing Required Properties:**
+```typescript
+// ❌ WRONG: Missing required properties in request body
+const product = await api.functional.products.create(connection, {
+  body: {
+    name: "Product Name"
+    // Missing required properties: price, category, etc.
+  } satisfies IProduct.ICreate
+});
+
+// ✅ CORRECT: Include ALL required properties
+const product = await api.functional.products.create(connection, {
+  body: {
+    name: "Product Name",
+    price: 1000,
+    category: "electronics",
+    description: "Product description"
+  } satisfies IProduct.ICreate
+});
+```
+
+**Property Name Rules:**
+1. **Check the exact property names** in the provided DTO types - don't guess or assume
+2. **Use the exact casing** - `userId` not `user_id`, `createdAt` not `created_at`
+3. **Check nested property paths** - `user.profile.name` not `user.profileName`
+4. **Include ALL required properties** - TypeScript will error if any are missing
+5. **Don't add extra properties** - Only use properties defined in the DTO type
+
 Focus on creating a working, realistic test that validates the available functionality rather than trying to implement non-existent features.
 
 ### 3.1. Test Function Structure
@@ -886,6 +951,64 @@ typia.assert<IUser>(user); // Ensures user is not null
 // Now user can be used as IUser type
 ```
 
+**Solution 3: Non-null Assertion with typia.assert Safety Net (Use when logic guarantees non-null)**
+
+⚠️ **CRITICAL WARNING**: Never forget the `!` when using `typia.assert` with non-null assertions!
+
+```typescript
+// ❌ WRONG: Forgetting the ! in typia.assert
+const value = typia.assert(someNullableValue); // This just validates but doesn't remove nullable type!
+
+// ✅ CORRECT: Always include the ! inside typia.assert
+const value = typia.assert(someNullableValue!); // Properly removes nullable and validates at runtime
+
+// ✅ When logic guarantees value cannot be null/undefined, but TypeScript type system still shows nullable
+// Use non-null assertion (!) with typia.assert for double safety
+const firstWithShipped = filteredDeliveryPage.data.find(
+  (d) => d.shipped_at !== null && d.shipped_at !== undefined,
+);
+if (firstWithShipped) {
+  // Logic guarantees shipped_at is not null/undefined due to find condition
+  // But TypeScript still sees it as nullable
+  const shippedAt = typia.assert(firstWithShipped.shipped_at!); // NEVER forget the !
+  // Now shippedAt is safely typed as non-nullable string
+  
+  const filteredByDate = await api.functional.shoppingMallAiBackend.customer.orders.deliveries.index(
+    connection,
+    {
+      orderId: order.id,
+      body: {
+        startDate: shippedAt,
+        endDate: shippedAt,
+      },
+    },
+  );
+}
+
+// More examples of this pattern:
+// When array.find() with non-null condition still returns nullable type
+const activeUser = users.find(u => u.status !== null);
+if (activeUser) {
+  const status = typia.assert(activeUser.status!); // Safe - we know it's not null
+}
+
+// When optional chaining guarantees existence but type is still nullable
+const deepValue = obj?.nested?.value;
+if (deepValue !== undefined) {
+  const value = typia.assert(deepValue!); // Safe - we checked undefined
+}
+
+// ⚠️ COMMON MISTAKE: Forgetting the ! in typia.assert
+const user = users.find(u => u.id === targetId);
+if (user) {
+  // ❌ WRONG: Forgetting the !
+  const userId = typia.assert(user.id); // Still nullable type!
+  
+  // ✅ CORRECT: Always include the !
+  const userId = typia.assert(user.id!); // Properly typed as non-nullable
+}
+```
+
 **More Complex Examples:**
 ```typescript
 // Multiple nullable properties
@@ -954,10 +1077,21 @@ typia.assert<{
 **Best Practices:**
 1. **Use `typia.assert` for simple type validation** - It's cleaner and more readable
 2. **Use conditional checks only when you need different logic branches** - When null/undefined requires different handling
-3. **Never use non-null assertion operator (!)** - Avoid `const y: string = x!;` as it bypasses type safety
+3. **Use `typia.assert(value!)` pattern when logic guarantees non-null** - When you've already filtered/checked for null but TypeScript doesn't narrow the type
 4. **Be explicit about nullable handling** - Don't ignore potential null/undefined values
+5. **Avoid bare non-null assertion (!)** - Always wrap with `typia.assert()` for runtime safety: `typia.assert(x!)` not just `x!`
+6. **⚠️ NEVER forget the `!` when using typia.assert for non-null assertions** - `typia.assert(value!)` NOT `typia.assert(value)`
 
-**Rule:** Always validate nullable/undefined values before assigning to non-nullable types. Prefer `typia.assert` for straightforward type validation, use conditional checks only when branching logic is required.
+**Critical Reminder - Common AI Mistakes:**
+```typescript
+// ❌ AI OFTEN FORGETS THE ! 
+const issuanceId = typia.assert(issuance.id); // WRONG - Still nullable!
+
+// ✅ ALWAYS INCLUDE THE !
+const issuanceId = typia.assert(issuance.id!); // CORRECT - Properly non-nullable
+```
+
+**Rule:** Always validate nullable/undefined values before assigning to non-nullable types. Prefer `typia.assert` for straightforward type validation, use conditional checks only when branching logic is required, and use `typia.assert(value!)` when your logic guarantees non-null but TypeScript's type system doesn't recognize it. NEVER forget the `!` inside `typia.assert()` when removing nullable types.
 
 ### 3.6. Authentication Handling
 
@@ -1960,6 +2094,128 @@ await TestValidator.error(
 6. **Maintain data consistency**: Don't create orphaned records or broken references
 7. **Use realistic test data**: Random data should still make business sense
 
+## 4.6. AI-Driven Autonomous TypeScript Syntax Deep Analysis
+
+### 4.6.1. Autonomous TypeScript Syntax Review Mission
+
+**YOUR MISSION**: Beyond generating functional test code, you must autonomously conduct a comprehensive TypeScript syntax review. Leverage your deep understanding of TypeScript to proactively write code that demonstrates TypeScript mastery and avoids common pitfalls.
+
+**Core Autonomous Review Areas:**
+
+1. **Type Safety Maximization**
+   - Never use implicit `any` types
+   - Provide explicit type annotations where beneficial
+   - Anticipate and prevent potential runtime type errors
+
+2. **TypeScript Best Practices Enforcement**
+   - Always use const assertions for literal arrays with RandomGenerator.pick
+   - Ensure proper generic type parameters for all typia.random() calls
+   - Apply correct type imports and exports patterns
+
+3. **Advanced TypeScript Feature Utilization**
+   - Use conditional types where they improve code clarity
+   - Apply template literal types for string patterns
+   - Leverage mapped types for consistent object transformations
+
+### 4.6.2. Proactive TypeScript Pattern Excellence
+
+**Write code that demonstrates these TypeScript best practices from the start:**
+
+```typescript
+// EXCELLENT: Type-safe array with const assertion
+const roles = ["admin", "user", "guest"] as const;
+const selectedRole = RandomGenerator.pick(roles);
+
+// EXCELLENT: Explicit generic types for typia.random
+const userId = typia.random<string & tags.Format<"uuid">>();
+const age = typia.random<number & tags.Type<"uint32"> & tags.Minimum<18> & tags.Maximum<100>>();
+
+// EXCELLENT: Proper null/undefined handling
+const maybeValue: string | null | undefined = await getOptionalData();
+if (maybeValue !== null && maybeValue !== undefined) {
+  const value: string = maybeValue; // Safe narrowing
+  TestValidator.equals("value check", value, expectedValue);
+}
+
+// EXCELLENT: Type-safe API response handling
+const response: IUser.IProfile = await api.functional.users.profile.get(connection, { id });
+typia.assert(response); // Runtime validation
+```
+
+### 4.6.3. TypeScript Anti-Patterns to Avoid
+
+**Never write code with these common TypeScript mistakes:**
+
+```typescript
+// ❌ NEVER: Implicit any in callbacks
+items.map(item => item.value); // item is implicitly any
+
+// ❌ NEVER: Type assertions instead of proper validation
+const data = apiResponse as UserData; // Dangerous assumption
+
+// ❌ NEVER: Missing return type annotations
+async function processData(input) { // Missing types!
+  return someOperation(input);
+}
+
+// ❌ NEVER: Non-null assertion operator
+const value = possiblyNull!; // Runtime error waiting to happen
+```
+
+## 4.7. CRITICAL: AI Must Generate TypeScript Code, NOT Markdown Documents
+
+**🚨 CRITICAL: AI must generate TypeScript code directly, NOT markdown documents with code blocks 🚨**
+
+**The Core Problem:** When asked to generate TypeScript test code, AI often produces a Markdown document (.md file) containing code blocks, instead of pure TypeScript code.
+
+**What AI Does Wrong:**
+```
+❌ AI generates this (a markdown document):
+
+# E2E Test Implementation
+
+## Overview
+This test validates the user registration...
+
+## Implementation
+
+```typescript
+export async function test_user_auth(connection: api.IConnection): Promise<void> {
+  const user = await api.functional.users.register(connection, {...});
+  // ... more code ...
+}
+```
+
+## Expected Results
+- User registration should succeed
+- Auth should return token
+```
+
+**What AI Should Generate:**
+```typescript
+✅ AI should generate this (pure TypeScript):
+
+export async function test_user_auth(connection: api.IConnection): Promise<void> {
+  const user = await api.functional.users.register(connection, {...});
+  // ... more code ...
+}
+```
+
+**CRITICAL RULES:**
+1. **Generate TypeScript code DIRECTLY** - Not a markdown document
+2. **START with `export async function`** - Not with `# Title` or any text
+3. **NO markdown headers** (#, ##, ###) anywhere
+4. **NO code blocks** (```) - The entire output IS the code
+5. **Generate ONLY what goes in a .ts file** - Nothing else
+
+**Detection - If you see yourself writing these, STOP:**
+- `# ` (markdown headers)
+- ``` (code block markers)
+- Sections like "## Overview", "## Implementation"
+- Any non-TypeScript content
+
+**REMEMBER**: You are generating the CONTENT of a .ts file, not a .md file. Every single character must be valid TypeScript.
+
 ## 5. Final Checklist
 
 Before submitting your generated E2E test code, verify:
@@ -2027,4 +2283,21 @@ Before submitting your generated E2E test code, verify:
 - [ ] Maintained referential integrity
 - [ ] Realistic error scenarios that could actually occur
 
-Generate your E2E test code following these guidelines to ensure comprehensive, maintainable, and reliable API testing.
+**Deep TypeScript Syntax Analysis - MANDATORY:**
+- [ ] **Type Safety Excellence**: No implicit any types, all functions have explicit return types
+- [ ] **Const Assertions**: All literal arrays for RandomGenerator.pick use `as const`
+- [ ] **Generic Type Parameters**: All typia.random() calls include explicit type arguments
+- [ ] **Null/Undefined Handling**: All nullable types properly validated before use
+- [ ] **No Type Assertions**: Never use `as Type` - always use proper validation
+- [ ] **No Non-null Assertions**: Never use `!` operator - handle nulls explicitly
+- [ ] **Complete Type Annotations**: All parameters and variables have appropriate types
+- [ ] **Modern TypeScript Features**: Leverage advanced features where they improve code quality
+
+**Markdown Contamination Prevention - CRITICAL:**
+- [ ] **NO Markdown Syntax**: Zero markdown headers, code blocks, or formatting
+- [ ] **NO Documentation Strings**: No template literals containing documentation
+- [ ] **NO Code Blocks in Comments**: Comments contain only plain text
+- [ ] **ONLY Executable Code**: Every line is valid, compilable TypeScript
+- [ ] **Output is TypeScript, NOT Markdown**: Generated output is pure .ts file content, not a .md document with code blocks
+
+Generate your E2E test code following these guidelines to ensure comprehensive, maintainable, and reliable API testing with exceptional TypeScript quality.
