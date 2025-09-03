@@ -275,74 +275,120 @@ This is the API SDK function definition that your E2E test will call. The functi
 
 > Note: The above API function example is fictional - use only the actual API function provided in the next system prompt.
 
-### 2.4. E2E Mock Function Template
+### 2.4. E2E Test Code Template
 
+**CRITICAL: You will receive a template code file with pre-defined imports and function signature.**
+
+Example template structure:
 ```typescript
-export const test_api_shoppings_customers_sales_reviews_update = async (
+import { ArrayUtil, RandomGenerator, TestValidator } from "@nestia/e2e";
+import { IConnection } from "@nestia/fetcher";
+import typia, { tags } from "typia";
+
+import api from "@ORGANIZATION/PROJECT-api";
+import type { IShoppingMallAiBackendAdmin } from "@ORGANIZATION/PROJECT-api/lib/structures/IShoppingMallAiBackendAdmin";
+import type { IAuthorizationToken } from "@ORGANIZATION/PROJECT-api/lib/structures/IAuthorizationToken";
+import type { IShoppingMallAiBackendOrderIncident } from "@ORGANIZATION/PROJECT-api/lib/structures/IShoppingMallAiBackendOrderIncident";
+import type { IPageIShoppingMallAiBackendOrderIncident } from "@ORGANIZATION/PROJECT-api/lib/structures/IPageIShoppingMallAiBackendOrderIncident";
+import type { IPage } from "@ORGANIZATION/PROJECT-api/lib/structures/IPage";
+import type { IShoppingMallAiBackendCoupon } from "@ORGANIZATION/PROJECT-api/lib/structures/IShoppingMallAiBackendCoupon";
+
+export async function test_api_admin_order_incidents_search_listing_and_filtering(
   connection: api.IConnection,
-) => {
-  const output: IShoppingSaleReview.ISnapshot =
-    await api.functional.shoppings.customers.sales.reviews.update(connection, {
-      saleId: typia.random<string & Format<"uuid">>(),
-      id: typia.random<string & Format<"uuid">>(),
-      body: typia.random<IShoppingSaleReview.IUpdate>(),
-    });
-  typia.assert(output);
-};
+) {
+  // <E2E TEST CODE HERE>
+}
 ```
 
-This is a **reference template** that demonstrates basic E2E test function structure, but it's filled with random data without business logic - this is NOT what you should generate.
+**YOUR TASK**: Replace ONLY the `// <E2E TEST CODE HERE>` comment with the actual test implementation.
 
-> Note: The above template uses fictional functions and types - use only the actual materials provided in the next system prompt.
+**ABSOLUTE PROHIBITIONS - ZERO TOLERANCE:**
+- ❌ **NEVER add ANY additional import statements** - Use ONLY the imports provided in the template
+- ❌ **NEVER modify the existing import statements** - Keep them exactly as given
+- ❌ **NEVER attempt creative syntax** like omitting the `import` keyword while keeping the rest
+- ❌ **NEVER use require() or dynamic imports** - Only the template imports are allowed
+- ❌ **NEVER import additional utilities, types, or helpers** - Work within the given imports
 
-**Template Analysis Requirements:**
+**IMPORTANT**: All necessary types and utilities are already imported in the template. You must implement the entire test using only these pre-imported resources. If something seems missing, find a way to implement it using the available imports.
 
-**1. Function Signature Understanding**
-- **Parameter**: `connection: api.IConnection` - This is the API connection context that carries authentication tokens, headers, and configuration
-- **Async Pattern**: All E2E test functions are async since they perform API calls
-- **Return Handling**: No explicit return type needed - the function performs assertions and throws errors on failure
+> Note: The above template is an example - use the actual template provided in the next system prompt.
 
-**2. SDK Call Method Patterns**
-- **First Parameter**: Always pass the `connection` object to maintain authentication and configuration context
-- **Second Parameter Structure**: Object containing path parameters and request body
-- **Type Safety**: Use `satisfies` keyword to ensure type compliance while maintaining IntelliSense support
+**Template Usage Requirements:**
 
-**3. Type Validation Integration**
-- **Response Validation**: `typia.assert(output)` ensures the API response matches expected TypeScript types at runtime
-- **Timing**: Call `typia.assert()` immediately after each API call that returns data
-- **Purpose**: Catch type mismatches and schema violations early in the test flow
+**1. Working Within Template Constraints**
+- **Use ONLY the imports provided** - Every type, utility, and function you need is already imported
+- **Do NOT add imports** - If you think something is missing, you're wrong - use what's available
+- **Work creatively within limits** - Find ways to implement functionality using only the given imports
 
-**4. Critical Limitations of Mock Template**
-- **No Business Context**: Uses `typia.random<T>()` which generates meaningless data
-- **No Prerequisites**: Doesn't set up required dependencies or authentication
-- **No Workflow**: Single isolated API call without realistic user journey
-- **No Validation**: Only validates response types, not business logic or data integrity
+**2. Common Import Mappings**
+The template imports provide everything you need:
+- **Testing utilities**: `ArrayUtil`, `RandomGenerator`, `TestValidator` from `@nestia/e2e`
+- **Type validation**: `typia` with `tags` for runtime type checking
+- **API client**: `api` from the project API package
+- **DTO types**: All necessary types are imported as `type { ... }`
+- **Connection type**: `IConnection` for API calls
 
-**5. Your Implementation Requirements**
-Instead of copying this mock pattern, you must:
-- **Replace Random Data**: Create meaningful test data based on business scenarios
-- **Implement Prerequisites**: Set up authentication, create dependencies, prepare test environment
-- **Follow Business Workflows**: Design realistic user journeys that validate end-to-end functionality
-- **Add Comprehensive Validation**: Verify business rules, data relationships, and expected behaviors
-- **Handle Multiple Steps**: Chain multiple API calls to simulate real user interactions
+**3. Implementation Strategy**
+- **Replace ONLY the marked section** - Do not touch anything else in the template
+- **Implement complete test logic** - All test steps must be within the function body
+- **Use imported types directly** - Reference imported types without additional imports
+- **Leverage provided utilities** - Use ArrayUtil, RandomGenerator, TestValidator for all testing needs
 
-**6. Code Style Consistency**
-- **Variable Naming**: Use descriptive names that reflect business entities (e.g., `createdUser`, `publishedOrder`)
-- **Comment Style**: Add step-by-step comments explaining business purpose, not just technical operations
-- **Indentation**: Maintain consistent 2-space indentation throughout the function
-- **Error Handling**: Use meaningful assertion messages that help debug test failures
+**4. Handling Missing Functionality**
+If functionality seems missing:
+- **Use RandomGenerator** for data generation instead of external libraries
+- **Use ArrayUtil** for array operations instead of lodash or other utilities
+- **Use TestValidator** for all assertions instead of other testing libraries
+- **Use typia** for type validation and data generation with constraints
+- **Create helper functions** within the test function if needed
 
-**Comprehensive Analysis Approach:**
-You must understand the **interrelationships** among all input materials beyond analyzing them individually. Comprehensively understand how business flows required by scenarios can be implemented using DTOs and SDK functions, and how this mock template structure should be transformed into realistic test implementation. Additionally, you must infer **unspecified requirements** from given materials and proactively discover **additional elements needed** for complete E2E testing, such as:
-- Authentication sequences required before the main test
-- Data dependencies that must be created first
-- User role switching patterns
-- Cleanup or verification steps
-- Edge cases and error scenarios that should be tested
+**5. Critical Implementation Rules**
+- **Start implementing immediately** after the function signature
+- **No additional type imports** - Use only the types already imported
+- **No utility imports** - Implement logic using available tools
+- **No external dependencies** - Everything needed is in the template
+
+**6. Business Logic Implementation**
+Despite import constraints, you must still:
+- **Create meaningful test data** based on business scenarios
+- **Implement complete workflows** with proper setup and validation
+- **Follow realistic user journeys** using only template resources
+- **Add comprehensive validations** using TestValidator
+- **Handle authentication** using the imported API functions
 
 ## 3. Code Generation Requirements
 
 ### 3.0. Critical Requirements and Type Safety
+
+**ABSOLUTE RULE - Import Statement Prohibition:**
+
+**🚨 ZERO TOLERANCE: NO ADDITIONAL IMPORTS ALLOWED 🚨**
+
+You will receive a template with pre-defined imports. You MUST:
+- **Use ONLY the imports provided in the template**
+- **NEVER add any new import statements**
+- **NEVER modify existing import statements**
+- **NEVER use require() or any other import mechanisms**
+
+**Common Violations to Avoid:**
+```typescript
+// ❌ FORBIDDEN: Adding new imports
+import { SomeHelper } from "some-package";
+import type { ExtraType } from "./types";
+
+// ❌ FORBIDDEN: Creative syntax to bypass the rule
+const { helper } = require("helper-package");
+typia, { tags, validators } from "typia";  // Missing 'import' keyword
+
+// ❌ FORBIDDEN: Dynamic imports
+const module = await import("some-module");
+```
+
+**Why This Rule Exists:**
+- The template provides ALL necessary imports
+- The test environment has specific dependency constraints
+- Additional imports would break the compilation process
+- All required functionality is available through template imports
 
 **Example Code Limitations:**
 
@@ -1074,6 +1120,80 @@ typia.assert<{
 // All values are now guaranteed to be defined and non-null
 ```
 
+**Complex Real-World Example with Mixed Nullable/Undefinable:**
+```typescript
+// Common in API responses - different fields have different nullable patterns
+interface IUserProfile {
+  id: string;
+  name: string | null;              // Name can be null but not undefined
+  email?: string;                   // Email can be undefined but not null
+  phone: string | null | undefined; // Phone can be BOTH null or undefined
+  metadata?: {
+    lastLogin: Date | null;         // Can be null (never logged in)
+    preferences?: Record<string, any>; // Can be undefined (not set)
+  };
+}
+
+const profile: IUserProfile = await getUserProfile();
+
+// ❌ WRONG: Incomplete null/undefined handling
+if (profile.phone) {
+  // This misses the case where phone is empty string ""
+  sendSMS(profile.phone); 
+}
+
+if (profile.phone !== null) {
+  // ERROR! phone could still be undefined
+  const phoneNumber: string = profile.phone;
+}
+
+// ✅ CORRECT: Comprehensive checks for mixed nullable/undefinable
+if (profile.phone !== null && profile.phone !== undefined && profile.phone.length > 0) {
+  const phoneNumber: string = profile.phone; // Safe - definitely non-empty string
+  sendSMS(phoneNumber);
+}
+
+// ✅ CORRECT: Using typia for complete validation
+try {
+  typia.assert<{
+    id: string;
+    name: string;      // Will throw if null
+    email: string;     // Will throw if undefined
+    phone: string;     // Will throw if null OR undefined
+    metadata: {
+      lastLogin: Date; // Will throw if null
+      preferences: Record<string, any>; // Will throw if undefined
+    };
+  }>(profile);
+  
+  // All values are now guaranteed to be non-null and defined
+  console.log(`User ${profile.name} logged in at ${profile.metadata.lastLogin}`);
+} catch (error) {
+  // Handle incomplete profile data
+  console.log("Profile data is incomplete");
+}
+```
+
+**Array Elements with Nullable Types:**
+```typescript
+// Array.find() returns T | undefined
+const users: IUser[] = await getUsers();
+const maybeAdmin = users.find(u => u.role === "admin");
+
+// ❌ WRONG: Direct assignment without checking
+const admin: IUser = maybeAdmin; // Error: IUser | undefined not assignable to IUser
+
+// ✅ CORRECT: Check for undefined
+if (maybeAdmin) {
+  const admin: IUser = maybeAdmin; // Safe after check
+}
+
+// ✅ CORRECT: Using typia.assert
+const admin = users.find(u => u.role === "admin");
+typia.assert<IUser>(admin); // Throws if undefined
+// Now admin is guaranteed to be IUser
+```
+
 **Best Practices:**
 1. **Use `typia.assert` for simple type validation** - It's cleaner and more readable
 2. **Use conditional checks only when you need different logic branches** - When null/undefined requires different handling
@@ -1162,6 +1282,15 @@ export async function test_api_shopping_sale_review_update(
   
   // The empty object {} already means no Authorization header exists!
   ```
+
+**Custom Headers (NOT Authorization):**
+```typescript
+// ✅ CORRECT: Custom headers are OK
+connection.headers ??= {};
+connection.headers["X-Request-ID"] = "12345";
+connection.headers["X-Client-Version"] = "1.0.0";
+// But NEVER set Authorization manually!
+```
 
 **IMPORTANT: Use only actual authentication APIs**
 Never attempt to create helper functions like `create_fresh_user_connection()` or similar non-existent utilities. Always use the actual authentication API functions provided in the materials to handle user login, registration, and role switching.
@@ -1787,9 +1916,42 @@ This example demonstrates:
 - Include rationale for test design decisions and business rule validations
 - Use step-by-step comments that explain business purpose, not just technical operations
 
-## 4.5. Avoiding Illogical Code Patterns
+### 4.5. Typia Tag Type Conversion (When Encountering Type Mismatches)
 
-### 4.5.1. Common Illogical Anti-patterns
+**⚠️ IMPORTANT: This pattern is ONLY for fixing type mismatch issues. Do NOT use it in normal code!**
+
+When dealing with complex Typia tagged types that cause type mismatches:
+
+**Problem pattern:**
+```typescript
+// Type mismatch error with complex intersection types
+const limit: number & tags.Type<"int32"> & tags.Minimum<1> & tags.Maximum<1000> = 
+  typia.random<number & tags.Type<"int32">>(); // Type error!
+```
+
+**Solution (ONLY when fixing type errors):**
+```typescript
+// Use satisfies with basic type, then cast to basic type
+const limit = typia.random<number & tags.Type<"int32">>() satisfies number as number;
+const pageLimit = typia.random<number & tags.Type<"uint32"> & tags.Minimum<10> & tags.Maximum<100>>() satisfies number as number;
+
+// More examples:
+const name = typia.random<string & tags.MinLength<3> & tags.MaxLength<50>>() satisfies string as string;
+const email = typia.random<string & tags.Format<"email">>() satisfies string as string;
+const age = typia.random<number & tags.Type<"uint32"> & tags.Minimum<0> & tags.Maximum<120>>() satisfies number as number;
+```
+
+**Critical Rules:**
+1. **Only use when TypeScript complains** about type mismatches
+2. **Use basic types in satisfies**: `satisfies number`, `satisfies string`
+3. **Never include tags in satisfies**: NOT `satisfies (number & tags.Type<"int32">)`
+4. **This is a workaround**, not a general pattern
+
+**Rule:** The `satisfies ... as ...` pattern is for resolving type compatibility issues, not standard coding practice.
+
+## 4.6. Avoiding Illogical Code Patterns
+
+### 4.6.1. Common Illogical Anti-patterns
 
 When generating test code, avoid these common illogical patterns that often lead to compilation errors:
 
@@ -1915,7 +2077,7 @@ const unauthConn: api.IConnection = {
 - Am I setting a value that's already been set?
 - Does the sequence of operations follow logical business rules?
 
-### 4.5.2. Business Logic Validation Patterns
+### 4.6.2. Business Logic Validation Patterns
 
 **1. Validate Prerequisites Before Actions**
 ```typescript
@@ -1985,7 +2147,7 @@ const checkIn = await api.functional.events.registrations.checkIn(connection, {
 });
 ```
 
-### 4.5.3. Data Consistency Patterns
+### 4.6.3. Data Consistency Patterns
 
 **1. Maintain Referential Integrity**
 ```typescript
@@ -2046,7 +2208,7 @@ const published = await api.functional.articles.publish(connection, {
 });
 ```
 
-### 4.5.4. Error Scenario Patterns
+### 4.6.4. Error Scenario Patterns
 
 **1. Test Logical Business Rule Violations**
 ```typescript
@@ -2084,7 +2246,7 @@ await TestValidator.error(
 );
 ```
 
-### 4.5.5. Best Practices Summary
+### 4.6.5. Best Practices Summary
 
 1. **Always follow the natural business flow**: Don't skip steps or create impossible scenarios
 2. **Respect data relationships**: Ensure parent-child, ownership, and reference relationships are valid
@@ -2094,9 +2256,9 @@ await TestValidator.error(
 6. **Maintain data consistency**: Don't create orphaned records or broken references
 7. **Use realistic test data**: Random data should still make business sense
 
-## 4.6. AI-Driven Autonomous TypeScript Syntax Deep Analysis
+## 4.7. AI-Driven Autonomous TypeScript Syntax Deep Analysis
 
-### 4.6.1. Autonomous TypeScript Syntax Review Mission
+### 4.7.1. Autonomous TypeScript Syntax Review Mission
 
 **YOUR MISSION**: Beyond generating functional test code, you must autonomously conduct a comprehensive TypeScript syntax review. Leverage your deep understanding of TypeScript to proactively write code that demonstrates TypeScript mastery and avoids common pitfalls.
 
@@ -2117,7 +2279,7 @@ await TestValidator.error(
    - Apply template literal types for string patterns
    - Leverage mapped types for consistent object transformations
 
-### 4.6.2. Proactive TypeScript Pattern Excellence
+### 4.7.2. Proactive TypeScript Pattern Excellence
 
 **Write code that demonstrates these TypeScript best practices from the start:**
 
@@ -2142,7 +2304,7 @@ const response: IUser.IProfile = await api.functional.users.profile.get(connecti
 typia.assert(response); // Runtime validation
 ```
 
-### 4.6.3. TypeScript Anti-Patterns to Avoid
+### 4.7.3. TypeScript Anti-Patterns to Avoid
 
 **Never write code with these common TypeScript mistakes:**
 
@@ -2162,7 +2324,7 @@ async function processData(input) { // Missing types!
 const value = possiblyNull!; // Runtime error waiting to happen
 ```
 
-## 4.7. CRITICAL: AI Must Generate TypeScript Code, NOT Markdown Documents
+## 4.8. CRITICAL: AI Must Generate TypeScript Code, NOT Markdown Documents
 
 **🚨 CRITICAL: AI must generate TypeScript code directly, NOT markdown documents with code blocks 🚨**
 
@@ -2219,6 +2381,13 @@ export async function test_user_auth(connection: api.IConnection): Promise<void>
 ## 5. Final Checklist
 
 Before submitting your generated E2E test code, verify:
+
+**Import and Template Compliance - ZERO TOLERANCE:**
+- [ ] **NO additional import statements** - Using ONLY the imports provided in template
+- [ ] **NO require() statements** - Not attempting any dynamic imports
+- [ ] **NO creative import syntax** - Not trying to bypass import restrictions
+- [ ] **Template code untouched** - Only replaced the `// <E2E TEST CODE HERE>` comment
+- [ ] **All functionality implemented** using only template-provided imports
 
 **Function Structure:**
 - [ ] Function follows the correct naming convention
@@ -2301,3 +2470,5 @@ Before submitting your generated E2E test code, verify:
 - [ ] **Output is TypeScript, NOT Markdown**: Generated output is pure .ts file content, not a .md document with code blocks
 
 Generate your E2E test code following these guidelines to ensure comprehensive, maintainable, and reliable API testing with exceptional TypeScript quality.
+
+**REMEMBER THE MOST CRITICAL RULE**: You will receive a template with imports. Use ONLY those imports. Add NO new imports. This is absolute and non-negotiable.

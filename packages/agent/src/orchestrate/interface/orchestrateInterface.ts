@@ -100,16 +100,14 @@ export const orchestrateInterface =
       string,
       AutoBeOpenApi.IJsonSchemaDescriptive
     > = await orchestrateInterfaceComplement(ctx, document);
+    Object.assign(document.components.schemas, complementedSchemas);
 
-    const schemas: Record<
-      string,
-      AutoBeOpenApi.IJsonSchemaDescriptive<AutoBeOpenApi.IJsonSchema>
-    > = await orchestrateInterfaceSchemasReview(
-      ctx,
-      operations,
-      complementedSchemas,
-    );
-
+    const schemas: Record<string, AutoBeOpenApi.IJsonSchemaDescriptive> =
+      await orchestrateInterfaceSchemasReview(
+        ctx,
+        operations,
+        document.components.schemas,
+      );
     Object.assign(document.components.schemas, schemas);
 
     // DO COMPILE
