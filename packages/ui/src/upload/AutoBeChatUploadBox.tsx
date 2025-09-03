@@ -271,6 +271,7 @@ export const AutoBeChatUploadBox = (props: AutoBeChatUploadBox.IProps) => {
             ))}
           </div>
         )}
+
         <textarea
           ref={inputRef}
           style={{
