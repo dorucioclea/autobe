@@ -172,7 +172,11 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const ConnectionInfo = ({ header }: { header: any }) => (
+const ConnectionInfo = ({
+  header,
+}: {
+  header: ReturnType<typeof useAutoBeAgent>["header"];
+}) => (
   <div>
     <SectionTitle>Connection Info</SectionTitle>
     <div
@@ -193,7 +197,7 @@ const ConnectionInfo = ({ header }: { header: any }) => (
         }}
       >
         <strong>Model:</strong> {header?.model || "N/A"} |{" "}
-        <strong>Vendor:</strong> {header?.vendor?.name || "N/A"} |{" "}
+        <strong>Vendor:</strong> {header?.vendor.model || "N/A"} |{" "}
         <strong>Locale:</strong> {header?.locale || "N/A"} |{" "}
         <strong>Timezone:</strong> {header?.timezone || "N/A"}
       </p>
