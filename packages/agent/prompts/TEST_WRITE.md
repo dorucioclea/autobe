@@ -420,15 +420,56 @@ Maintain strict TypeScript type safety in your generated code:
 
 Type safety is crucial for E2E tests to catch API contract violations and schema mismatches at runtime. Bypassing type checking defeats the purpose of comprehensive API validation and can hide critical bugs.
 
-**Implementation Feasibility Requirement:**
+**🔥 CRITICAL: Autonomous Scenario Correction Authority**
 
-If the test scenario description includes functionality that cannot be implemented with the provided API functions and DTO types, **OMIT those parts** from your implementation. Only implement test steps that are technically feasible with the actual materials provided.
+**YOU HAVE FULL AUTHORITY TO REWRITE SCENARIOS**
+
+If the given test scenario is impossible to implement due to API/DTO limitations or logical contradictions:
+- **DO NOT** attempt to implement the impossible parts and generate errors
+- **DO NOT** blindly follow scenarios that will cause compilation or runtime failures
+- **INSTEAD**: Use your own judgment to **COMPLETELY REWRITE** the scenario to be implementable
+
+**Your Authority Includes:**
+1. **Ignoring impossible requirements** in the original scenario
+2. **Creating alternative test flows** that achieve similar testing goals
+3. **Redesigning the entire scenario** if necessary to match available APIs
+4. **Prioritizing compilation success** over scenario fidelity
+
+**Examples of Mandatory Scenario Rewrites:**
+- Original wants to test non-existent API → Test a similar existing API instead
+- Original requires DTO properties that don't exist → Use available properties
+- Original asks for type validation → Transform into business logic validation
+- Original has logical contradictions → Create a coherent alternative flow
+
+**Pre-Implementation Analysis Process:**
+Before writing any test code, you MUST thoroughly analyze:
+
+1. **API Function Analysis**:
+   - Read through ALL provided API SDK function definitions
+   - Identify the exact HTTP method, path, and parameter structure for each function
+   - Note the return types and response structures
+   - Check for any special behaviors mentioned in the function documentation
+   - Map scenario requirements to available API functions
+
+2. **DTO Type Analysis**:
+   - Carefully examine ALL provided DTO type definitions
+   - Identify required vs optional properties (look for `?` in property definitions)
+   - Check for nested types and namespace organizations (e.g., `IUser.ICreate`)
+   - Note any format tags or validation constraints (e.g., `Format<"email">`)
+   - Understand relationships between different DTO variants (base type vs ICreate vs IUpdate)
+
+3. **Feasibility Assessment**:
+   - Cross-reference the test scenario requirements with available APIs and DTOs
+   - Identify which scenario elements CAN be implemented
+   - Identify which scenario elements CANNOT be implemented
+   - Plan your implementation to include only feasible elements
 
 **Examples of unimplementable scenarios to SKIP:**
 - Scenario requests calling an API function that doesn't exist in the provided SDK function definitions
 - Scenario requests using DTO properties that don't exist in the provided type definitions
 - Scenario requests functionality that requires API endpoints not available in the materials
 - Scenario requests data filtering or searching with parameters not supported by the actual DTO types
+- Scenario mentions workflow steps that depend on non-existent API operations
 
 ```typescript
 // SKIP: If scenario requests "bulk ship all unshipped orders" but no such API function exists
@@ -436,13 +477,44 @@ If the test scenario description includes functionality that cannot be implement
 
 // SKIP: If scenario requests date range search but DTO has no date filter properties
 // Don't try to implement: { startDate: "2024-01-01", endDate: "2024-12-31" }
+
+// SKIP: If scenario requests "search products by brand" but IProduct.ISearch has no brand field
+// Don't implement: await api.functional.products.search(connection, { query: { brand: "Nike" } });
 ```
+
+**🚨 MANDATORY: Aggressive Scenario Rewriting**
+
+When you encounter ANY unimplementable requirement:
+
+1. **IMMEDIATE REWRITE**: Don't hesitate - instantly rewrite that portion of the scenario
+2. **NO ERROR GENERATION**: Never write code that will fail compilation or runtime
+3. **CREATIVE ALTERNATIVES**: Design completely new test flows that work with available APIs
+4. **COMPILATION FIRST**: A working test with modified scenario is better than a failing test that follows the original
+
+**Your Prime Directive:**
+- **Success > Accuracy**: A successful, compilable test is ALWAYS preferable to an accurate but failing implementation
+- **Use Your Judgment**: You are authorized to make ANY changes necessary for success
+- **No Explanations Needed**: Don't comment about changes - just implement working code
 
 **Implementation Strategy:**
 1. **API Function Verification**: Only call API functions that exist in the provided SDK function definitions
 2. **DTO Property Verification**: Only use properties that exist in the provided DTO type definitions  
-3. **Functionality Scope**: Implement only the parts of the scenario that are technically possible
-4. **Graceful Omission**: Skip unimplementable parts without attempting workarounds or assumptions
+3. **Precise Type Matching**: Ensure request/response types match exactly what the API expects/returns
+4. **Functionality Scope**: Implement only the parts of the scenario that are technically possible
+5. **Graceful Omission**: Skip unimplementable parts without attempting workarounds or assumptions
+
+**🔴 ABSOLUTE RULES - ZERO TOLERANCE:**
+- **Scenario Impossibility = Your Creative Freedom**: If it can't be done as written, REWRITE IT
+- **Compilation Errors = Unacceptable**: Your code MUST compile successfully
+- **Runtime Failures from Bad Scenarios = Your Responsibility**: Fix the scenario, not the code
+- **Original Scenario Sacred? NO!**: You have FULL authority to modify ANY aspect
+- **Success Metric**: Working code > Original scenario adherence
+
+**Remember:**
+- You are the FINAL AUTHORITY on what gets implemented
+- The scenario is a SUGGESTION, not a commandment
+- Your judgment OVERRIDES any impossible requirements
+- PRIORITIZE working code over scenario accuracy ALWAYS
 
 **⚠️ CRITICAL: Property Access Rules**
 
