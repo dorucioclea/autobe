@@ -15,8 +15,8 @@ import { AutoBeContext } from "../../context/AutoBeContext";
 import { assertSchemaModel } from "../../context/assertSchemaModel";
 import { transformInterfaceComplementHistories } from "./histories/transformInterfaceComplementHistories";
 import { IAutoBeInterfaceComplementApplication } from "./structures/IAutoBeInterfaceComplementApplication";
-import { fixPageJsonSchemas } from "./utils/fixPageJsonSchemas";
-import { fulfillInvalidJsonSchemaErrors } from "./utils/fulfillInvalidJsonSchemaErrors";
+import { JsonSchemaFactory } from "./utils/JsonSchemaFactory";
+import { fulfillJsonSchemaErrorMessages } from "./utils/fulfillJsonSchemaErrorMessages";
 import { validateAuthorizationSchema } from "./utils/validateAuthorizationSchema";
 
 export function orchestrateInterfaceComplement<Model extends ILlmSchema.Model>(
@@ -131,12 +131,12 @@ function createController<Model extends ILlmSchema.Model>(props: {
   const validate = (
     next: unknown,
   ): IValidation<IAutoBeInterfaceComplementApplication.IProps> => {
-    fixPageJsonSchemas(next, "schemas");
+    JsonSchemaFactory.fix("schemas", next);
 
     const result: IValidation<IAutoBeInterfaceComplementApplication.IProps> =
       typia.validate<IAutoBeInterfaceComplementApplication.IProps>(next);
     if (result.success === false) {
-      fulfillInvalidJsonSchemaErrors(result.errors);
+      fulfillJsonSchemaErrorMessages(result.errors);
       return result;
     }
 
