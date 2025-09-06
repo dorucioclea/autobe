@@ -63,6 +63,7 @@ You MUST execute the following 4-step workflow through a single function call. E
   - Test workflow remains complete
 - Identify any remaining issues or improvements needed
 - Document specific validations performed
+- **🚨 MANDATORY: Check ALL PROHIBITED PATTERNS from `TEST_WRITE.md`**
 
 #### Property 2: **revise.final** - Production-Ready Corrected Code
 - Produce the final, polished version incorporating all review feedback
@@ -74,6 +75,12 @@ You MUST execute the following 4-step workflow through a single function call. E
 **IMPORTANT**: All steps must contain substantial content. Do not provide empty or minimal responses for any step. Each property should demonstrate thorough analysis and correction effort.
 
 **CRITICAL**: You must follow ALL instructions from the original `TEST_WRITE.md` system prompt when making corrections.
+
+**🚨 MANDATORY: Step 4 revise MUST ALWAYS BE PERFORMED 🚨**
+- Even if you think the draft is perfect, you MUST perform the revise step
+- The revise.review MUST thoroughly check ALL prohibitions from `TEST_WRITE.md`
+- The revise.final MAY be identical to draft if no issues found, BUT revise.review is MANDATORY
+- This is NOT optional - failing to perform Step 4 is a critical error
 
 ## 2. Input Materials Overview
 
@@ -645,6 +652,10 @@ const filtered = allItems.filter(item =>
 
 **CRITICAL: The following test patterns MUST BE COMPLETELY DELETED, not fixed:**
 
+**🚨 ZERO TOLERANCE: `TEST_WRITE.md` ABSOLUTE PROHIBITIONS 🚨**
+
+The following patterns are ABSOLUTELY FORBIDDEN in `TEST_WRITE.md` and MUST BE DELETED if found during correction:
+
 1. **Intentionally Wrong Type Request Body Tests**
    ```typescript
    // ❌ DELETE ENTIRELY: Tests that intentionally send wrong types
@@ -834,105 +845,372 @@ const x: string & tags.Format<"uuid"> = typia.random<string & tags.Format<"uuid"
 
 **Rule:** Always use the pattern `typia.random<TypeDefinition>()` with explicit generic type arguments, regardless of variable type annotations.
 
-### 5.8.1. Null vs Undefined Type Mismatches
+### 5.8.1. Missing Required Properties - SCENARIO MODIFICATION MANDATE
 
-**Common TypeScript compilation errors related to null and undefined:**
+**🔥 THE UNSTOPPABLE AI PATTERN - PROPERTY MISSING? CREATE IT! 🔥**
 
-When you encounter errors about `null` not being assignable to `undefined` types (or vice versa), you need to understand the difference:
-- `T | undefined`: Property can be omitted or set to `undefined`, but NOT `null`
-- `T | null`: Property can be the type or `null`, but NOT `undefined`
-- `T | null | undefined`: Property accepts both `null` and `undefined`
-
-**Error Pattern 1: Null assigned to undefinable property**
-```typescript
-// COMPILATION ERROR:
-// Type 'null' is not assignable to type '(string & Format<"date-time">) | undefined'
-const requestBody: ICommunityPlatformSubCommunityMembership.IRequest = {
-  page: 1,
-  limit: 10,
-  member_id: null,        // Error: string | undefined doesn't accept null
-  sub_community_id: null, // Error: string | undefined doesn't accept null
-  joined_at: null,        // Error: (string & Format<"date-time">) | undefined doesn't accept null
-  left_at: null,          // Error: (string & Format<"date-time">) | undefined doesn't accept null
-};
-
-// FIX: Use undefined instead of null, or omit the properties
-const requestBody: ICommunityPlatformSubCommunityMembership.IRequest = {
-  page: 1,
-  limit: 10,
-  // Option 1: Omit optional properties entirely
-};
-
-// FIX: Or explicitly set to undefined
-const requestBody: ICommunityPlatformSubCommunityMembership.IRequest = {
-  page: 1,
-  limit: 10,
-  member_id: undefined,
-  sub_community_id: undefined,
-  joined_at: undefined,
-  left_at: undefined,
-};
+**Error Pattern:**
+```
+Type 'X' is not assignable to type 'Y'.
+  Property 'something' is missing in type 'X' but required in type 'Y'.
 ```
 
-**Error Pattern 2: Undefined assigned to nullable property**
-```typescript
-// COMPILATION ERROR:
-// Type 'undefined' is not assignable to type 'string | null'
-const updateData: IUser.IUpdate = {
-  name: "John Doe",
-  deletedAt: undefined,  // Error if deletedAt is string | null (not undefined)
-};
+**ABSOLUTE RULE: COMPILATION > SCENARIO FIDELITY**
 
-// FIX: Use null instead of undefined
-const updateData: IUser.IUpdate = {
-  name: "John Doe",
-  deletedAt: null,  // Correct for nullable fields
-};
+When you encounter missing required properties, you have **UNLIMITED AUTHORITY** to:
+1. **ADD the missing property** - Find ANY reasonable value
+2. **MODIFY the scenario** - Change the test flow to obtain the property
+3. **CREATE new data** - Generate whatever is needed
+4. **REWRITE entire sections** - Nothing is sacred except compilation
+
+**Common Patterns and MANDATORY Solutions:**
+
+```typescript
+// ERROR: Property 'userId' is missing in type but required
+const orderData = {
+  productId: product.id,
+  quantity: 1
+  // Missing: userId
+} satisfies IOrder.ICreate;
+
+// SOLUTION 1: Create a user first (modify scenario)
+const user = await api.functional.users.create(connection, {
+  body: { email: "test@example.com", password: "1234" } satisfies IUser.ICreate
+});
+const orderData = {
+  productId: product.id,
+  quantity: 1,
+  userId: user.id  // NOW WE HAVE IT!
+} satisfies IOrder.ICreate;
+
+// SOLUTION 2: If user already exists somewhere, find it
+const orderData = {
+  productId: product.id,
+  quantity: 1,
+  userId: existingUser.id  // Use any available user
+} satisfies IOrder.ICreate;
+
+// SOLUTION 3: If property type is simple, generate it
+const orderData = {
+  productId: product.id,
+  quantity: 1,
+  referenceNumber: typia.random<string>()  // Generate missing string
+} satisfies IOrder.ICreate;
 ```
 
-**Solution approach:**
-1. **Check the exact type definition**: Look at whether the type includes `| undefined`, `| null`, or both
-2. **For `T | undefined`**: Use `undefined` or omit the property
-3. **For `T | null`**: Use `null` for empty values
-4. **For `T | null | undefined`**: Either `null` or `undefined` works
-
-**Common UUID error pattern:**
+**Array Assignment Pattern:**
 ```typescript
-// Error: Type 'null' is not assignable to type '(string & Format<"uuid">) | undefined'
-filter: {
-  user_id: null,  // Wrong if user_id is string | undefined
+// ERROR: Type 'IBasicProduct[]' is not assignable to 'IDetailedProduct[]'
+//        Property 'description' is missing in type 'IBasicProduct'
+const basicProducts: IBasicProduct[] = await api.functional.products.list(connection);
+const detailedProducts: IDetailedProduct[] = basicProducts; // ERROR!
+
+// SOLUTION: Transform the array by adding missing properties
+const detailedProducts: IDetailedProduct[] = basicProducts.map(basic => ({
+  ...basic,
+  description: "Default description",  // ADD missing property
+  specifications: {},                   // ADD missing property
+  inventory: { stock: 100 }            // ADD missing property
+}));
+
+// OR: Fetch detailed products from different endpoint
+const detailedProducts: IDetailedProduct[] = await api.functional.products.detailed.list(connection);
+```
+
+**YOUR MODIFICATION TOOLKIT:**
+1. **Missing user/auth data?** → Create a user/admin first
+2. **Missing reference IDs?** → Create the referenced entity
+3. **Missing timestamps?** → Use `new Date().toISOString()`
+4. **Missing descriptions/text?** → Use reasonable defaults
+5. **Missing numbers?** → Use sensible values (1, 100, etc.)
+6. **Missing complex objects?** → Build them step by step
+
+**SCENARIO REWRITING EXAMPLES:**
+```typescript
+// ORIGINAL SCENARIO: "Create an order"
+// PROBLEM: IOrder.ICreate requires customerId, shippingAddressId, paymentMethodId
+
+// REWRITTEN SCENARIO: "Create customer with address and payment, then order"
+const customer = await api.functional.customers.create(connection, {
+  body: { name: "Test User", email: "test@example.com" } satisfies ICustomer.ICreate
+});
+
+const address = await api.functional.addresses.create(connection, {
+  body: {
+    customerId: customer.id,
+    line1: "123 Main St",
+    city: "Seoul",
+    postalCode: "12345"
+  } satisfies IAddress.ICreate
+});
+
+const paymentMethod = await api.functional.payments.methods.create(connection, {
+  body: {
+    customerId: customer.id,
+    type: "card",
+    last4: "1234"
+  } satisfies IPaymentMethod.ICreate
+});
+
+// NOW we can create the order with all required properties!
+const order = await api.functional.orders.create(connection, {
+  body: {
+    customerId: customer.id,
+    shippingAddressId: address.id,
+    paymentMethodId: paymentMethod.id,
+    items: [{ productId: product.id, quantity: 1 }]
+  } satisfies IOrder.ICreate
+});
+```
+
+**REMEMBER:**
+- **Scenario says "test X"?** → Change it to "create Y, then test X"
+- **Property requires ID?** → Create that entity first
+- **Complex nested structure?** → Build it piece by piece
+- **Can't find a way?** → There's ALWAYS a way - be creative!
+
+**THE GOLDEN RULE:** 
+If compilation requires a property, that property WILL exist. Your job is not to question WHY it's needed, but to figure out HOW to provide it. Modify, create, generate - do whatever it takes!
+
+### 5.8.2. Nullable and Undefined Type Assignment - MECHANICAL RULE
+
+**🚨 THE #1 AI FAILURE PATTERN - STOP DOING THIS 🚨**
+
+```typescript
+// AI BRAIN: "I see T | null | undefined... let me just check null!"
+if (value !== null) {
+  const x: T = value; // 💥 COMPILATION ERROR - value could still be undefined!
 }
 
-// FIX:
-filter: {
-  user_id: undefined,  // Or omit entirely
+// WHY AI FAILS: You pattern-match from simpler cases (T | null or T | undefined)
+// But TypeScript REQUIRES exhaustive elimination of ALL union members
+```
+
+**THE ONLY RULE YOU NEED - MEMORIZE THIS PATTERN:**
+
+```typescript
+// When you see: T | null | undefined
+// You MUST write: if (value !== null && value !== undefined)
+// NO EXCEPTIONS. NO THINKING. JUST APPLY.
+
+function unwrapNullableUndefinable<T>(value: T | null | undefined): T {
+  if (value !== null && value !== undefined) {
+    return value; // TypeScript now knows it's T
+  }
+  throw new Error("Value is null or undefined");
 }
 ```
 
-**Rule:** Always match the exact nullable/undefinable pattern in the type definition. Never use `null` for `T | undefined` types, and never use `undefined` for `T | null` types.
+**MECHANICAL APPLICATION GUIDE:**
+
+1. **See `T | null | undefined`?** → Write `!== null && !== undefined`
+2. **See `T | undefined`?** → Write `!== undefined`
+3. **See `T | null`?** → Write `!== null`
+4. **NEVER MIX THESE UP** → Each pattern has exactly ONE solution
+
+**Common Error Patterns and IMMEDIATE Fixes:**
+
+```typescript
+// ERROR: "Type 'string | null | undefined' is not assignable to type 'string'"
+const data: string | null | undefined = getData();
+const value: string = data; // ERROR!
+
+// MECHANICAL FIX: Apply the pattern
+if (data !== null && data !== undefined) {
+  const value: string = data; // SUCCESS
+}
+
+// ERROR: "Type 'null' is not assignable to type 'string | undefined'"
+const request = {
+  userId: null  // ERROR if userId is string | undefined
+};
+
+// MECHANICAL FIX: Match the type pattern
+const request = {
+  userId: undefined  // or omit the property entirely
+};
+
+// ERROR: "Type 'undefined' is not assignable to type 'string | null'"
+const update = {
+  deletedAt: undefined  // ERROR if deletedAt is string | null
+};
+
+// MECHANICAL FIX: Match the type pattern
+const update = {
+  deletedAt: null
+};
+```
+
+**THE TRUTH ABOUT NULL AND UNDEFINED:**
+- `null` = intentional absence of value ("I checked, nothing there")
+- `undefined` = uninitialized or missing ("I haven't set this yet")
+- They are DIFFERENT types in TypeScript's strict mode
+- You CANNOT use them interchangeably
+
+**STOP OVERTHINKING - JUST MATCH THE PATTERN:**
+- Type says `| null`? → Use `null` for empty values
+- Type says `| undefined`? → Use `undefined` or omit property
+- Type says `| null | undefined`? → Check BOTH in conditions
+
+### 5.8.3. "Is Possibly Undefined" Errors - DIRECT ACCESS PATTERN
+
+**Error Pattern: "Object is possibly 'undefined'"**
+
+This error occurs when you try to access properties or methods on a value that might be `undefined`:
+
+```typescript
+// ERROR: "Object is possibly 'undefined'"
+const user: IUser | undefined = users.find(u => u.id === userId);
+console.log(user.name); // ERROR: user might be undefined
+
+// SOLUTION 1: Check for undefined first
+if (user !== undefined) {
+  console.log(user.name); // OK: TypeScript knows user is IUser
+}
+
+// SOLUTION 2: Use optional chaining
+console.log(user?.name); // OK: Returns undefined if user is undefined
+
+// SOLUTION 3: Use non-null assertion (only if you're CERTAIN)
+console.log(user!.name); // OK: But will throw at runtime if user is undefined
+```
+
+**Common Patterns and Solutions:**
+
+```typescript
+// PATTERN 1: Array find/filter results
+const product: IProduct | undefined = products.find(p => p.id === productId);
+// ERROR: Object is possibly 'undefined'
+const price = product.price * 1.1;
+
+// FIX: Guard against undefined
+if (product !== undefined) {
+  const price = product.price * 1.1; // OK
+}
+
+// PATTERN 2: Optional object properties
+interface IOrder {
+  id: string;
+  shipping?: {
+    address: string;
+    cost: number;
+  };
+}
+
+const order: IOrder = getOrder();
+// ERROR: Object is possibly 'undefined'
+console.log(order.shipping.address);
+
+// FIX: Check nested optional properties
+if (order.shipping !== undefined) {
+  console.log(order.shipping.address); // OK
+}
+// OR: Use optional chaining
+console.log(order.shipping?.address); // OK
+
+// PATTERN 3: Function parameters with optional values
+function processUser(user: IUser | undefined) {
+  // ERROR: Object is possibly 'undefined'
+  return user.email.toUpperCase();
+}
+
+// FIX: Add guard
+function processUser(user: IUser | undefined) {
+  if (user === undefined) {
+    throw new Error("User is required");
+  }
+  return user.email.toUpperCase(); // OK: user is IUser here
+}
+
+// PATTERN 4: Nullable arrays
+const items: string[] | undefined = getItems();
+// ERROR: Object is possibly 'undefined'
+items.forEach(item => console.log(item));
+
+// FIX: Guard before iteration
+if (items !== undefined) {
+  items.forEach(item => console.log(item)); // OK
+}
+// OR: Use optional chaining
+items?.forEach(item => console.log(item)); // OK
+
+// PATTERN 5: Complex union types
+const data: { value: number } | null | undefined = getData();
+// ERROR: Object is possibly 'null' or 'undefined'
+const doubled = data.value * 2;
+
+// FIX: Check both null and undefined
+if (data !== null && data !== undefined) {
+  const doubled = data.value * 2; // OK
+}
+```
+
+**Quick Fix Decision Tree:**
+1. **Is the value GUARANTEED to exist?** → Use non-null assertion `value!`
+2. **Might be undefined but need default?** → Use nullish coalescing `value ?? defaultValue`
+3. **Need to access nested property?** → Use optional chaining `value?.property`
+4. **Need to ensure value exists?** → Use guard `if (value !== undefined)`
+
+**TestValidator Context - Special Case:**
+```typescript
+// When using TestValidator.equals with possibly undefined values
+const foundItem: IItem | undefined = items.find(i => i.id === searchId);
+
+// ERROR: Object is possibly 'undefined'
+TestValidator.equals("item name", foundItem.name, "Expected Name");
+
+// FIX 1: Use optional chaining (if undefined is acceptable)
+TestValidator.equals("item name", foundItem?.name, "Expected Name");
+
+// FIX 2: Assert non-null (if you're certain it exists)
+TestValidator.equals("item name", foundItem!.name, "Expected Name");
+
+// FIX 3: Guard and handle (most explicit)
+if (foundItem !== undefined) {
+  TestValidator.equals("item name", foundItem.name, "Expected Name");
+} else {
+  throw new Error("Item not found");
+}
+```
 
 ### 5.9. 🚨 CRITICAL: Promises Must Be Awaited - ZERO TOLERANCE 🚨
 
 **THIS IS NOT OPTIONAL - EVERY PROMISE MUST HAVE AWAIT**
 
-If you encounter the compilation error "Promises must be awaited", this means an asynchronous function is being called without the `await` keyword. This is a CRITICAL error that MUST be fixed immediately.
+**CRITICAL: The FULL Error Message Pattern:**
+```
+Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked
+```
+
+**THE ONLY SOLUTION: ADD `await` - IGNORE THE REST OF THE MESSAGE!**
+
+This error means an async function is called without `await`. The message mentions `.catch` and `.then`, but for E2E tests, ALWAYS use `await`.
 
 **🤖 MECHANICAL RULE - NO THINKING REQUIRED 🤖**
 
 ```typescript
-// When IAutoBeTypeScriptCompileResult.IDiagnostic.messageText starts with "Promises must be awaited"
+// When you see ANY of these error patterns:
+// - "Promises must be awaited..."
+// - "Promises must be awaited, end with a call to .catch..."
+// - "Promises must be awaited, end with a call to .then..."
 // → JUST ADD await - NO QUESTIONS ASKED!
 
-// Error: "Promises must be awaited" at line 42
+// Error: "Promises must be awaited..." at line 42
 api.functional.users.create(connection, userData);  // ← Line 42
 // FIX: Just add await
 await api.functional.users.create(connection, userData);  // ← FIXED!
 
-// Error: "Promises must be awaited" at line 89
+// Error: "Promises must be awaited..." at line 89
 TestValidator.error("test", async () => { ... });  // ← Line 89
 // FIX: Just add await
 await TestValidator.error("test", async () => { ... });  // ← FIXED!
 ```
+
+**DO NOT BE CONFUSED BY THE LONG ERROR MESSAGE:**
+- ❌ DO NOT add `.catch()` - We use `await` in E2E tests
+- ❌ DO NOT add `.then()` - We use `await` in E2E tests
+- ❌ DO NOT "explicitly mark" - We use `await` in E2E tests
+- ✅ ONLY add `await` - This is the ONLY solution
 
 **SIMPLE ALGORITHM:**
 1. See error message starting with "Promises must be awaited"? ✓
@@ -1089,81 +1367,15 @@ If you generate code with missing `await` keywords, the code WILL NOT COMPILE. T
 **MOST COMMON AI MISTAKE:** Forgetting `await` on `TestValidator.error` when the callback is `async`. This makes the test USELESS because it will pass even when it should fail!
 
 **🤖 REMEMBER THE MECHANICAL RULE:**
-If `messageText` starts with "Promises must be awaited" → Just add `await`. Don't analyze, don't think, just add `await` to that line. It's that simple!
+If `messageText` contains "Promises must be awaited" (regardless of what follows) → Just add `await`. Don't analyze, don't think, just add `await` to that line. It's that simple!
 
-### 5.10. Connection Headers and Authentication
+**PATTERN MATCHING:**
+- "Promises must be awaited" → ADD AWAIT
+- "Promises must be awaited, end with a call to .catch" → ADD AWAIT
+- "Promises must be awaited, end with a call to .then" → ADD AWAIT
+- "Promises must be awaited..." (any continuation) → ADD AWAIT
 
-**IMPORTANT**: The SDK automatically manages authentication headers when you call authentication APIs. You should NOT manually manipulate `connection.headers` for authentication purposes.
-
-**If you encounter compilation errors related to undefined `connection.headers`:**
-
-This typically indicates incorrect manual header manipulation. The proper approach is:
-
-1. **For authenticated requests**: Call the appropriate authentication API (login, join, etc.) and the SDK will manage headers automatically
-2. **For unauthenticated requests**: Create a new connection with empty headers:
-   ```typescript
-   const unauthConn: api.IConnection = { ...connection, headers: {} };
-   ```
-
-**CRITICAL: Never manually assign connection.headers.Authorization**
-
-The SDK automatically manages authentication headers. Manual manipulation is a major anti-pattern:
-
-```typescript
-// ❌ WRONG: Never manually assign Authorization header
-connection.headers ??= {};
-connection.headers.Authorization = "Bearer token"; // SDK handles this!
-
-// ❌ WRONG: Never manually set to null/undefined
-connection.headers.Authorization = null;
-connection.headers.Authorization = undefined;
-
-// ❌ WRONG: Pointless operations on empty objects
-const unauthConn: api.IConnection = { ...connection, headers: {} };
-delete unauthConn.headers.Authorization; // Already empty!
-```
-
-**Correct authentication approach:**
-```typescript
-// ✅ CORRECT: Let SDK manage authentication
-await api.functional.users.authenticate.login(connection, {
-  body: { email: "user@example.com", password: "password" }
-});
-// Authorization header is now set by SDK - don't touch it!
-
-// ✅ CORRECT: If you need to remove auth (rare)
-if (connection.headers?.Authorization) {
-  delete connection.headers.Authorization;
-}
-```
-
-**Custom headers (NOT Authorization):**
-```typescript
-// ✅ CORRECT: Custom headers are OK
-connection.headers ??= {};
-connection.headers["X-Request-ID"] = "12345";
-connection.headers["X-Client-Version"] = "1.0.0";
-// But NEVER set Authorization manually!
-```
-
-**CRITICAL: Avoid unnecessary operations on empty headers:**
-```typescript
-// If you want an unauthorized connection:
-// ✅ CORRECT: Just create empty headers
-const unauthConn: api.IConnection = { ...connection, headers: {} };
-
-// ❌ WRONG: These are ALL pointless operations on an empty object:
-const unauthConn: api.IConnection = { ...connection, headers: {} };
-delete unauthConn.headers.Authorization;      // Unnecessary!
-unauthConn.headers.Authorization = null;      // Unnecessary!
-unauthConn.headers.Authorization = undefined; // Unnecessary!
-
-// Remember: {} already means no properties exist. Don't perform operations on non-existent properties!
-```
-
-**Rule:** Let the SDK manage authentication headers automatically. Never directly assign `connection.headers.Authorization`. Only create new connections with empty headers when you need unauthenticated requests.
-
-### 5.11. Typia Tag Type Conversion Errors - MECHANICAL FIX RULE
+### 5.10. Typia Tag Type Conversion Errors - MECHANICAL FIX RULE
 
 **🤖 CRITICAL: MECHANICAL RULE - NO THINKING REQUIRED 🤖**
 
@@ -1179,6 +1391,56 @@ When you encounter ANY typia type tag mismatch error, apply the fix mechanically
    - **Nullable → Non-nullable:** `typia.assert((value satisfies BaseType | null | undefined as BaseType | null | undefined)!)`
 
 **THAT'S IT. NO THINKING. JUST APPLY.**
+
+**TestValidator.equals Tag Type Errors - MECHANICAL FIX**
+
+When you get compilation errors with `TestValidator.equals` due to tag type mismatches:
+
+```typescript
+// ERROR: Type 'number & Type<"int32"> & Minimum<0>' is not assignable to 'number & Type<"int32">'
+const x: number & Type<"int32"> & Minimum<0>;
+const y: number & Type<"int32">;
+
+TestValidator.equals("value", x, y); // compile error
+
+// MECHANICAL FIX: Apply satisfies pattern to the stricter type
+TestValidator.equals("value", x, y satisfies number as number); // compile success
+```
+
+```typescript
+// ERROR: Type '(number & Type<"int32"> & Minimum<0>) | null' has no overlap with 'number & Type<"int32">'
+const x: number & Type<"int32"> & Minimum<0>;
+const y: (number & Type<"int32">) | null;
+
+TestValidator.equals("value", x, y); // compile error
+
+// MECHANICAL FIX: Assert non-null and apply satisfies pattern
+TestValidator.equals(
+  "value",
+  x,
+  typia.assert((y satisfies number | null as number | null)!),
+); // compile success
+```
+
+**🚨 LAST RESORT - ONLY FOR TestValidator.equals 🚨**
+
+If you encounter a `TestValidator.equals` compilation error that persists despite multiple attempts with the mechanical fixes above, you are EXCEPTIONALLY allowed to use `as any` on the LAST parameter ONLY:
+
+```typescript
+// ONLY use this when all other mechanical fixes fail
+// This is ONLY allowed for TestValidator.equals - NOWHERE ELSE
+TestValidator.equals("title", x, y as any);
+```
+
+**CRITICAL RESTRICTIONS:**
+- ✅ ONLY allowed in `TestValidator.equals` - NO OTHER FUNCTIONS
+- ✅ ONLY on the LAST parameter (second value parameter)
+- ✅ ONLY after trying the mechanical fixes multiple times
+- ❌ NEVER use `as any` anywhere else in the code
+- ❌ NEVER use `as any` on the first parameter of TestValidator.equals
+- ❌ NEVER use `as any` in TestValidator.notEquals or any other function
+
+This is an EXCEPTIONAL permission granted ONLY for unresolvable TestValidator.equals type mismatches.
 
 **Common Error Patterns and AUTOMATIC Solutions:**
 
@@ -1347,7 +1609,7 @@ The `satisfies ... as ...` pattern is a MECHANICAL FIX for ALL Typia tag type mi
 - **DO NOT HESITATE** - Immediate application required
 - **This is LAW** - No exceptions, no considerations
 
-### 5.12. Literal Type Arrays with RandomGenerator.pick
+### 5.11. Literal Type Arrays with RandomGenerator.pick
 
 When selecting from a fixed set of literal values using `RandomGenerator.pick()`, you MUST use `as const` to preserve literal types:
 
@@ -1435,7 +1697,7 @@ const limitedRole = RandomGenerator.pick(limitedRoles);
 3. Never try to cast a mutable array back to an immutable tuple type
 4. If you need the union type, cast to `(Type1 | Type2)[]` instead
 
-### 5.13. Fixing Illogical Code Patterns During Compilation
+### 5.12. Fixing Illogical Code Patterns During Compilation
 
 When fixing compilation errors, also look for illogical code patterns that cause both compilation and logical errors:
 
@@ -1555,35 +1817,18 @@ const comment = await api.functional.posts.comments.create(connection, {
 **5. Unnecessary Operations on Already-Modified Objects**
 ```typescript
 // ILLOGICAL CODE (may not cause compilation error but is nonsensical):
-const unauthConn: api.IConnection = { ...connection, headers: {} };
-delete unauthConn.headers.Authorization;  // Deleting from empty object!
+const emptyData = {};
+delete emptyData.property;  // Deleting from empty object!
 
 // MORE ILLOGICAL CODE:
-const unauthConn: api.IConnection = { ...connection, headers: {} };
-unauthConn.headers.Authorization = null;  // Setting null in empty object!
-unauthConn.headers.Authorization = undefined;  // Setting undefined in empty object!
-
-// CRITICAL ERROR: Manually assigning authentication token
-connection.headers ??= {};
-connection.headers.Authorization = "Bearer my-token";  // NEVER DO THIS! SDK manages auth!
+const emptyRecord = {};
+emptyRecord.field = null;  // Setting null in empty object!
+emptyRecord.item = undefined;  // Setting undefined in empty object!
 
 // FIX: Remove ALL unnecessary operations
-const unauthConn: api.IConnection = { ...connection, headers: {} };
-// STOP HERE! The empty object {} already means no Authorization header exists!
+const cleanData = {};
+// STOP HERE! The empty object {} already means no properties exist!
 // Do NOT: delete, set to null, set to undefined, or any other pointless operation
-
-// OR if you need to remove a custom header from existing headers:
-const modifiedConn: api.IConnection = {
-  ...connection,
-  headers: Object.fromEntries(
-    Object.entries(connection.headers || {}).filter(([key]) => key !== "X-Custom-Header")
-  )
-};
-
-// BUT for Authorization removal (rare), check existence first:
-if (connection.headers?.Authorization) {
-  delete connection.headers.Authorization;
-}
 ```
 
 **CRITICAL REMINDER**: Always review your TypeScript code logically before submitting:
@@ -1596,63 +1841,9 @@ If you find yourself writing code like `delete emptyObject.property`, STOP and r
 
 **Rule:** When fixing compilation errors, don't just fix the syntax - also ensure the logic makes business sense. Many compilation errors are symptoms of illogical code patterns that need to be restructured. Review every line of code for logical consistency, not just syntactic correctness.
 
-### 5.14. Nullable and Undefined Type Assignment Errors
+### 5.13. Using Typia for Type Assertions
 
-When assigning nullable/undefined values to non-nullable types, TypeScript will report compilation errors:
-
-**Common Error Pattern:**
-```typescript
-// COMPILATION ERROR: Cannot assign nullable to non-nullable
-const apiResponse: string | null | undefined = await someApiCall();
-const processedValue: string = apiResponse;
-// Error: Type 'string | null | undefined' is not assignable to type 'string'.
-//        Type 'undefined' is not assignable to type 'string'.
-```
-
-**CRITICAL: Types that are BOTH nullable AND undefinable**
-```typescript
-// When a type can be BOTH null and undefined, you MUST check both:
-const score: number | null | undefined = getTestScore();
-
-// ❌ WRONG: Only checking null - compilation error!
-if (score !== null) {
-  const validScore: number = score; // ERROR! score could still be undefined
-  // Error: Type 'number | undefined' is not assignable to type 'number'
-}
-
-// ❌ WRONG: Only checking undefined - compilation error!
-if (score !== undefined) {
-  const validScore: number = score; // ERROR! score could still be null  
-  // Error: Type 'number | null' is not assignable to type 'number'
-}
-
-// ✅ CORRECT: Check BOTH null AND undefined
-if (score !== null && score !== undefined) {
-  const validScore: number = score; // Safe - score is definitely number
-  TestValidator.predicate("score is passing", validScore >= 70);
-}
-```
-
-**Solution 1: Conditional Checks (When branching logic is needed)**
-```typescript
-// FIX: Use conditional checks when different branches are required
-const apiResponse: string | null | undefined = await someApiCall();
-if (apiResponse === null || apiResponse === undefined) {
-  // Handle missing value case
-  throw new Error("Expected value not found");
-  // OR provide default
-  const processedValue: string = "default";
-} else {
-  // TypeScript narrows apiResponse to string here
-  const processedValue: string = apiResponse; // Now safe
-}
-```
-
-**Solution 2: Type Assertion with typia (RECOMMENDED)**
-
-**IMPORTANT: typia.assert vs typia.assertGuard**
-
-When using non-null assertions with typia, choose the correct function:
+**When to use typia.assert vs typia.assertGuard:**
 
 1. **typia.assert(value!)** - Returns the validated value with proper type
    - Use when you need the return value for assignment
@@ -1662,117 +1853,7 @@ When using non-null assertions with typia, choose the correct function:
    - Use when you need the original variable's type to be narrowed
    - Acts as a type guard that affects the variable itself
 
-```typescript
-// FIX Option 1: Use typia.assert when you need the return value
-const apiResponse: string | null | undefined = await someApiCall();
-const processedValue: string = typia.assert(apiResponse!); // Returns validated value
-
-// FIX Option 2: Use typia.assertGuard to narrow the original variable
-const apiResponse: string | null | undefined = await someApiCall();
-typia.assertGuard(apiResponse!); // No return, but apiResponse is now non-nullable
-const processedValue: string = apiResponse; // Now safe to use directly
-```
-
-**Complex Nested Nullable Properties:**
-```typescript
-// COMPILATION ERROR: Optional chaining doesn't guarantee non-null
-const result: { data?: { items?: string[] } } = await fetchData();
-const items: string[] = result.data?.items;
-// Error: Type 'string[] | undefined' is not assignable to type 'string[]'.
-
-// FIX 1: Conditional checks
-if (result.data && result.data.items) {
-  const items: string[] = result.data.items; // Safe
-}
-
-// FIX 2: Type assertion (cleaner)
-typia.assertGuard<{ data: { items: string[] } }>(result);
-const items: string[] = result.data.items; // Safe
-```
-
-**Complex Real-World Example with Mixed Nullable/Undefinable:**
-```typescript
-// Common in API responses - different fields have different nullable patterns
-interface IUserProfile {
-  id: string;
-  name: string | null;              // Name can be null but not undefined
-  email?: string;                   // Email can be undefined but not null
-  phone: string | null | undefined; // Phone can be BOTH null or undefined
-  metadata?: {
-    lastLogin: Date | null;         // Can be null (never logged in)
-    preferences?: Record<string, any>; // Can be undefined (not set)
-  };
-}
-
-const profile: IUserProfile = await getUserProfile();
-
-// ❌ WRONG: Incomplete null/undefined handling
-if (profile.phone) {
-  // This misses the case where phone is empty string ""
-  sendSMS(profile.phone); 
-}
-
-if (profile.phone !== null) {
-  // ERROR! phone could still be undefined
-  const phoneNumber: string = profile.phone;
-}
-
-// ✅ CORRECT: Comprehensive checks for mixed nullable/undefinable
-if (profile.phone !== null && profile.phone !== undefined && profile.phone.length > 0) {
-  const phoneNumber: string = profile.phone; // Safe - definitely non-empty string
-  sendSMS(phoneNumber);
-}
-
-// ✅ CORRECT: Using typia for complete validation
-try {
-  typia.assert<{
-    id: string;
-    name: string;      // Will throw if null
-    email: string;     // Will throw if undefined
-    phone: string;     // Will throw if null OR undefined
-    metadata: {
-      lastLogin: Date; // Will throw if null
-      preferences: Record<string, any>; // Will throw if undefined
-    };
-  }>(profile);
-  
-  // All values are now guaranteed to be non-null and defined
-  console.log(`User ${profile.name} logged in at ${profile.metadata.lastLogin}`);
-} catch (error) {
-  // Handle incomplete profile data
-  console.log("Profile data is incomplete");
-}
-```
-
-**Array Elements with Nullable Types:**
-```typescript
-// COMPILATION ERROR: find() returns T | undefined
-const users: IUser[] = await getUsers();
-const admin: IUser = users.find(u => u.role === "admin");
-// Error: Type 'IUser | undefined' is not assignable to type 'IUser'.
-
-// FIX 1: Check for undefined
-const maybeAdmin = users.find(u => u.role === "admin");
-if (maybeAdmin) {
-  const admin: IUser = maybeAdmin; // Safe
-}
-
-// FIX 2: Type assertion
-const admin = users.find(u => u.role === "admin");
-typia.assert<IUser>(admin); // Throws if undefined
-// Now admin is guaranteed to be IUser
-```
-
-**Best Practices:**
-1. **Always handle nullable/undefined explicitly** - Never ignore potential null values
-2. **Choose the right typia function**:
-   - Use `typia.assert(value!)` when you need the return value
-   - Use `typia.assertGuard(value!)` when narrowing the original variable
-3. **Use conditional checks only when branching is needed** - When null requires different logic
-4. **Avoid bare non-null assertion (!)** - Always wrap with typia functions for runtime safety
-5. **Consider the business logic** - Sometimes null/undefined indicates a real error condition
-
-**Examples of Correct Usage:**
+**Examples:**
 ```typescript
 // Example 1: Using typia.assert for assignment
 const foundItem: IItem | undefined = items.find(i => i.id === searchId);
@@ -1784,11 +1865,14 @@ const foundCoupon: ICoupon | undefined = coupons.find(c => c.code === code);
 typia.assertGuard(foundCoupon!); // No return, narrows foundCoupon type
 // foundCoupon is now typed as ICoupon (not ICoupon | undefined)
 TestValidator.equals("coupon code", foundCoupon.code, expectedCode);
+
+// Example 3: Complex nested validation
+const result: { data?: { items?: string[] } } = await fetchData();
+typia.assertGuard<{ data: { items: string[] } }>(result);
+const items: string[] = result.data.items; // Safe after assertGuard
 ```
 
-**Rule:** TypeScript's strict null checks prevent runtime errors. Always validate nullable values before assignment. Use `typia.assert` for return values, `typia.assertGuard` for type narrowing, and conditional checks for branching logic.
-
-### 5.15. Handling Non-Existent Type Properties - ZERO TOLERANCE FOR HALLUCINATION
+### 5.14. Handling Non-Existent Type Properties - ZERO TOLERANCE FOR HALLUCINATION
 
 **🚨 CRITICAL ANTI-HALLUCINATION PROTOCOL 🚨**
 
@@ -1905,7 +1989,7 @@ TestValidator.equals("bio", profile.bio, "Software Developer");
 
 **Rule:** Never force usage of non-existent properties. Always work within the constraints of the actual type definitions. If a test scenario cannot be implemented due to missing properties, gracefully skip or modify that scenario rather than attempting workarounds.
 
-### 5.16. Handling Possibly Undefined Properties in Comparisons
+### 5.15. Handling Possibly Undefined Properties in Comparisons
 
 When you encounter the error **"someProperty is possibly undefined"** during comparisons or operations, this occurs when the property type includes `undefined` as a possible value (e.g., `number | undefined`).
 
@@ -2018,7 +2102,6 @@ Your corrected code must:
 - Resolve all TypeScript compilation errors identified in the diagnostics
 - Compile successfully without any errors or warnings
 - Maintain proper TypeScript syntax and type safety
-- **CRITICAL**: Never manually assign `connection.headers.Authorization` - let SDK manage it
 - **🚨 CRITICAL**: EVERY Promise/async function call MUST have `await` - NO EXCEPTIONS
 
 **Promise/Await Verification Checklist - MANDATORY:**
@@ -2030,6 +2113,13 @@ Your corrected code must:
 - [ ] **Return statements with async calls have `await`** - `return await api.functional...`
 - [ ] **`Promise.all()` calls have `await`** - `await Promise.all([...])`
 - [ ] **No floating Promises** - Every Promise must be awaited or returned
+
+**Nullable/Undefined Type Checks - MANDATORY:**
+- [ ] **Every `T | null | undefined`** → Check has `!== null && !== undefined` (BOTH conditions)
+- [ ] **Every `T | undefined`** → Check has `!== undefined` only
+- [ ] **Every `T | null`** → Check has `!== null` only
+- [ ] **NO partial checks** - Never check only null when undefined also exists
+- [ ] **NO wrong null/undefined usage** - Never use null for `T | undefined` types
 
 **🎯 SPECIFIC `TestValidator.error` CHECKLIST:**
 - [ ] **Async callback (`async () => {}`)** → `await TestValidator.error()` REQUIRED
@@ -2061,12 +2151,10 @@ Your corrected code must:
 - Verify the corrected code maintains test coherence
 - **FINAL CHECK**: Scan entire code for missing `await` keywords
 
-**TEST_WRITE Guidelines Compliance:**
-Ensure all corrections follow the guidelines provided in TEST_WRITE prompt.
+**`TEST_WRITE.md` Guidelines Compliance:**
+Ensure all corrections follow the guidelines provided in `TEST_WRITE.md` prompt.
 
-Generate corrected code that achieves successful compilation while maintaining all original requirements and functionality.
-
-### 5.17. TypeScript Type Narrowing Compilation Errors - "No Overlap" Fix
+### 5.16. TypeScript Type Narrowing Compilation Errors - "No Overlap" Fix
 
 **Error Pattern: "This comparison appears to be unintentional because the types 'X' and 'Y' have no overlap"**
 
@@ -2146,4 +2234,185 @@ switch (action) {
 ```
 
 **Rule:** When you see "no overlap" errors, simply remove the impossible comparison. The type is already narrowed - trust TypeScript's analysis.
+
+### 5.17. Optional Chaining with Array Methods Returns Union Types
+
+**Problem: Optional chaining (`?.`) with array methods creates `T | undefined` types**
+
+When using optional chaining with array methods like `includes()`, the result type becomes `boolean | undefined`, which causes compilation errors in contexts expecting pure `boolean` types.
+
+**Error Example:**
+```typescript
+// Property 'tags' might be string[] | undefined
+const hasBlogTag = article.tags?.includes("blog");  // Type: boolean | undefined
+
+// COMPILATION ERROR: Argument of type 'boolean | undefined' is not assignable to parameter of type 'boolean'
+TestValidator.predicate(
+  "article has blog tag",
+  hasBlogTag  // ERROR! Expected boolean, got boolean | undefined
+);
+```
+
+**Why This Happens:**
+- Optional chaining `?.` returns `undefined` if the left side is null/undefined
+- `array?.includes()` returns:
+  - `boolean` if array exists
+  - `undefined` if array is null/undefined
+- Result type: `boolean | undefined`
+
+**Solution 1: Direct Comparison with `=== true` (RECOMMENDED)**
+```typescript
+// ✅ CORRECT: Compare with true to narrow to boolean
+TestValidator.predicate(
+  "article has blog tag",
+  article.tags?.includes("blog") === true  // Always boolean: true or false
+);
+
+// More examples:
+TestValidator.predicate(
+  "user has admin role",
+  user.roles?.includes("admin") === true
+);
+
+TestValidator.predicate(
+  "product is in wishlist",
+  wishlist.items?.includes(productId) === true
+);
+
+TestValidator.predicate(
+  "comment contains keyword",
+  comment.keywords?.includes("important") === true
+);
+```
+
+**Solution 2: Default Value with `??` (Nullish Coalescing)**
+```typescript
+// ✅ CORRECT: Use nullish coalescing to provide default
+TestValidator.predicate(
+  "article has blog tag",
+  article.tags?.includes("blog") ?? false  // If undefined, default to false
+);
+
+// When you want different default behavior:
+const hasTag = article.tags?.includes("blog") ?? false;  // Default false
+const assumeHasTag = article.tags?.includes("blog") ?? true;  // Default true
+```
+
+**Solution 3: Explicit Type Guard**
+```typescript
+// ✅ CORRECT: Check existence first
+if (article.tags) {
+  TestValidator.predicate(
+    "article has blog tag",
+    article.tags.includes("blog")  // Now it's definitely boolean
+  );
+}
+
+// Or with early return:
+if (!article.tags) {
+  return;
+}
+TestValidator.predicate(
+  "article has blog tag",
+  article.tags.includes("blog")  // Safe: tags exists
+);
+```
+
+**Common Array Method Patterns:**
+```typescript
+// All these methods return T | undefined with optional chaining:
+
+// includes() → boolean | undefined
+const hasItem = array?.includes(item) === true;
+
+// some() → boolean | undefined  
+const hasMatch = array?.some(x => x > 10) === true;
+
+// every() → boolean | undefined
+const allValid = array?.every(x => x.isValid) === true;
+
+// startsWith() / endsWith() → boolean | undefined
+const isPrefix = text?.startsWith("http://") === true;
+const isSuffix = filename?.endsWith(".pdf") === true;
+
+// Array.isArray() with optional chaining
+const isArrayType = Array.isArray(data?.items) === true;
+```
+
+**Complex Examples:**
+```typescript
+// Nested optional chaining
+TestValidator.predicate(
+  "user has premium subscription",
+  user.account?.subscriptions?.includes("premium") === true
+);
+
+// Multiple conditions
+TestValidator.predicate(
+  "valid admin user",
+  user.isActive === true && user.roles?.includes("admin") === true
+);
+
+// With array methods
+const hasValidItems = order.items?.some(item => 
+  item.quantity > 0 && item.price > 0
+) === true;
+
+TestValidator.predicate("order has valid items", hasValidItems);
+
+// String methods
+TestValidator.predicate(
+  "email is corporate",
+  user.email?.endsWith("@company.com") === true
+);
+```
+
+**When NOT to Use `=== true`:**
+```typescript
+// ❌ UNNECESSARY: When the value is already guaranteed boolean
+const isActive: boolean = user.isActive;
+TestValidator.predicate(
+  "user is active",
+  isActive  // No need for === true
+);
+
+// ❌ REDUNDANT: After null check
+if (article.tags) {
+  TestValidator.predicate(
+    "has tags",
+    article.tags.includes("blog")  // Already boolean
+  );
+}
+```
+
+**Best Practices:**
+1. **Use `=== true` immediately** when optional chaining returns `boolean | undefined`
+2. **Don't store intermediate values** - apply the fix inline
+3. **Be consistent** - always handle optional chaining the same way
+4. **Consider the business logic** - sometimes `undefined` should be treated differently than `false`
+
+**Quick Reference:**
+- `array?.method()` → returns `T | undefined`
+- `array?.method() === true` → returns `boolean` (true or false)
+- `array?.method() ?? false` → returns `T` with default
+- Check existence first → avoids the issue entirely
+
+**Rule:** When using optional chaining with methods that return boolean, always compare with `=== true` to ensure the result is a pure boolean type, not `boolean | undefined`.
+
+## 7. Final Verification Checklist
+
+**🚨 CRITICAL FINAL VERIFICATION - ZERO TOLERANCE 🚨**
+
+Before submitting corrected code, MANDATORY verification:
+- [ ] **ALL prohibitions from `TEST_WRITE.md` checked** - ZERO violations
+- [ ] **Step 3-4 revise COMPLETED** - Both review and final performed
+- [ ] **ALL async calls have await** - Every single Promise awaited
+- [ ] **TestValidator.error await rules followed** - async callback = await
+
+**REMEMBER:**
+- `TEST_WRITE.md` prohibitions are ABSOLUTE - NO EXCEPTIONS
+- Compilation success through scenario rewriting is MANDATORY
+- The revise step is NOT OPTIONAL - it MUST be performed
+
+Generate corrected code that achieves successful compilation while maintaining all original requirements and functionality.
 
