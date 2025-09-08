@@ -1,14 +1,11 @@
-import { IAutoBePlaygroundHeader, IAutoBeRpcService } from "@autobe/interface";
 import {
   AutoBeAgentProvider,
   AutoBeChatMain,
-  AutoBeListener,
-  IAutoBeEventGroup,
-  IAutoBeUploadConfig,
+  AutoBeServiceFactory,
+  createAutoBeConfigFields,
 } from "@autobe/ui";
 import { useMediaQuery } from "@autobe/ui/hooks";
 import { AppBar, Toolbar, Typography } from "@mui/material";
-import { ILlmSchema } from "@samchon/openapi";
 import { useState } from "react";
 
 export function AutoBePlaygroundChatMovie(
@@ -19,6 +16,17 @@ export function AutoBePlaygroundChatMovie(
   //----
   // STATES
   const [, setError] = useState<Error | null>(null);
+
+  // Configuration fields for AutoBE Playground (adds serverUrl to defaults)
+  const configFields = createAutoBeConfigFields({
+    key: "serverUrl",
+    label: "Server URL",
+    type: "text",
+    storageKey: "autobe_server_url",
+    placeholder: "http://127.0.0.1:5890",
+    default: "http://127.0.0.1:5890",
+    required: true,
+  });
 
   //----
   // RENDERERS
@@ -52,18 +60,13 @@ export function AutoBePlaygroundChatMovie(
           overflow: "hidden",
         }}
       >
-        <AutoBeAgentProvider
-          listener={props.listener}
-          service={props.service}
-          header={props.header}
-        >
+        <AutoBeAgentProvider serviceFactory={props.serviceFactory}>
           <AutoBeChatMain
+            isUnusedConfig={props.isUnusedConfig ?? false}
             isMobile={isMobile}
-            conversate={async (contents) => {
-              await props.service.conversate(contents);
-            }}
             setError={setError}
-            uploadConfig={props.uploadConfig}
+            configFields={configFields}
+            requiredFields={["serverUrl"]} // Playground requires serverUrl
             style={{
               backgroundColor: "lightblue",
             }}
@@ -74,14 +77,9 @@ export function AutoBePlaygroundChatMovie(
   );
 }
 export namespace AutoBePlaygroundChatMovie {
-  export interface IProps extends IContext {
+  export interface IProps {
     title?: string;
-  }
-  export interface IContext {
-    header: IAutoBePlaygroundHeader<ILlmSchema.Model>;
-    service: IAutoBeRpcService;
-    listener: AutoBeListener;
-    eventGroups?: IAutoBeEventGroup[];
-    uploadConfig?: IAutoBeUploadConfig;
+    serviceFactory: AutoBeServiceFactory;
+    isUnusedConfig?: boolean;
   }
 }

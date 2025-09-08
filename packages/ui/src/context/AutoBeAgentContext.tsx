@@ -4,65 +4,152 @@ import {
   IAutoBeTokenUsageJson,
 } from "@autobe/interface";
 import { ILlmSchema } from "@samchon/openapi";
-import { ReactNode, createContext, useContext, useState } from "react";
-import { useEffect } from "react";
+import {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
 import {
   AutoBeListener,
   AutoBeListenerState,
   IAutoBeEventGroup,
 } from "../structure";
+import { IAutoBeConfig } from "../types/config";
 
-interface AutoBeAgentContextType {
-  eventGroups: IAutoBeEventGroup[];
-  tokenUsage: IAutoBeTokenUsageJson | null;
-  state: AutoBeListenerState;
-  header: IAutoBePlaygroundHeader<ILlmSchema.Model>;
+export interface IAutoBeServiceData {
   service: IAutoBeRpcService;
   listener: AutoBeListener;
+  header: IAutoBePlaygroundHeader<ILlmSchema.Model>;
+}
+
+export type AutoBeServiceFactory = (
+  config: IAutoBeConfig,
+) => Promise<IAutoBeServiceData>;
+
+export type AutoBeConnectionStatus =
+  | "disconnected" // 연결되지 않음
+  | "connecting" // 연결 중
+  | "connected"; // 연결 완료 및 활성 상태
+
+interface AutoBeAgentContextType {
+  // Service state
+  connectionStatus: AutoBeConnectionStatus;
+
+  // Service data (available when ready)
+  eventGroups: IAutoBeEventGroup[];
+  tokenUsage: IAutoBeTokenUsageJson | null;
+  state: AutoBeListenerState | null;
+  header: IAutoBePlaygroundHeader<ILlmSchema.Model> | null;
+  service: IAutoBeRpcService | null;
+  listener: AutoBeListener | null;
+
+  // Service management
+  getAutoBeService: (config?: IAutoBeConfig) => Promise<IAutoBeServiceData>;
+  resetService: () => void;
 }
 
 const AutoBeAgentContext = createContext<AutoBeAgentContextType | null>(null);
 
 export function AutoBeAgentProvider({
   children,
-  listener,
-  service,
-  header,
+  serviceFactory,
 }: {
-  listener: AutoBeListener;
-  service: IAutoBeRpcService;
-  header: IAutoBePlaygroundHeader<ILlmSchema.Model>;
+  serviceFactory?: AutoBeServiceFactory;
   children: ReactNode;
 }) {
+  // Service state
+  const [connectionStatus, setConnectionStatus] =
+    useState<AutoBeConnectionStatus>("disconnected");
+
+  // Service data
   const [tokenUsage, setTokenUsage] = useState<IAutoBeTokenUsageJson | null>(
     null,
   );
   const [eventGroups, setEventGroups] = useState<IAutoBeEventGroup[]>([]);
 
-  useEffect(() => {
-    listener.on(async (e) => {
-      service
-        .getTokenUsage()
-        .then(setTokenUsage)
-        .catch(() => {});
-      setEventGroups(e);
-    });
-    service
-      .getTokenUsage()
-      .then(setTokenUsage)
-      .catch(() => {});
+  // Context-scoped service instance (contains service, listener, header)
+  const [serviceInstance, setServiceInstance] =
+    useState<IAutoBeServiceData | null>(null);
+
+  // Context-scoped service getter
+  const getAutoBeService = useCallback(
+    async (
+      config: IAutoBeConfig = {} as IAutoBeConfig,
+    ): Promise<IAutoBeServiceData> => {
+      // Return existing instance if available
+      if (serviceInstance && connectionStatus === "connected") {
+        return serviceInstance;
+      }
+
+      // Prevent multiple concurrent creations
+      if (connectionStatus === "connecting") {
+        throw new Error("Service is already connecting. Please wait.");
+      }
+
+      if (!serviceFactory) {
+        throw new Error("No service factory provided. Cannot create service.");
+      }
+
+      try {
+        setConnectionStatus("connecting");
+
+        // Create new service instance
+        const newServiceData = await serviceFactory(config);
+        setServiceInstance(newServiceData);
+        setConnectionStatus("connected");
+
+        // Set up event listeners
+        newServiceData.listener.on(async (e) => {
+          newServiceData.service
+            .getTokenUsage()
+            .then(setTokenUsage)
+            .catch(() => {});
+          setEventGroups(e);
+        });
+
+        // Get initial token usage
+        newServiceData.service
+          .getTokenUsage()
+          .then(setTokenUsage)
+          .catch(() => {});
+
+        return newServiceData;
+      } catch (error) {
+        setConnectionStatus("disconnected");
+        throw error;
+      }
+    },
+    [serviceFactory, serviceInstance, connectionStatus],
+  );
+
+  // Reset service (for reconnection, etc.)
+  const resetService = useCallback(() => {
+    setServiceInstance(null);
+    setConnectionStatus("disconnected");
+    setEventGroups([]);
+    setTokenUsage(null);
   }, []);
 
   return (
     <AutoBeAgentContext.Provider
       value={{
+        // Service state
+        connectionStatus,
+
+        // Service data
         eventGroups,
         tokenUsage,
-        state: listener.getState(),
-        header,
-        service,
-        listener,
+        state: serviceInstance?.listener?.getState() ?? null,
+        header: serviceInstance?.header ?? null,
+        service: serviceInstance?.service ?? null,
+        listener: serviceInstance?.listener ?? null,
+
+        // Service management
+        getAutoBeService,
+        resetService,
       }}
     >
       {children}
