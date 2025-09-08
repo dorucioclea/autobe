@@ -1,10 +1,14 @@
 import {
   AutoBeAgentProvider,
+  AutoBeAgentSessionListProvider,
   AutoBeChatMain,
+  AutoBeChatSidebar,
   AutoBeServiceFactory,
+  IAutoBeAgentSessionStorageStrategy,
+  SearchParamsContext,
   createAutoBeConfigFields,
 } from "@autobe/ui";
-import { useMediaQuery } from "@autobe/ui/hooks";
+import { useMediaQuery, useSearchParams } from "@autobe/ui/hooks";
 import { AppBar, Toolbar, Typography } from "@mui/material";
 import { useState } from "react";
 
@@ -16,6 +20,16 @@ export function AutoBePlaygroundChatMovie(
   //----
   // STATES
   const [, setError] = useState<Error | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Use URL parameter for conversation ID - enables bookmark/share support
+  const activeConversationId =
+    searchParams.getSearchParam("session-id") ?? null;
+
+  const [storageStrategy] = useState<IAutoBeAgentSessionStorageStrategy>(
+    props.storageStrategyFactory(),
+  );
 
   // Configuration fields for AutoBE Playground (adds serverUrl to defaults)
   const configFields = createAutoBeConfigFields({
@@ -60,18 +74,53 @@ export function AutoBePlaygroundChatMovie(
           overflow: "hidden",
         }}
       >
-        <AutoBeAgentProvider serviceFactory={props.serviceFactory}>
-          <AutoBeChatMain
-            isUnusedConfig={props.isUnusedConfig ?? false}
-            isMobile={isMobile}
-            setError={setError}
-            configFields={configFields}
-            requiredFields={["serverUrl"]} // Playground requires serverUrl
-            style={{
-              backgroundColor: "lightblue",
-            }}
-          />
-        </AutoBeAgentProvider>
+        <SearchParamsContext
+          value={new URLSearchParams(window.location.search)}
+        >
+          <AutoBeAgentSessionListProvider storageStrategy={storageStrategy}>
+            <AutoBeAgentProvider
+              storageStrategy={storageStrategy}
+              serviceFactory={props.serviceFactory}
+            >
+              {/* Flex container for sidebar and main content */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                <AutoBeChatSidebar
+                  storageStrategy={storageStrategy}
+                  isCollapsed={isMobile ? false : sidebarCollapsed}
+                  onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  activeSessionId={
+                    typeof activeConversationId === "string"
+                      ? activeConversationId
+                      : (activeConversationId?.at(0) ?? undefined)
+                  }
+                  onSessionSelect={(id) => {
+                    searchParams.setSearchParam("session-id", id);
+                  }}
+                  onDeleteSession={(id) => {
+                    storageStrategy.deleteSession({ id });
+                  }}
+                />
+                <AutoBeChatMain
+                  isUnusedConfig={props.isUnusedConfig ?? false}
+                  isMobile={isMobile}
+                  setError={setError}
+                  configFields={configFields}
+                  requiredFields={["serverUrl"]} // Playground requires serverUrl
+                  style={{
+                    backgroundColor: "lightblue",
+                  }}
+                />
+              </div>
+            </AutoBeAgentProvider>
+          </AutoBeAgentSessionListProvider>
+        </SearchParamsContext>
       </div>
     </div>
   );
@@ -81,5 +130,6 @@ export namespace AutoBePlaygroundChatMovie {
     title?: string;
     serviceFactory: AutoBeServiceFactory;
     isUnusedConfig?: boolean;
+    storageStrategyFactory: () => IAutoBeAgentSessionStorageStrategy;
   }
 }
