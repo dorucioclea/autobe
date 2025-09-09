@@ -81,6 +81,7 @@ export class AutoBeAgentSessionStorageStrategy
       tokenUsage: session.token_usage,
       createdAt: new Date(session.created_at),
       updatedAt: new Date(session.completed_at ?? session.created_at),
+      completedAt: session.completed_at,
       events: [],
     }));
   }

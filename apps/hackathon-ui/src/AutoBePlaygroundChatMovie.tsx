@@ -2,7 +2,6 @@ import {
   AutoBeAgentProvider,
   AutoBeAgentSessionListProvider,
   AutoBeChatMain,
-  AutoBeChatSidebar,
   AutoBeServiceFactory,
   IAutoBeAgentSessionStorageStrategy,
   IConfigField,
@@ -19,6 +18,8 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 
+import AutoBeChatSidebar from "./components/AutoBeChatSidebar";
+
 export function AutoBePlaygroundChatMovie(
   props: AutoBePlaygroundChatMovie.IProps,
 ) {
@@ -32,9 +33,16 @@ export function AutoBePlaygroundChatMovie(
     props.storageStrategyFactory(),
   );
   // Configuration fields for AutoBE Playground (adds serverUrl to defaults)
-  const configFields = createAutoBeConfigFields().filter(
-    props.configFilter ?? (() => true),
-  );
+  const configFields = createAutoBeConfigFields()
+    .filter(props.configFilter ?? (() => true))
+    .map((v) => ({
+      ...v,
+      suggestions: [
+        "openai/gpt-4.1",
+        "openai/gpt-4.1-mini",
+        "qwen/qwen3-235b-a22b-2507",
+      ],
+    }));
   const { searchParams, setSearchParams } = useSearchParams();
 
   /**
