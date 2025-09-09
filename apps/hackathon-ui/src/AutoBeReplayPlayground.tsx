@@ -9,7 +9,7 @@ import { useRef } from "react";
 import { AutoBePlaygroundChatMovie } from "./AutoBePlaygroundChatMovie";
 import { HACKATHON_CODE } from "./constant";
 import { useAuthorizationToken } from "./hooks/useAuthorizationToken";
-import { AutoBeAgentSessionStorageMockStrategy } from "./strategy/AutoBeAgentSessionStorageMockStrategy";
+import { AutoBeAgentSessionStorageStrategy } from "./strategy/AutoBeAgentSessionStorageStrategy";
 
 export function AutoBeReplayPlayground() {
   const { getToken } = useAuthorizationToken();
@@ -76,9 +76,7 @@ export function AutoBeReplayPlayground() {
         <AutoBePlaygroundChatMovie
           title="AutoBE Playground"
           serviceFactory={serviceFactory}
-          storageStrategyFactory={() =>
-            new AutoBeAgentSessionStorageMockStrategy()
-          }
+          storageStrategyFactory={() => new AutoBeAgentSessionStorageStrategy()}
           configFilter={(config) => config.key === "aiModel"}
           isReplay={true}
         />

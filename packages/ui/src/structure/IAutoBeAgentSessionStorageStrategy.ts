@@ -33,6 +33,9 @@ export interface IAutoBeAgentSessionStorageStrategy {
   ) => Promise<IAutoBeAgentSession>;
   getSessionList: () => Promise<IAutoBeAgentSession[]>;
   deleteSession: (props: Pick<IAutoBeAgentSession, "id">) => Promise<void>;
+  editSessionTitle: (
+    props: Pick<IAutoBeAgentSession, "id" | "title">,
+  ) => Promise<void>;
 }
 
 export const AutoBeAgentSession_INIT = {

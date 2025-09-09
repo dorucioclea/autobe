@@ -7,6 +7,7 @@ import {
   IAutoBeAgentSessionStorageStrategy,
   IConfigField,
   createAutoBeConfigFields,
+  useSearchParams,
 } from "@autobe/ui";
 import { useMediaQuery } from "@autobe/ui/hooks";
 import { AppBar, Toolbar, Typography } from "@mui/material";
@@ -28,6 +29,7 @@ export function AutoBePlaygroundChatMovie(
   const configFields = createAutoBeConfigFields().filter(
     props.configFilter ?? (() => true),
   );
+  const { searchParams, setSearchParams } = useSearchParams();
 
   //----
   // RENDERERS
@@ -46,7 +48,14 @@ export function AutoBePlaygroundChatMovie(
       }}
     >
       <AppBar position="relative" component="div">
-        <Toolbar>
+        <Toolbar
+          style={{
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            window.location.href = "/";
+          }}
+        >
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {props.title ?? "AutoBE Playground"}
           </Typography>
@@ -82,6 +91,13 @@ export function AutoBePlaygroundChatMovie(
                 onSessionSelect={() => {}}
                 onDeleteSession={(id) => {
                   storageStrategy.deleteSession({ id });
+                  if (searchParams.get("session-id") === id) {
+                    setSearchParams((sp) => {
+                      const newSp = new URLSearchParams(sp);
+                      newSp.delete("session-id");
+                      return newSp;
+                    });
+                  }
                 }}
               />
               <AutoBeChatMain
