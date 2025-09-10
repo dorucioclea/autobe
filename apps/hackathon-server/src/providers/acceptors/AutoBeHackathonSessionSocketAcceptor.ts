@@ -44,6 +44,7 @@ export namespace AutoBeHackathonSessionSocketAcceptor {
           },
         );
       if (record.enabled === true) break;
+      await sleep_for(2_500);
     }
     void props.acceptor
       .getDriver()
