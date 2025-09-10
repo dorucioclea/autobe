@@ -95,8 +95,8 @@ export function AutoBePlaygroundChatMovie(
                 isCollapsed={isMobile ? false : sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
                 onSessionSelect={() => {}}
-                onDeleteSession={(id) => {
-                  storageStrategy.deleteSession({ id });
+                onDeleteSession={async (id) => {
+                  await storageStrategy.deleteSession({ id });
                   if (searchParams.get("session-id") === id) {
                     setSearchParams((sp) => {
                       const newSp = new URLSearchParams(sp);

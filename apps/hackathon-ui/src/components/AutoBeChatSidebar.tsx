@@ -251,7 +251,7 @@ export const AutoBeChatSidebar = (props: IAutoBeChatSidebarProps) => {
                   onSelect={handleOnSessionSelect}
                   onDelete={async () => {
                     await props.onDeleteSession?.(session.id);
-                    refreshSessionList();
+                    await refreshSessionList();
                     if (session.id === currentSessionId) {
                       setSearchParams((sp) => {
                         const newSp = new URLSearchParams(sp);
