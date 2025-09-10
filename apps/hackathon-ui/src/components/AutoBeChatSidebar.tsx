@@ -1,4 +1,4 @@
-import { functional } from "@autobe/hackathon-api";
+import { HttpError, functional } from "@autobe/hackathon-api";
 import {
   ActionButtonGroup,
   CompactSessionList,
@@ -8,6 +8,7 @@ import {
   useSearchParams,
 } from "@autobe/ui";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { HACKATHON_CODE } from "../constant";
 import { useAuthorizationToken } from "../hooks/useAuthorizationToken";
@@ -78,8 +79,6 @@ export const AutoBeChatSidebar = (props: IAutoBeChatSidebarProps) => {
       <div
         style={{
           padding: props.isCollapsed ? "1rem 0.75rem" : "1.5rem 1.25rem 1rem",
-          borderBottom: "1px solid #f3f4f6",
-          backgroundColor: "#fafafa",
           transition: "padding 0.3s ease",
         }}
       >
@@ -155,7 +154,6 @@ export const AutoBeChatSidebar = (props: IAutoBeChatSidebarProps) => {
         <div
           style={{
             padding: "0 1.25rem 1rem",
-            borderBottom: "1px solid #f3f4f6",
           }}
         >
           <button
@@ -164,34 +162,31 @@ export const AutoBeChatSidebar = (props: IAutoBeChatSidebarProps) => {
               window.location.href = "/index.html";
             }}
             style={{
-              background: "#f9fafb",
-              border: "1px solid #e5e7eb",
+              background: "transparent",
+              border: "none",
               borderRadius: "0.375rem",
-              padding: "0.5rem 1rem",
+              padding: "0.5rem 0.75rem",
               fontSize: "0.875rem",
               fontWeight: "500",
-              color: "#374151",
+              color: "#9ca3af",
               cursor: "pointer",
               transition: "all 0.2s ease",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-              width: "100%",
+              width: "auto",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
+              justifyContent: "flex-start",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "#f3f4f6";
-              e.currentTarget.style.borderColor = "#d1d5db";
               e.currentTarget.style.color = "#1f2937";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#f9fafb";
-              e.currentTarget.style.borderColor = "#e5e7eb";
-              e.currentTarget.style.color = "#374151";
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "#9ca3af";
             }}
             title="Start new conversation"
           >
-            New Conversation
+            + New Conversation
           </button>
         </div>
       )}
@@ -276,19 +271,26 @@ export const AutoBeChatSidebar = (props: IAutoBeChatSidebarProps) => {
                   onSubmitReview={async (sessionId, link) => {
                     const { getToken } = useAuthorizationToken();
                     const token = getToken();
-                    await functional.autobe.hackathon.participants.sessions.review(
-                      {
-                        host: import.meta.env.VITE_API_BASE_URL,
-                        headers: {
-                          Authorization: `Bearer ${token.token.access}`,
+                    await functional.autobe.hackathon.participants.sessions
+                      .review(
+                        {
+                          host: import.meta.env.VITE_API_BASE_URL,
+                          headers: {
+                            Authorization: `Bearer ${token.token.access}`,
+                          },
                         },
-                      },
-                      HACKATHON_CODE,
-                      sessionId,
-                      {
-                        review_article_url: link,
-                      },
-                    );
+                        HACKATHON_CODE,
+                        sessionId,
+                        {
+                          review_article_url: link,
+                        },
+                      )
+                      .catch((e) => {
+                        if (e instanceof HttpError && e.status === 400) {
+                          toast.error("Invalid review article URL");
+                        }
+                        throw e;
+                      });
                     refreshSessionList();
                   }}
                 />

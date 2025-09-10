@@ -39,6 +39,7 @@
     "@samchon/openapi": "catalog:samchon",
     "react": "catalog:ui",
     "react-dom": "catalog:ui",
+    "sonner": "^2.0.7",
     "typia": "catalog:samchon",
     "uuid": "^11.1.0"
   },

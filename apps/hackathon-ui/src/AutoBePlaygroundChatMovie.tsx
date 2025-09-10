@@ -11,6 +11,7 @@ import {
 import { useMediaQuery } from "@autobe/ui/hooks";
 import { AppBar, Toolbar, Typography } from "@mui/material";
 import { useState } from "react";
+import { Toaster } from "sonner";
 
 import AutoBeChatSidebar from "./components/AutoBeChatSidebar";
 
@@ -58,6 +59,7 @@ export function AutoBePlaygroundChatMovie(
         position: "relative",
       }}
     >
+      <Toaster position="top-center" richColors />
       <AppBar position="relative" component="div">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
