@@ -290,6 +290,12 @@ export const AutoBeChatSidebar = (props: IAutoBeChatSidebarProps) => {
                         if (e instanceof HttpError && e.status === 400) {
                           toast.error("Invalid review article URL");
                         }
+                        if (e instanceof HttpError && e.status === 403) {
+                          window.location.href = "/login";
+                        }
+                        if (e instanceof HttpError && e.status === 422) {
+                          toast.error(JSON.parse(e.message).message);
+                        }
                         throw e;
                       });
                     refreshSessionList();
@@ -420,7 +426,6 @@ export const SessionListItem = (props: IConversationListItemProps) => {
   const [editingTitle, setEditingTitle] = useState(session.title ?? "");
   const [showReviewInput, setShowReviewInput] = useState(false);
   const [reviewLink, setReviewLink] = useState("");
-  const lastMessage = session.history.at(-1);
 
   const handleSaveTitle = () => {
     const trimmedTitle = editingTitle.trim();
@@ -574,11 +579,9 @@ export const SessionListItem = (props: IConversationListItemProps) => {
       <div style={STYLES.metadata}>
         <span>
           {(session as unknown as { phase: AutoBePhase }).phase ??
-            "not started"}
+            "not started"}{" "}
+          - {(session as unknown as { model: string }).model}
         </span>
-        {session.history.length > 0 && (
-          <span>{session.history.length} messages</span>
-        )}
       </div>
 
       {/* Review input field - only show for incomplete sessions */}
