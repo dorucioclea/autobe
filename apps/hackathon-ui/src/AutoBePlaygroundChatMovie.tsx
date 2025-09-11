@@ -43,6 +43,8 @@ export function AutoBePlaygroundChatMovie(
     })) satisfies IConfigField[];
   const { searchParams, setSearchParams } = useSearchParams();
 
+  const currentSessionId = searchParams.get("session-id");
+  const activeConfigFields = currentSessionId == null ? configFields : [];
   //----
   // RENDERERS
   //----
@@ -110,7 +112,7 @@ export function AutoBePlaygroundChatMovie(
                 isUnusedConfig={props.isUnusedConfig ?? false}
                 isMobile={isMobile}
                 setError={setError}
-                configFields={configFields}
+                configFields={activeConfigFields}
                 style={{
                   backgroundColor: "lightblue",
                 }}

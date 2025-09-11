@@ -274,9 +274,11 @@ export const AutoBeChatMain = (props: IAutoBeChatMainProps) => {
             `}
           </style>
 
-          {props.isUnusedConfig === false && (
-            <AutoBeConfigButton fields={props.configFields || []} />
-          )}
+          {props.isUnusedConfig === false &&
+            props.configFields?.length != null &&
+            props.configFields.length > 0 && (
+              <AutoBeConfigButton fields={props.configFields || []} />
+            )}
           <AutoBeStatusButton />
         </div>
         <div
