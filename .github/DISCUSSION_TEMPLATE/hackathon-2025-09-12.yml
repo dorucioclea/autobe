@@ -11,6 +11,16 @@ body:
         - **Overall Review** should be **200+ words**.
 
   - type: textarea
+    id: Conversation links
+    attributes:
+      label: "Conversation Links"
+      description: |
+        - Please provide the links to the conversation you reviewed.
+      placeholder: "https://...."
+    validations:
+      required: true
+
+  - type: textarea
     id: requirements
     attributes:
       label: "1. Requirements Analysis"
