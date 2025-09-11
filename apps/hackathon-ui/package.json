@@ -7,6 +7,7 @@
   "typings": "./lib/index.d.ts",
   "scripts": {
     "build": "vite build --mode qa",
+    "build:prod": "vite build --mode production",
     "dev": "vite --host --mode qa",
     "prepack": "pnpm run build"
   },
