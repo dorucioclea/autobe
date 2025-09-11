@@ -18,7 +18,7 @@ body:
         - Were the requirements understood and prioritized clearly?
         - Are user roles and permissions designed realistically?
         - Were non-functional needs (performance/security) considered?
-        (Max 100 words per bullet)
+        (Max 200 words)
       placeholder: "- Priority definition…\n- RBAC/permission scope…\n- Performance/security concerns…"
     validations:
       required: true
