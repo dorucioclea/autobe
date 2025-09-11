@@ -1,4 +1,4 @@
-import hApi from "@autobe/hackathon-api";
+import hApi, { HttpError } from "@autobe/hackathon-api";
 import { AutoBeHackathonModel } from "@autobe/interface";
 import {
   AutoBeListener,
@@ -6,6 +6,7 @@ import {
   SearchParamsProvider,
 } from "@autobe/ui";
 import { useRef } from "react";
+import { toast } from "sonner";
 
 import { AutoBePlaygroundChatMovie } from "./AutoBePlaygroundChatMovie";
 import { HACKATHON_CODE } from "./constant";
@@ -39,6 +40,13 @@ export function AutoBePlaygroundApplication() {
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
       };
+      const errorHandler = (e: unknown) => {
+        if (e instanceof HttpError && e.status === 422) {
+          const message = JSON.parse(e.message).message;
+          toast.error(message);
+        }
+        throw e;
+      };
 
       if (config.sessionId != null && typeof config.sessionId === "string") {
         return {
@@ -49,20 +57,19 @@ export function AutoBePlaygroundApplication() {
               config.sessionId,
               listener.getListener(),
             )
-            .then((v) => v.driver),
+            .then((v) => v.driver)
+            .catch(errorHandler),
           sessionId: config.sessionId,
         };
       }
 
       const session =
-        await hApi.functional.autobe.hackathon.participants.sessions.create(
-          connection,
-          HACKATHON_CODE,
-          {
+        await hApi.functional.autobe.hackathon.participants.sessions
+          .create(connection, HACKATHON_CODE, {
             model: connection.headers.model as AutoBeHackathonModel,
             timezone: connection.headers.timezone,
-          },
-        );
+          })
+          .catch(errorHandler);
 
       return {
         service: await hApi.functional.autobe.hackathon.participants.sessions
@@ -72,7 +79,8 @@ export function AutoBePlaygroundApplication() {
             session.id,
             listener.getListener(),
           )
-          .then((v) => v.driver),
+          .then((v) => v.driver)
+          .catch(errorHandler),
         sessionId: session.id,
       };
     })();
