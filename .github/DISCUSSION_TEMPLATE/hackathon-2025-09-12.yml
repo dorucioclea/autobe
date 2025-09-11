@@ -6,9 +6,9 @@ body:
     attributes:
       value: |
         ✍️ **Writing Guideline**
-        - Each bullet point should be answered in **max 100 words**.
+        - Each bullet point should be answered in **max 200 words**.
         - Avoid yes/no answers; be concise but concrete.
-        - **Overall Review** should be **100+ words**.
+        - **Overall Review** should be **200+ words**.
 
   - type: textarea
     id: requirements
