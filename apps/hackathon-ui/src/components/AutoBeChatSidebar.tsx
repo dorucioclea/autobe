@@ -1,4 +1,5 @@
 import { HttpError, functional } from "@autobe/hackathon-api";
+import { AutoBePhase } from "@autobe/interface";
 import {
   ActionButtonGroup,
   CompactSessionList,
@@ -572,14 +573,8 @@ export const SessionListItem = (props: IConversationListItemProps) => {
       {/* Conversation metadata */}
       <div style={STYLES.metadata}>
         <span>
-          {session.history.length > 0 && lastMessage !== undefined
-            ? new Date(lastMessage.created_at).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "No messages"}
+          {(session as unknown as { phase: AutoBePhase }).phase ??
+            "not started"}
         </span>
         {session.history.length > 0 && (
           <span>{session.history.length} messages</span>

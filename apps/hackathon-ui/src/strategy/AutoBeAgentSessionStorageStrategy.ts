@@ -83,6 +83,7 @@ export class AutoBeAgentSessionStorageStrategy
       updatedAt: new Date(session.completed_at ?? session.created_at),
       completedAt: session.completed_at,
       events: [],
+      phase: session.phase,
     }));
   }
   async deleteSession(props: Pick<IAutoBeAgentSession, "id">): Promise<void> {
