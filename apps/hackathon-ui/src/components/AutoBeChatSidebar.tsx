@@ -509,9 +509,8 @@ export const SessionListItem = (props: IConversationListItemProps) => {
         {showActions && (
           <div
             style={{
-              visibility: isHovered ? "visible" : "hidden",
-              opacity: isHovered ? 1 : 0,
-              transition: "opacity 0.2s ease",
+              visibility: "visible",
+              opacity: 1,
               display: "flex",
               gap: "0.375rem",
             }}
@@ -530,7 +529,14 @@ export const SessionListItem = (props: IConversationListItemProps) => {
                   e.stopPropagation();
                   setShowReviewInput(true);
                 }}
-                style={STYLES.reviewButton}
+                style={{
+                  ...STYLES.reviewButton,
+                  width: "auto",
+                  height: "auto",
+                  padding: "0.25rem 0.5rem",
+                  fontSize: "0.75rem",
+                  fontWeight: "500",
+                }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = "#eff6ff";
                   e.currentTarget.style.color = "#3b82f6";
@@ -548,18 +554,7 @@ export const SessionListItem = (props: IConversationListItemProps) => {
                 }}
                 title="Submit Review"
               >
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15,3 21,3 21,9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
+                Review
               </button>
             )}
           </div>
