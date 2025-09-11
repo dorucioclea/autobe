@@ -42,6 +42,7 @@ export const archive_interface = async (
     await orchestrate.interface(agent.getContext())({
       reason: "Step to the interface designing after DB schema generation",
     });
+  console.log("The interface result history", result);
   if (result.type !== "interface")
     throw new Error("History type must be interface.");
 

@@ -43,6 +43,7 @@ export const archive_test = async (
     await orchestrateTest(agent.getContext())({
       reason: "Validate agent test",
     });
+  console.log("The test result history", result);
   if (result.type !== "test") throw new Error("Failed to generate test.");
 
   // REPORT RESULT
