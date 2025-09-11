@@ -10,7 +10,7 @@ body:
         - Avoid yes/no answers; be concise but concrete.
         - **Overall Review** should be **200+ words**.
 
-  - type: textarea
+  - type: input
     id: conversation_links
     attributes:
       label: "Conversation Links"
