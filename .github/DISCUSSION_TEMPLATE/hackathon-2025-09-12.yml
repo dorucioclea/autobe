@@ -13,7 +13,7 @@ body:
   - type: textarea
     id: requirements
     attributes:
-      label: "## Requirements Analysis"
+      label: "## 1. Requirements Analysis"
       description: |
         - Were the requirements understood and prioritized clearly?
         - Are user roles and permissions designed realistically?
@@ -26,7 +26,7 @@ body:
   - type: textarea
     id: database
     attributes:
-      label: "## Database Design"
+      label: "## 2. Database Design"
       description: |
         - Are table relationships logical for the intended service?
         - Is unnecessary duplication or over-engineering avoided?
@@ -38,7 +38,7 @@ body:
   - type: textarea
     id: api
     attributes:
-      label: "## API Design"
+      label: "## 3. API Design"
       description: |
         - Do the APIs follow RESTful principles (methods/URIs/status codes)?
         - Are formats and documentation consistent enough to be useful?
@@ -50,7 +50,7 @@ body:
   - type: textarea
     id: tests
     attributes:
-      label: "## Test Code"
+      label: "## 4. Test Code"
       description: |
         - Do tests verify key business logic?
         - Are both normal and error cases covered?
@@ -62,7 +62,7 @@ body:
   - type: textarea
     id: implementation
     attributes:
-      label: "## Implementation Code"
+      label: "## 5. Implementation Code"
       description: |
         - Is the code readable and organized into a clear structure?
         - Are basic performance and security concerns addressed?
@@ -86,7 +86,7 @@ body:
   - type: textarea
     id: overall
     attributes:
-      label: "## Overall Review"
+      label: "## 6. Overall Review"
       description: |
         - What are the main strengths and weaknesses of AutoBE?
         - What level does the generated code quality correspond to?
