@@ -30,7 +30,7 @@ body:
       description: |
         - Are table relationships logical for the intended service?
         - Is unnecessary duplication or over-engineering avoided?
-        (Max 100 words per bullet)
+        (Max 200 words)
       placeholder: "- ER relationships validity…\n- Normalization/duplication checks…"
     validations:
       required: true
@@ -42,7 +42,7 @@ body:
       description: |
         - Do the APIs follow RESTful principles (methods/URIs/status codes)?
         - Are formats and documentation consistent enough to be useful?
-        (Max 100 words per bullet)
+        (Max 200 words)
       placeholder: "- Endpoint/method correctness…\n- Error model/versioning/docs…"
     validations:
       required: true
@@ -54,7 +54,7 @@ body:
       description: |
         - Do tests verify key business logic?
         - Are both normal and error cases covered?
-        (Max 100 words per bullet)
+        (Max 200 words)
       placeholder: "- Unit/integration/contract tests…\n- Failure paths/edge cases…"
     validations:
       required: true
@@ -66,7 +66,7 @@ body:
       description: |
         - Is the code readable and organized into a clear structure?
         - Are basic performance and security concerns addressed?
-        (Max 100 words per bullet)
+        (Max 200 words)
       placeholder: "- Directory structure/layering…\n- N+1 prevention/caching/input validation…"
     validations:
       required: true
@@ -91,7 +91,7 @@ body:
         - What are the main strengths and weaknesses of AutoBE?
         - What level does the generated code quality correspond to?
         - What specific improvements should be prioritized?
-        (**100+ words recommended**)
+        (**200+ words recommended**)
       placeholder: "Strengths: …\nWeaknesses: …\nRecommended improvements: … (e.g., schema evolution, error model standardization, load testing, secret management, etc.)"
     validations:
       required: true
