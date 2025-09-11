@@ -35,11 +35,8 @@ export const archive_test = async (
       tokenUsage: agent.getTokenUsage().toJSON(),
     });
   };
-  agent.on("assistantMessage", listen);
-  agent.on("jsonParseError", listen);
-  agent.on("jsonValidateError", listen);
   for (const type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
-    if (type.startsWith("test")) agent.on(type, listen);
+    agent.on(type, listen);
 
   // DO TEST GENERATION
   const result: AutoBeAssistantMessageHistory | AutoBeTestHistory =
