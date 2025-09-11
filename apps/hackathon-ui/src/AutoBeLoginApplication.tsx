@@ -10,7 +10,7 @@ export function AutoBeLoginApplication() {
   // STATES
   //----
   const [credentials, setCredentials] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +20,7 @@ export function AutoBeLoginApplication() {
   // EVENT HANDLERS
   //----
   const handleInputChange =
-    (field: "username" | "password") =>
+    (field: "email" | "password") =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setCredentials((prev) => ({
         ...prev,
@@ -30,7 +30,7 @@ export function AutoBeLoginApplication() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!credentials.username.trim() || !credentials.password.trim()) {
+    if (!credentials.email.trim() || !credentials.password.trim()) {
       return;
     }
 
@@ -43,7 +43,7 @@ export function AutoBeLoginApplication() {
           },
           HACKATHON_CODE,
           {
-            email: credentials.username,
+            email: credentials.email,
             password: credentials.password,
           },
         );
@@ -133,9 +133,9 @@ export function AutoBeLoginApplication() {
         <div>
           <input
             type="text"
-            placeholder="Username"
-            value={credentials.username}
-            onChange={handleInputChange("username")}
+            placeholder="Email"
+            value={credentials.email}
+            onChange={handleInputChange("email")}
             onKeyPress={handleKeyPress}
             disabled={isLoading}
             style={inputStyle}
@@ -174,7 +174,7 @@ export function AutoBeLoginApplication() {
           type="submit"
           disabled={
             isLoading ||
-            !credentials.username.trim() ||
+            !credentials.email.trim() ||
             !credentials.password.trim()
           }
           style={buttonStyle}

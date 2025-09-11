@@ -63,7 +63,7 @@ export function AutoBePlaygroundChatMovie(
       <AppBar position="relative" component="div">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {props.title ?? "AutoBE Playground"}
+            {props.title ?? "AutoBE Hackathon"}
           </Typography>
         </Toolbar>
       </AppBar>
