@@ -6,7 +6,6 @@ import {
   IAutoBeTokenUsageJson,
 } from "@autobe/interface";
 import fs from "fs";
-import typia from "typia";
 import { v7 } from "uuid";
 
 import { TestGlobal } from "../TestGlobal";
@@ -52,8 +51,7 @@ export namespace TestHistory {
     const content: string = await CompressUtil.gunzip(
       await fs.promises.readFile(location),
     );
-    const histories: AutoBeHistory[] = JSON.parse(content);
-    return typia.assert(histories);
+    return JSON.parse(content);
   };
 
   export const getTokenUsage = async (
