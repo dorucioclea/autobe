@@ -103,6 +103,9 @@ export const AutoBeChatMain = (props: IAutoBeChatMainProps) => {
       const serviceData = await getAutoBeService(config);
       if (messages.length !== 0) {
         await new Promise((resolve) => {
+          if (serviceData.listener.getEnable() === true) {
+            resolve(void 0);
+          }
           serviceData.listener.onEnable(async (value) => {
             if (value === true) {
               resolve(void 0);
