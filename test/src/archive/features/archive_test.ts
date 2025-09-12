@@ -9,6 +9,7 @@ import {
   AutoBeTestHistory,
 } from "@autobe/interface";
 import { TestValidator } from "@nestia/e2e";
+import { sleep_for } from "tstl";
 import typia from "typia";
 
 import { TestFactory } from "../../TestFactory";
@@ -18,28 +19,84 @@ import { TestHistory } from "../../internal/TestHistory";
 import { TestLogger } from "../../internal/TestLogger";
 import { TestProject } from "../../structures/TestProject";
 
-export const archive_test = async (
+export let archive_test = async (
   factory: TestFactory,
   project: TestProject,
 ) => {
   if (TestGlobal.env.API_KEY === undefined) return false;
 
   // PREPARE AGENT
-  const { agent, zero } = await prepare_agent_test(factory, project);
-  const snapshots: AutoBeEventSnapshot[] = [];
-  const start: Date = new Date();
-  const listen = (event: AutoBeEventOfSerializable) => {
+  let { agent, zero } = await prepare_agent_test(factory, project);
+  let snapshots: AutoBeEventSnapshot[] = [];
+  let start: Date = new Date();
+  let listen = (event: AutoBeEventOfSerializable) => {
     if (TestGlobal.archive) TestLogger.event(start, event);
     snapshots.push({
       event,
       tokenUsage: agent.getTokenUsage().toJSON(),
     });
   };
-  for (const type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
+  for (let type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
     agent.on(type, listen);
 
+  const bodyMap: WeakSet<object> = new Set();
+  let requestCount: number = 0;
+  let responseCount: number = 0;
+  agent.on("vendorRequest", (e) => {
+    const t1: Date = new Date();
+    const time = (prev: Date) =>
+      ((new Date().getTime() - prev.getTime()) / 60_000).toLocaleString() +
+      " mins";
+    console.log(`request: ${time(start)}`);
+    console.log(`  - source ${e.source}`);
+    console.log(`  - id: ${e.id}`);
+    console.log(`  - count: ${++requestCount}`);
+    bodyMap.add(e.body);
+    void (async () => {
+      while (true) {
+        await sleep_for(60_000);
+        if (bodyMap.has(e.body) === false) break;
+        console.log("Request not completed yet", e.source, e.id, time(t1));
+      }
+    })().catch(() => {});
+  });
+  agent.on("vendorResponse", async (e) => {
+    const t1: Date = new Date();
+    const time = (prev: Date) =>
+      ((new Date().getTime() - prev.getTime()) / 60_000).toLocaleString() +
+      " mins";
+    console.log(`response: ${time(start)}`);
+    console.log(`  - source ${e.source}`);
+    console.log(`  - id: ${e.id}`);
+    console.log(`  - count: ${++responseCount} of ${requestCount}`);
+    bodyMap.delete(e.body);
+
+    let completed: boolean = false as boolean;
+    let chunkCount: number = 0;
+    void (async () => {
+      for await (const _c of e.stream) {
+        ++chunkCount;
+      }
+    })().catch(() => {});
+    void (async () => {
+      while (true) {
+        await sleep_for(60_000);
+        if (completed === true) break;
+        console.log(
+          "Response streaming not completed yet",
+          e.source,
+          e.id,
+          time(t1),
+          "chunk count: " + chunkCount,
+        );
+      }
+    })().catch(() => {});
+    await e.join();
+    completed = true;
+  });
+
   // DO TEST GENERATION
-  const result: AutoBeAssistantMessageHistory | AutoBeTestHistory =
+  let result: AutoBeAssistantMessageHistory | AutoBeTestHistory =
     await orchestrateTest(agent.getContext())({
       reason: "Validate agent test",
     });
@@ -47,8 +104,8 @@ export const archive_test = async (
   if (result.type !== "test") throw new Error("Failed to generate test.");
 
   // REPORT RESULT
-  const histories: AutoBeHistory[] = agent.getHistories();
-  const model: string = TestGlobal.getVendorModel();
+  let histories: AutoBeHistory[] = agent.getHistories();
+  let model: string = TestGlobal.getVendorModel();
   try {
     await FileSystemIterator.save({
       root: `${TestGlobal.ROOT}/results/${model}/${project}/test`,
