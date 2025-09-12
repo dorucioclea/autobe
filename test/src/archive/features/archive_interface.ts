@@ -36,6 +36,7 @@ export const archive_interface = async (
   };
   for (const type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
     agent.on(type, listen);
+  agent.on("vendorResponse", (e) => TestLogger.event(start, e));
 
   // REQUEST INTERFACE GENERATION
   const result: AutoBeInterfaceHistory | AutoBeAssistantMessageHistory =

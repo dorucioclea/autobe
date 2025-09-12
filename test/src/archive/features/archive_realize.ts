@@ -36,6 +36,7 @@ export const archive_realize = async (
   };
   for (const type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
     agent.on(type, listen);
+  agent.on("vendorResponse", (e) => TestLogger.event(start, e));
 
   // DO TEST GENERATION
   const ctx = agent.getContext();
