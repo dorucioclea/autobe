@@ -1,7 +1,6 @@
 import { MicroAgentica } from "@agentica/core";
 import { ILlmSchema } from "@samchon/openapi";
 import { IPointer } from "tstl";
-import typia from "typia";
 
 export const registerChunkTimeout = <Model extends ILlmSchema.Model>(
   agent: MicroAgentica<Model>,
