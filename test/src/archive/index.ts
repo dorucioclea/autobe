@@ -168,7 +168,7 @@ const main = async (): Promise<void> => {
         `- Success: ${(Date.now() - start.getTime()).toLocaleString()} ms`,
       );
     } catch (error) {
-      console.log("  - Error");
+      console.log("  - Error", error);
       throw error;
     }
   }

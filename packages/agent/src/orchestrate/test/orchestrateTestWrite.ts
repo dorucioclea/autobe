@@ -71,7 +71,7 @@ async function process<Model extends ILlmSchema.Model>(
   const pointer: IPointer<IAutoBeTestWriteApplication.IProps | null> = {
     value: null,
   };
-  const { histories, tokenUsage } = await ctx.conversate({
+  const { tokenUsage } = await ctx.conversate({
     source: "testWrite",
     histories: await transformTestWriteHistories(ctx, scenario, artifacts),
     controller: createController({
@@ -86,10 +86,6 @@ async function process<Model extends ILlmSchema.Model>(
     message: "Create e2e test functions.",
   });
   if (pointer.value === null) {
-    console.log(
-      "Failed to create test code.",
-      histories.map((h) => h.type),
-    );
     ++progress.completed;
     throw new Error("Failed to create test code.");
   }
@@ -98,15 +94,11 @@ async function process<Model extends ILlmSchema.Model>(
     ctx,
     artifacts,
     pointer.value.revise.final,
-    undefined,
-    pointer.value.revise,
   );
   pointer.value.draft = await completeTestCode(
     ctx,
     artifacts,
     pointer.value.draft,
-    undefined,
-    pointer.value.revise,
   );
   return {
     type: "testWrite",

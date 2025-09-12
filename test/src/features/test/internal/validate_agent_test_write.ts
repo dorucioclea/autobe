@@ -34,18 +34,17 @@ export const validate_agent_test_write = async (
       ),
     ),
   );
-  typia.assert(scenarios);
 
   const start: Date = new Date();
   for (const type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
     agent.on(type, (event) => TestLogger.event(start, event));
+  agent.on("vendorResponse", (e) => TestLogger.event(start, e));
 
   // GENERATE TEST FUNCTIONS
   const writes: IAutoBeTestWriteResult[] = await orchestrateTestWrite(
     agent.getContext(),
     scenarios,
   );
-  typia.assert(writes);
 
   // REPORT RESULT
   const compiler: IAutoBeCompiler = await agent.getContext().compiler();

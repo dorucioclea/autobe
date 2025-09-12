@@ -45,6 +45,7 @@ export const archive_analyze = async (
   };
   for (const type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
     agent.on(type, listen);
+  agent.on("vendorResponse", (e) => TestLogger.event(start, e));
 
   // FOR NEXT TESTING ASSETS
   let scenario: AutoBeAnalyzeScenarioEvent | null = null;

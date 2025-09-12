@@ -12,13 +12,6 @@ import process from "process";
 import { TestFactory } from "./TestFactory";
 import { TestGlobal } from "./TestGlobal";
 
-global.process.on("uncaughtException", (error) =>
-  console.log("uncaughtException", error),
-);
-global.process.on("unhandledRejection", (error) =>
-  console.log("unhandledRejection", error),
-);
-
 async function main(): Promise<void> {
   console.log("---------------------------------------------------");
   console.log("AutoBE Test Program");
@@ -165,6 +158,12 @@ async function main(): Promise<void> {
   if (exceptions.length !== 0) process.exit(-1);
 }
 
+global.process.on("uncaughtException", (error) =>
+  console.log("uncaughtException", error),
+);
+global.process.on("unhandledRejection", (error) =>
+  console.log("unhandledRejection", error),
+);
 main().catch((error) => {
   console.log("critical error", error);
   process.exit(-1);
