@@ -44,7 +44,6 @@ export let archive_test = async (
     await orchestrateTest(agent.getContext())({
       reason: "Validate agent test",
     });
-  console.log("The test result history", result);
   if (result.type !== "test") throw new Error("Failed to generate test.");
 
   // REPORT RESULT
@@ -65,9 +64,7 @@ export let archive_test = async (
         "logs/histories.json": JSON.stringify(histories),
       },
     });
-  } catch (error) {
-    console.log(error);
-  }
+  } catch {}
   if (TestGlobal.archive)
     await TestHistory.save({
       [`${project}.test.json`]: JSON.stringify(histories),

@@ -41,7 +41,6 @@ export async function orchestrateInterfaceOperationsReview<
       message: "Review the operations",
     });
     if (pointer.value === null) {
-      console.error("Failed to review operations.");
       ++progress.completed;
       return [];
     }
@@ -67,8 +66,7 @@ export async function orchestrateInterfaceOperationsReview<
       completed: ++progress.completed,
     } satisfies AutoBeInterfaceOperationsReviewEvent);
     return content;
-  } catch (error) {
-    console.error("Error occurred during interface operations review:", error);
+  } catch {
     ++progress.completed;
     return [];
   }
