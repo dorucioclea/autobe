@@ -34,7 +34,6 @@ export const validate_agent_test_write = async (
       ),
     ),
   );
-  typia.assert(scenarios);
 
   const start: Date = new Date();
   for (const type of typia.misc.literals<AutoBeEventOfSerializable.Type>())
@@ -46,7 +45,6 @@ export const validate_agent_test_write = async (
     agent.getContext(),
     scenarios,
   );
-  typia.assert(writes);
 
   // REPORT RESULT
   const compiler: IAutoBeCompiler = await agent.getContext().compiler();

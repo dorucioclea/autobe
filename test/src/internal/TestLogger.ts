@@ -1,5 +1,5 @@
 import { AutoBeEvent, IAutoBeTokenUsageJson } from "@autobe/interface";
-import { sleep_for } from "tstl";
+import { IPointer, sleep_for } from "tstl";
 import typia from "typia";
 
 export namespace TestLogger {
@@ -39,22 +39,27 @@ export namespace TestLogger {
       content.push(`  - id: ${event.id}`);
 
       const t1: Date = new Date();
-      let completed: boolean = false as boolean;
-      let chunkCount: number = 0;
+      const t2: IPointer<Date> = { value: t1 };
+      const completed: IPointer<boolean> = { value: false };
+      const chunks: number[] = [];
       void (async () => {
-        for await (const _c of event.stream) ++chunkCount;
+        for await (const _c of event.stream) {
+          const now: Date = new Date();
+          chunks.push(now.getTime() - t2.value.getTime());
+          t2.value = now;
+        }
       })().catch(() => {});
       void (async () => {
         while (true) {
           await sleep_for(60_000);
-          if (completed === true) break;
+          if (completed.value === true) break;
           console.log("Response streaming not completed yet");
           console.log(
             [
               `source: ${event.source}`,
               `id: ${event.id}`,
               `elapsed time: ${time(t1)}`,
-              `chunk count: ${chunkCount}`,
+              `chunk times: (max: ${Math.max(...chunks)}), [${chunks.join(", ")}]`,
             ]
               .map((s) => `  - ${s}`)
               .join("\n"),
@@ -62,9 +67,15 @@ export namespace TestLogger {
         }
       })().catch(() => {});
       event.join().then(() => {
-        completed = true;
+        completed.value = true;
+        console.log(
+          `Response chunk times (${event.source}): (max: ${Math.max(...chunks)}), [${chunks.join(", ")}]`,
+        );
       });
     }
+
+    // PRINT
+    console.log(content.join("\n"));
   };
 }
 
