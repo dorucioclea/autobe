@@ -1,21 +1,6 @@
 import { MicroAgentica } from "@agentica/core";
 import { ILlmSchema } from "@samchon/openapi";
 import { IPointer } from "tstl";
-import typia from "typia";
-
-typia.misc
-  .literals<NodeJS.Signals>()
-  .filter((v) => v !== "SIGKILL" && v !== "SIGSTOP")
-  .map((v) => {
-    return () => {
-      process.on(v, () => {
-        console.log(`${v} caught`);
-      });
-    };
-  })
-  .forEach((fn) => {
-    fn();
-  });
 
 export const registerChunkTimeout = <Model extends ILlmSchema.Model>(
   agent: MicroAgentica<Model>,
