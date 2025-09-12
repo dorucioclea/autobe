@@ -1,5 +1,5 @@
 import { AutoBeEvent, IAutoBeTokenUsageJson } from "@autobe/interface";
-import { IPointer, sleep_for } from "tstl";
+import { IPointer, Pair, sleep_for } from "tstl";
 import typia from "typia";
 
 export namespace TestLogger {
@@ -41,11 +41,11 @@ export namespace TestLogger {
       const t1: Date = new Date();
       const t2: IPointer<Date> = { value: t1 };
       const completed: IPointer<boolean> = { value: false };
-      const chunks: number[] = [];
+      const chunks: Pair<number, Date>[] = [];
       void (async () => {
         for await (const _c of event.stream) {
           const now: Date = new Date();
-          chunks.push(now.getTime() - t2.value.getTime());
+          chunks.push(new Pair(now.getTime() - t2.value.getTime(), now));
           t2.value = now;
         }
       })().catch(() => {});
@@ -59,7 +59,7 @@ export namespace TestLogger {
               `source: ${event.source}`,
               `id: ${event.id}`,
               `elapsed time: ${time(t1)}`,
-              `chunk times: (max: ${Math.max(...chunks)}), [${chunks.join(", ")}]`,
+              `chunk times: (max: ${Math.max(...chunks.map((c) => c.first))}, delayed: ${time(chunks.at(-1)?.second ?? t1)})`,
             ]
               .map((s) => `  - ${s}`)
               .join("\n"),
@@ -69,7 +69,7 @@ export namespace TestLogger {
       event.join().then(() => {
         completed.value = true;
         console.log(
-          `Response chunk times (${event.source}): (max: ${Math.max(...chunks)}), [${chunks.join(", ")}]`,
+          `Response chunk times (${event.source}): (max: ${Math.max(...chunks.map((c) => c.first))})`,
         );
       });
     }
