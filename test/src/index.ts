@@ -5,7 +5,6 @@ import { AutoBePlaygroundServer } from "@autobe/playground-server";
 import { DynamicExecutor } from "@nestia/e2e";
 import chalk from "chalk";
 import fs from "fs";
-import OpenAI from "openai";
 import path from "path";
 import process from "process";
 
@@ -26,17 +25,7 @@ async function main(): Promise<void> {
     createAgent: (histories) =>
       new AutoBeAgent({
         model: TestGlobal.env.SCHEMA_MODEL ?? "chatgpt",
-        vendor: {
-          api: new OpenAI({
-            apiKey: TestGlobal.env.API_KEY,
-            baseURL: TestGlobal.env.BASE_URL,
-          }),
-          model:
-            TestGlobal.getArguments("vendor")?.[0] ??
-            TestGlobal.env.VENDOR_MODEL ??
-            "gpt-4.1",
-          semaphore: Number(TestGlobal.getArguments("semaphore")?.[0] ?? "16"),
-        },
+        vendor: TestGlobal.getVendorConfig(),
         config: {
           locale: "en-US",
         },
