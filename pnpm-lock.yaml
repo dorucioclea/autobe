@@ -308,6 +308,9 @@ importers:
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      tgrid:
+        specifier: catalog:samchon
+        version: 1.2.0
       typia:
         specifier: catalog:samchon
         version: 9.7.2(typescript@5.9.2)
@@ -925,6 +928,9 @@ importers:
       overlay-kit:
         specifier: ^1.8.5
         version: 1.8.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      tgrid:
+        specifier: catalog:samchon
+        version: 1.2.0
       tstl:
         specifier: catalog:samchon
         version: 3.0.0
