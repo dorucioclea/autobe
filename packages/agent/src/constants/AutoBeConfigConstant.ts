@@ -1,4 +1,5 @@
 export const enum AutoBeConfigConstant {
-  DEFAULT_RETRY = 4,
+  RETRY = 4,
   INTERFACE_CAPACITY = 4,
+  TIMEOUT = 10 * 60 * 1000,
 }
