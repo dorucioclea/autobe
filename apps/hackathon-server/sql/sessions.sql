@@ -4,4 +4,5 @@ FROM autobe.autobe_hackathon_sessions AS S
     ON S.autobe_hackathon_participant_id = P.id
   INNER JOIN autobe.autobe_hackathon_session_aggregates AS A
     ON S.id = A.autobe_hackathon_session_id
+WHERE P.email NOT LIKE '%@wrtn.io'
 ORDER BY S.created_at DESC;
