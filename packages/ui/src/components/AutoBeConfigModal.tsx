@@ -361,14 +361,9 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     placeholder: "gpt-4.1",
     suggestions: [
       "gpt-4.1",
-      "gpt-4",
-      "gpt-4-turbo",
-      "gpt-3.5-turbo",
-      "claude-3-sonnet",
-      "claude-3-haiku",
-      "claude-3-opus",
-      "llama-3.1-70b",
-      "deepseek-coder",
+      "gpt-4.1-mini",
+      "qwen/qwen3-235b-a22b-2507",
+      "qwen/qwen3-next-80b-a3b-instruct",
     ],
   },
   openApiKey: {
@@ -385,8 +380,8 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     label: "Base URL",
     type: "text",
     storageKey: "autobe_base_url",
-    placeholder: "Leave empty for OpenAI default",
-    default: "https://api.openai.com/v1",
+    placeholder: "https://api.openai.com/v1",
+    suggestions: ["https://api.openai.com/v1", "https://openrouter.ai/api/v1"],
   },
   semaphore: {
     key: "semaphore",
