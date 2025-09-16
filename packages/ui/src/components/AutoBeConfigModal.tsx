@@ -343,6 +343,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "text",
     storageKey: "autobe_locale",
     placeholder: "en",
+    default: "en",
     suggestions: ["en", "ko", "ja", "zh", "es", "fr", "de"],
   },
   schemaModel: {
@@ -351,6 +352,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "text",
     storageKey: "autobe_schema_model",
     placeholder: "chatgpt",
+    default: "chatgpt",
     suggestions: ["chatgpt", "claude"],
   },
   aiModel: {
@@ -359,6 +361,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "text",
     storageKey: "autobe_ai_model",
     placeholder: "gpt-4.1",
+    default: "gpt-4.1",
     suggestions: [
       "gpt-4.1",
       "gpt-4.1-mini",
@@ -382,6 +385,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     storageKey: "autobe_base_url",
     placeholder: "https://api.openai.com/v1",
     suggestions: ["https://api.openai.com/v1", "https://openrouter.ai/api/v1"],
+    default: "https://api.openai.com/v1",
   },
   semaphore: {
     key: "semaphore",
@@ -389,6 +393,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "number",
     storageKey: "autobe_semaphore",
     placeholder: "16",
+    default: 16,
     min: 1,
     max: 100,
   },
