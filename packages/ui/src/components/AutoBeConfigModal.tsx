@@ -57,6 +57,7 @@ export const AutoBeConfigModal = (props: IAutoBeConfigModalProps) => {
       return stored;
     }
 
+    if (field.default !== undefined) return field.default;
     // Return default values based on type
     if (field.type === "checkbox") return false;
     if (field.type === "number") return 0;
@@ -66,8 +67,7 @@ export const AutoBeConfigModal = (props: IAutoBeConfigModalProps) => {
   const [config, setConfig] = useState<Record<string, unknown>>(() => {
     const initialConfig: Record<string, unknown> = {};
     props.fields.forEach((field) => {
-      initialConfig[field.key] =
-        getStoredValue(field) ?? field.default ?? undefined;
+      initialConfig[field.key] = getStoredValue(field) ?? undefined;
     });
     return initialConfig;
   });
@@ -343,6 +343,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "text",
     storageKey: "autobe_locale",
     placeholder: "en",
+    default: "en",
     suggestions: ["en", "ko", "ja", "zh", "es", "fr", "de"],
   },
   schemaModel: {
@@ -351,6 +352,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "text",
     storageKey: "autobe_schema_model",
     placeholder: "chatgpt",
+    default: "chatgpt",
     suggestions: ["chatgpt", "claude"],
   },
   aiModel: {
@@ -359,6 +361,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "text",
     storageKey: "autobe_ai_model",
     placeholder: "gpt-4.1",
+    default: "gpt-4.1",
     suggestions: [
       "gpt-4.1",
       "gpt-4.1-mini",
@@ -389,6 +392,7 @@ const ALL_CONFIG_FIELDS: Record<string, IConfigField> = {
     type: "number",
     storageKey: "autobe_semaphore",
     placeholder: "16",
+    default: 16,
     min: 1,
     max: 100,
   },
