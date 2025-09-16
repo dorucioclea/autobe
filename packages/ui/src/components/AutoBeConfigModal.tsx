@@ -57,6 +57,7 @@ export const AutoBeConfigModal = (props: IAutoBeConfigModalProps) => {
       return stored;
     }
 
+    if (field.default !== undefined) return field.default;
     // Return default values based on type
     if (field.type === "checkbox") return false;
     if (field.type === "number") return 0;
@@ -66,8 +67,7 @@ export const AutoBeConfigModal = (props: IAutoBeConfigModalProps) => {
   const [config, setConfig] = useState<Record<string, unknown>>(() => {
     const initialConfig: Record<string, unknown> = {};
     props.fields.forEach((field) => {
-      initialConfig[field.key] =
-        getStoredValue(field) ?? field.default ?? undefined;
+      initialConfig[field.key] = getStoredValue(field) ?? undefined;
     });
     return initialConfig;
   });
