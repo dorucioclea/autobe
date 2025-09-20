@@ -1,8 +1,8 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
-import { AutoBeHackathonConfiguration } from "../AutoBeHackathonConfiguration";
-import { AutoBeHackathonSetupWizard } from "../setup/AutoBeHackathonSetupWizard";
+import { MyGlobal } from "../MyGlobal";
+import { MySetupWizard } from "../setup/MySetupWizard";
 
 async function execute(
   database: string,
@@ -10,16 +10,13 @@ async function execute(
   password: string,
   script: string,
 ): Promise<void> {
-  const env = AutoBeHackathonConfiguration.env();
   try {
     const prisma = new PrismaClient({
       adapter: new PrismaPg(
         {
-          connectionString: `postgresql://${username}:${password}@${env.HACKATHON_POSTGRES_HOST}:${env.HACKATHON_POSTGRES_PORT}/${database}?schema=${env.HACKATHON_POSTGRES_SCHEMA}`,
+          connectionString: `postgresql://${username}:${password}@${MyGlobal.env.POSTGRES_HOST}:${MyGlobal.env.POSTGRES_PORT}/${database}?schema=${MyGlobal.env.POSTGRES_SCHEMA}`,
         },
-        {
-          schema: env.HACKATHON_POSTGRES_SCHEMA,
-        },
+        { schema: MyGlobal.env.POSTGRES_SCHEMA },
       ),
     });
     const queries: string[] = script
@@ -40,10 +37,10 @@ async function execute(
 
 async function main(): Promise<void> {
   const config = {
-    database: AutoBeHackathonConfiguration.env().HACKATHON_POSTGRES_DATABASE,
-    schema: AutoBeHackathonConfiguration.env().HACKATHON_POSTGRES_SCHEMA,
-    username: AutoBeHackathonConfiguration.env().HACKATHON_POSTGRES_USERNAME,
-    password: AutoBeHackathonConfiguration.env().HACKATHON_POSTGRES_PASSWORD,
+    database: MyGlobal.env.POSTGRES_DATABASE,
+    schema: MyGlobal.env.POSTGRES_SCHEMA,
+    username: MyGlobal.env.POSTGRES_USERNAME,
+    password: MyGlobal.env.POSTGRES_PASSWORD,
   };
   const root = {
     account: process.argv[2] ?? "postgres",
@@ -70,24 +67,16 @@ async function main(): Promise<void> {
     `,
   );
 
-  await execute(
-    config.database,
-    root.account,
-    root.password,
-    `
-      GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${config.schema} TO ${config.username};
-    `,
-  );
-
   console.log("------------------------------------------");
   console.log("CREATE TABLES");
   console.log("------------------------------------------");
-  await AutoBeHackathonSetupWizard.schema();
+  MyGlobal.testing = true;
+  await MySetupWizard.schema();
 
   console.log("------------------------------------------");
   console.log("INITIAL DATA");
   console.log("------------------------------------------");
-  await AutoBeHackathonSetupWizard.seed();
+  await MySetupWizard.seed();
 }
 main().catch((exp) => {
   console.log(exp);
