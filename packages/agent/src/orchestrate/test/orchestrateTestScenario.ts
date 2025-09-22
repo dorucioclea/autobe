@@ -17,6 +17,7 @@ import { assertSchemaModel } from "../../context/assertSchemaModel";
 import { divideArray } from "../../utils/divideArray";
 import { executeCachedBatch } from "../../utils/executeCachedBatch";
 import { transformTestScenarioHistories } from "./histories/transformTestScenarioHistories";
+import { orchestrateTestScenarioReview } from "./orchestrateTestScenarioReview";
 import { IAutoBeTestScenarioApplication } from "./structures/IAutoBeTestScenarioApplication";
 import { IAutoBeTestScenarioAuthorizationRole } from "./structures/IAutoBeTestScenarioAuthorizationRole";
 
@@ -30,8 +31,6 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
       "Cannot write test scenarios because these are no operations.",
     );
   }
-
-  Object.entries(document.components.schemas);
 
   const dict: HashMap<AutoBeOpenApi.IEndpoint, AutoBeOpenApi.IOperation> =
     new HashMap<AutoBeOpenApi.IEndpoint, AutoBeOpenApi.IOperation>(
@@ -63,6 +62,10 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
     total: document.operations.length,
     completed: 0,
   };
+  const reviewProgress: AutoBeProgressEventBase = {
+    total: document.operations.length,
+    completed: 0,
+  };
   const exclude: IAutoBeTestScenarioApplication.IScenarioGroup[] = [];
   let include: AutoBeOpenApi.IOperation[] = [...document.operations];
   let trial: number = 0;
@@ -82,6 +85,7 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
             include,
             exclude: exclude.map((x) => x.endpoint),
             progress,
+            reviewProgress,
             promptCacheKey,
           })),
         );
@@ -99,6 +103,7 @@ export async function orchestrateTestScenario<Model extends ILlmSchema.Model>(
       return true;
     });
     progress.total = include.length + exclude.length;
+    reviewProgress.total = include.length + exclude.length;
   } while (include.length > 0 && ++trial < ctx.retry);
 
   return exclude.flatMap((pg) => {
@@ -122,6 +127,7 @@ const divideAndConquer = async <Model extends ILlmSchema.Model>(
     include: AutoBeOpenApi.IOperation[];
     exclude: AutoBeOpenApi.IEndpoint[];
     progress: AutoBeProgressEventBase;
+    reviewProgress: AutoBeProgressEventBase;
     promptCacheKey: string;
   },
 ): Promise<IAutoBeTestScenarioApplication.IScenarioGroup[]> => {
@@ -187,7 +193,11 @@ const divideAndConquer = async <Model extends ILlmSchema.Model>(
       step: ctx.state().interface?.step ?? 0,
       created_at: new Date().toISOString(),
     });
-    return pointer.value;
+    return orchestrateTestScenarioReview(
+      ctx,
+      pointer.value,
+      props.reviewProgress,
+    );
   } catch {
     return [];
   }
