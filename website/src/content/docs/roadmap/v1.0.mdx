@@ -1,6 +1,7 @@
 ---
 title: AutoBE > Guide Documents > Roadmap > v1.0 Official Release
 ---
+import { Tabs } from "nextra/components";
 
 ## Preface
 ```mermaid
@@ -21,7 +22,6 @@ gantt
   Domestic Demonstration: planned, 2025-09-22, 30d
 
   section RAG Optimization
-  Analysis : planned, 2025-09-29, 77d
   Prisma   : planned, 2025-10-13, 63d
   Interface: planned, 2025-10-27, 49d
   Test     : planned, 2025-11-10, 35d
@@ -132,7 +132,7 @@ To make AutoBE a tool usable in actual production environments, we're experiment
 
 Through this proof-of-concept project, we'll prove that AutoBE is a practical tool usable in real work environments.
 
-## 3. Retrieval Augmented Generation
+## 3. RAG Optimization
 ![](/images/demonstrate/replay-openai-gpt4.1.png)
 
 Transitioning to a next-generation architecture that maximizes token efficiency and improves generation quality through intelligent cyclic workflows.
@@ -147,18 +147,34 @@ In v1.0, we're transitioning to an intelligent cyclic structure where each agent
 - **Enhanced Accuracy**: More accurate code generation with focused context
 - **Progressive Improvement**: Immediate reflection of feedback at each stage
 
-```typescript
-interface ITestWriteApplication {
+<Tabs 
+  items={["Interface Agent", "Test Agent"]}
+  defaultIndex={1}>
+  <Tabs.Tab>
+```typescript showLineNumbers
+interface IAutoBeInterfaceOperationApplication {
   getDocuments(filenames: string[]): Record<string, string>;
-  getModel(names: string[]): AutoBePrisma.IModel[]; 
+  getModels(names: string[]): AutoBePrisma.IModel[]; 
+  complete(operations: AutoBeOpenApi.IOperation[]): void;
+  halt(reason: string): void;
+}
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```typescript showLineNumbers
+interface IAutoBeTestScenarioApplication {
+  getDocuments(filenames: string[]): Record<string, string>;
+  getModels(names: string[]): AutoBePrisma.IModel[]; 
   getOperation(endpoints: AutoBeOpenApi.IEndpoint[]): {
     operations: AutoBeOpenApi.IOperation[];
     schemas: Record<string, AutoBeOpenApi.IJsonSchemaDescriptive>;
   };
-  complete(file: IAutoBeTestFunction): void;
+  complete(scenario: IAutoBeTestScenario): void;
   halt(reason: string): void;
 }
 ```
+  </Tabs.Tab>
+</Tabs>
 
 This cyclic workflow evolves AutoBE into a smarter and more efficient system, enabling cost-effective operation even in large-scale enterprise projects.
 
