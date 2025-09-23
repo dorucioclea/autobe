@@ -1,10 +1,6 @@
 # Seeking Local LLM Recommendations for AST Generation (by Function Calling)
 
-> TL;DR: Our open source project generates backend apps by having AI create ASTs via function calling instead of writing code as text.
->
-> Since this heavily depends on function calling capabilities, traditional programming benchmarks don't apply - `openai/gpt-4.1-mini` outperforms `openai/gpt-5`, and `qwen3-coder` (450b parameter model) can fail where `qwen3-next-80b-a3b` model succeeds.
->
-> We're looking for Local LLM recommendations to test for our benchmark.
+> Looking for Local LLM recommendations that can generate complex AST structures through function calling. This is an area that shows different performance patterns from existing programming benchmarks, so looking for models that can be actually tested.
 
 ## Our Approach
 
